@@ -1,0 +1,54 @@
+@import "../bootstrap/scss/bootstrap.scss";
+
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+
+:root {
+    --primary-color: #38B6FF;
+    --white: #FFF;
+    --black: #000;
+    --light-grey: #999;
+    --primary-text-color: #333;
+    --secondary-text-color: #666;
+    --secondary-background-color: #EDF2FB;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    font-family: "Rubik", sans-serif;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    text-rendering: optimizeSpeed;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+button,
+input,
+[tabindex] {
+    border: none;
+    outline: none;
+
+    &:focus {
+        outline: none;
+    }
+}
+
+a[href] {
+    text-decoration: none;
+    color: var(--text-black-color);
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}

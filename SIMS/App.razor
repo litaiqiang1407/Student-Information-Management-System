@@ -1,6 +1,6 @@
 ﻿<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <RouteView RouteData="@routeData" DefaultLayout="@GetLayout(routeData.PageType)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
@@ -10,3 +10,14 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private Type GetLayout(Type page)
+    {
+        if (page == typeof(Pages.Index))
+        {
+            return typeof(SIMS.Pages.Home.Layout);
+        }
+        return typeof(MainLayout);
+    }
+}

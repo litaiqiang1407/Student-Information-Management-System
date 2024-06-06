@@ -1,0 +1,14 @@
+﻿[
+  {
+    "outputFile": "wwwroot/scss/site.css",
+    "inputFile": "wwwroot/scss/site.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/GlobalStyles.css",
+    "inputFile": "wwwroot/css/GlobalStyles.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Logo/Logo.razor.css",
+    "inputFile": "Shared/Components/Logo/Logo.razor.scss"
+  }
+]
