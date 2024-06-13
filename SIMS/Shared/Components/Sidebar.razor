@@ -12,14 +12,24 @@
             {
                 @foreach (var item in MenuItems)
                 {
-                    <li>
-                        <a href="@item.Url" class="nav-link">
-                            <i class="bi @item.Icon"></i>
-                            <span>@item.Label</span>
+                    <li class="nav-item @(item.IsActive ? "active" : "")">
+                        <a href="@item.Url" class="nav-link" @onclick="() => SetActive(item)">
+                            <i class="bi @item.Icon nav-icon"></i>
+                            <span class="nav-label">@item.Label</span>
+                            @if (item.IsActive)
+                            {
+                                <i class="bi bi-caret-right-fill icon-active"></i>
+                            }
                         </a>
                     </li>
                 }
             }
+            <li class="nav-item">
+                <a href="setting" class="nav-link">
+                    <i class="bi bi-gear nav-icon"></i>
+                    <span>Setting</span>
+                </a>
+            </li>
         </ul>
     </nav>
 </div>
@@ -27,4 +37,12 @@
 @code {
     [Parameter]
     public List<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
+
+    private void SetActive(MenuItem item)
+    {
+        foreach (var menuItem in MenuItems)
+        {
+            menuItem.IsActive = (menuItem == item);
+        }
+    }
 }

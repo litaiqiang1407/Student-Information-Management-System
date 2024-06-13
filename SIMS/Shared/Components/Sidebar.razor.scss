@@ -6,12 +6,54 @@
 }
 
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-right: var(--primary-2px-border);
+    height: 100%;
+
     .sidebar-header {
         height: 160px;
+        border-bottom: var(--primary-2px-border);
         @include flex-center;
 
         .logo {
             height: 120px;
+        }
+    }
+
+    .sidebar-nav {
+        padding: 20px;
+
+        .nav-item {
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: 500;
+
+            .nav-link {
+                color: var(--primary-color);
+
+
+                .nav-icon {
+                    margin-right: 12px;
+                    font-size: 1.8rem;
+                }
+
+                .icon-active {
+                    color: var(--white);
+                    float: right;
+                    margin-left: auto;
+                    font-size: 1.8rem;
+                }
+            }
+
+            &:hover, &.active {
+                background-color: var(--primary-color);
+
+                .nav-link {
+                    color: var(--white);
+                }
+            }
         }
     }
 }

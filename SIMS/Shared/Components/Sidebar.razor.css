@@ -1,9 +1,44 @@
-﻿.sidebar .sidebar-header {
+﻿.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-right: var(--primary-2px-border);
+  height: 100%;
+}
+.sidebar .sidebar-header {
   height: 160px;
+  border-bottom: var(--primary-2px-border);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .sidebar .sidebar-header .logo {
   height: 120px;
+}
+.sidebar .sidebar-nav {
+  padding: 20px;
+}
+.sidebar .sidebar-nav .nav-item {
+  padding: 12px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.sidebar .sidebar-nav .nav-item .nav-link {
+  color: var(--primary-color);
+}
+.sidebar .sidebar-nav .nav-item .nav-link .nav-icon {
+  margin-right: 12px;
+  font-size: 1.8rem;
+}
+.sidebar .sidebar-nav .nav-item .nav-link .icon-active {
+  color: var(--white);
+  float: right;
+  margin-left: auto;
+  font-size: 1.8rem;
+}
+.sidebar .sidebar-nav .nav-item:hover, .sidebar .sidebar-nav .nav-item.active {
+  background-color: var(--primary-color);
+}
+.sidebar .sidebar-nav .nav-item:hover .nav-link, .sidebar .sidebar-nav .nav-item.active .nav-link {
+  color: var(--white);
 }
