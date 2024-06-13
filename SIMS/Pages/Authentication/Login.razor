@@ -1,0 +1,39 @@
+﻿@page "/login"
+
+@layout SIMS.Shared.Layouts.SubLayout
+
+@using SIMS.Shared.Components
+@using SIMS.Shared.Layouts
+
+<PageTitle>Login</PageTitle>
+
+<SubLayout>
+    <div class="container">
+        <div class="logo">
+            <Logo />
+        </div>
+
+        <h2 class="title">Welcome Back!</h2>
+
+        <button class="google-button" >
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <div id="g_id_onload"
+                 data-client_id="153760737781-9skhub91t8mc5g0khkoalrh2tja01jju.apps.googleusercontent.com"
+                 data-login_uri="https://localhost:7170/login-google"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="log_in_with"
+                 data-shape="circle"
+                 data-logo_alignment="center"
+                 data-width="400">
+            </div>
+        </button>
+    </div>
+</SubLayout>
+
+
+

@@ -1,0 +1,33 @@
+﻿@page "/admin"
+
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Shared.Layouts
+@using SIMS.Shared.Models
+@using SIMS.Shared.Components
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject SIMS.Shared.Services.MenuService MenuService
+
+<PageTitle>Admin</PageTitle>
+
+<h3>Admin Page</h3>
+
+@code {
+    private List<MenuItem> menuItems = new List<MenuItem>
+    {
+        new MenuItem { Label = "Account", Icon = "bi-person-gear", Url = "/admin/timetable" },
+        new MenuItem { Label = "Admin", Icon = "bi-person-lock", Url = "/admin/enrollment" },
+        new MenuItem { Label = "Lecturer", Icon = "bi-person-video3", Url = "/admin/courses" },
+        new MenuItem { Label = "Student", Icon = "bi-person-workspace", Url = "/admin/curriculum" },
+        new MenuItem { Label = "Courses", Icon = "bi-book", Url = "/admin/courses" },
+        new MenuItem { Label = "Subject", Icon = "bi-book", Url = "/admin/courses" },
+        new MenuItem { Label = "Semester", Icon = "bi-book", Url = "/admin/courses" },
+        new MenuItem { Label = "Department", Icon = "bi-award", Url = "/admin/department" },
+        new MenuItem { Label = "Major", Icon = "bi-kanban", Url = "/admin/major" },
+    };
+
+    protected override void OnInitialized()
+    {
+        MenuService.MenuItems = menuItems;
+    }
+}

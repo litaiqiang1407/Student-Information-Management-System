@@ -1,0 +1,28 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    .logo {
+        width: 200px;
+        height: 200px;
+    }
+
+    .title {
+        margin: 40px 0;
+        color: var(--primary-bold-color);
+        font-size: 3.2rem;
+        font-weight: 700;
+    }
+
+    .google-button {
+        padding: 0;
+        width: 404px;
+        height: 44px;
+        background-color: var(--white);
+        border: 2px solid var(--primary-color);
+        border-radius: 1000px;
+    }
+}

@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+@using SIMS.Shared.Components
+@using SIMS.Shared.Models
+@using Microsoft.AspNetCore.Components
+@using System.Collections.Generic
+@using SIMS.Shared.Services
+@inject SIMS.Shared.Services.MenuService MenuService
+
+<CascadingValue Value="this">
+    <div class="main-layout">
+        <div class="main-layout__container row">
+            <div class="col col-lg-2">
+                <Sidebar MenuItems="@MenuService.MenuItems" />
+            </div>
+            <div class="col col-lg-10">
+                @Body
+            </div>
+        </div>
+    </div>
+</CascadingValue>
+
+@code {
+    public List<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
+}

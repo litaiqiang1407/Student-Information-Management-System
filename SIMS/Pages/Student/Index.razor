@@ -1,0 +1,31 @@
+﻿@page "/student"
+
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Shared.Layouts
+@using SIMS.Shared.Models
+@using SIMS.Shared.Components
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject SIMS.Shared.Services.MenuService MenuService
+
+<PageTitle>Student</PageTitle>
+<h3>Student</h3>
+
+@code {
+
+    private List<MenuItem> menuItems = new List<MenuItem>
+    {
+        new MenuItem { Label = "Timetable", Icon = "bi-calendar-week", Url = "/student/timetable" },
+        new MenuItem { Label = "Enrollment", Icon = "bi-file-earmark-medical", Url = "/student/enrollment" },
+        new MenuItem { Label = "Courses", Icon = "bi-book", Url = "/student/courses" },
+        new MenuItem { Label = "Curriculum", Icon = "bi-journal-text", Url = "/student/curriculum" },
+        new MenuItem { Label = "Department", Icon = "bi-award", Url = "/student/department" },
+        new MenuItem { Label = "Major", Icon = "bi-kanban", Url = "/student/major" },
+        new MenuItem { Label = "Services", Icon = "bi-people", Url = "/student/services" },
+    };
+
+    protected override void OnInitialized()
+    {
+        MenuService.MenuItems = menuItems;
+    }
+}

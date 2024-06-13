@@ -1,0 +1,38 @@
+﻿[
+  {
+    "outputFile": "wwwroot/scss/site.css",
+    "inputFile": "wwwroot/scss/site.scss"
+  },
+  {
+    "outputFile": "wwwroot/css/GlobalStyles.css",
+    "inputFile": "wwwroot/css/GlobalStyles.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Logo/Logo.razor.css",
+    "inputFile": "Shared/Components/Logo/Logo.razor.scss"
+  },
+  {
+    "outputFile": "Pages/Authentication/Login.razor.css",
+    "inputFile": "Pages/Authentication/Login.razor.scss"
+  },
+  {
+    "outputFile": "Pages/Home/Layout.razor.css",
+    "inputFile": "wwwroot/css/GlobalStyles.scss"
+  },
+  {
+    "outputFile": "Pages/Home/Layout.razor.css",
+    "inputFile": "Pages/Home/Layout.razor.css"
+  },
+  {
+    "outputFile": "Pages/Home/Layout.razor.css",
+    "inputFile": "Pages/Home/Layout.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Logo.razor.css",
+    "inputFile": "Shared/Components/Logo.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Sidebar.razor.css",
+    "inputFile": "Shared/Components/Sidebar.razor.scss"
+  }
+]

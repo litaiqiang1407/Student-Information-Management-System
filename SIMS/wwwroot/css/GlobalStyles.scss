@@ -1,0 +1,79 @@
+@import "../bootstrap/scss/bootstrap.scss";
+
+@import url("https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+
+:root {
+    --primary-color: #38B6FF;
+    --primary-bold-color: #1E88E5;
+    --white: #FFF;
+    --black: #000;
+    --light-grey: #999;
+    --primary-text-color: #333;
+    --secondary-text-color: #666;
+    --secondary-background-color: #EDF2FB;
+    --delete-button-color: #FF4136;
+    --add-button-color: #2ECC40;
+    --edit-button-color: #FFC107;
+    --primary-2px-border: 2px solid #38B6FF;
+    --tranparent-border: 2px solid transparent;
+    /*--primary-hover-color: #1E88E5;*/
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    font-family: "Rubik", sans-serif;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    text-rendering: optimizeSpeed;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+button,
+input,
+[tabindex] {
+    border: none;
+    outline: none;
+
+    &:focus {
+        outline: none;
+    }
+}
+
+a[href] {
+    text-decoration: none;
+    color: var(--primary-text-color);
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.primary-button {
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 8px 32px;
+    font-size: 1.6rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: var(--tranparent-border);
+    border-radius: 100px;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background-color: var(--white);
+        color: var(--primary-color);
+        border: var(--primary-2px-border);
+    }
+}

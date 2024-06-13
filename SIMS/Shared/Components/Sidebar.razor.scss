@@ -1,0 +1,17 @@
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.sidebar {
+    .sidebar-header {
+        height: 160px;
+        @include flex-center;
+
+        .logo {
+            height: 120px;
+        }
+    }
+}

@@ -1,0 +1,9 @@
+﻿.sidebar .sidebar-header {
+  height: 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.sidebar .sidebar-header .logo {
+  height: 120px;
+}

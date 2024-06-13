@@ -1,0 +1,30 @@
+﻿@using SIMS.Shared.Models
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <a href="/" class="logo">
+            <Logo />
+        </a>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            @if (MenuItems != null)
+            {
+                @foreach (var item in MenuItems)
+                {
+                    <li>
+                        <a href="@item.Url" class="nav-link">
+                            <i class="bi @item.Icon"></i>
+                            <span>@item.Label</span>
+                        </a>
+                    </li>
+                }
+            }
+        </ul>
+    </nav>
+</div>
+
+@code {
+    [Parameter]
+    public List<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
+}
