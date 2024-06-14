@@ -1,0 +1,31 @@
+﻿@using SIMS.Shared.Models
+
+<header class="header">
+    <div class="header-top">
+               <a class="action-link">
+                    <i class="bi bi-bell action-icon"></i>
+                </a>
+        <a class="action-link">
+                    <i class="bi bi-person-circle action-icon"></i>
+                </a>
+    </div>
+    <div class="header-bottom">
+        <div>
+            <h1 class="header-title">
+                @Title
+            </h1>
+        </div>
+        <div>
+            <a class="add-button" href="add">
+                <i class="bi bi-plus-lg add-icon"></i>
+                <span class="add-content">Add</span>
+            </a>
+        </div>
+        
+    </div>
+</header>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+}

@@ -9,10 +9,12 @@
 <CascadingValue Value="this">
     <div class="main-layout">
         <div class="main-layout__container row">
-            <div class="col col-lg-2">
+            <div class="col col-lg-2" style="padding: 0;">
                 <Sidebar MenuItems="@MenuService.MenuItems" />
             </div>
-            <div class="col col-lg-10">
+            <div class="col col-lg-10" style="padding: 0;">
+                <Header Title="@HeaderTitle" />
+                <Table/>
                 @Body
             </div>
         </div>
@@ -21,4 +23,7 @@
 
 @code {
     public List<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
+
+    [Parameter]
+    public string HeaderTitle { get; set; }
 }

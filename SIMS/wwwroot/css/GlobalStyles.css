@@ -11897,6 +11897,7 @@ textarea.form-control-lg {
 }
 :root {
   --primary-color: #38B6FF;
+  --primary-hover-color: rgba(56, 182, 255, 0.6);
   --primary-bold-color: #1E88E5;
   --white: #FFF;
   --black: #000;

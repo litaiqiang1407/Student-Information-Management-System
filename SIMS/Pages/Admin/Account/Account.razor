@@ -1,0 +1,17 @@
+﻿@page "/admin/account"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Shared.Models
+@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+
+<PageTitle>Account</PageTitle>
+
+<h3>Account</h3>
+
+@code {
+    private string HeaderTitle = "Account";
+
+    protected override void OnInitialized()
+    {
+        HeaderTitleService.Title = HeaderTitle;
+    }
+}

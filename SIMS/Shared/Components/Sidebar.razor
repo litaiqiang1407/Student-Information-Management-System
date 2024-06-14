@@ -1,4 +1,5 @@
 ﻿@using SIMS.Shared.Models
+@using SIMS.Shared.Layouts
 
 <div class="sidebar">
     <div class="sidebar-header">
@@ -43,6 +44,6 @@
         foreach (var menuItem in MenuItems)
         {
             menuItem.IsActive = (menuItem == item);
-        }
+        }             
     }
 }
