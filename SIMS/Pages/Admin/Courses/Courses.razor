@@ -1,10 +1,17 @@
 ﻿@page "/admin/courses"
 @layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Shared.Models
+@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 
 <PageTitle>Courses</PageTitle>
 
 <h3>Courses</h3>
 
 @code {
+    private string HeaderTitle = "Courses";
 
+    protected override void OnInitialized()
+    {
+        HeaderTitleService.Title = HeaderTitle;
+    }
 }

@@ -4,7 +4,9 @@
 @using Microsoft.AspNetCore.Components
 @using System.Collections.Generic
 @using SIMS.Shared.Services
+@using System.ComponentModel;
 @inject SIMS.Shared.Services.MenuService MenuService
+@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 
 <CascadingValue Value="this">
     <div class="main-layout">
@@ -13,7 +15,7 @@
                 <Sidebar MenuItems="@MenuService.MenuItems" />
             </div>
             <div class="col col-lg-10" style="padding: 0;">
-                <Header Title="@HeaderTitle" />
+                <Header Title="@HeaderTitleService.Title" />
                 <Table/>
                 @Body
             </div>
@@ -24,6 +26,16 @@
 @code {
     public List<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
 
-    [Parameter]
-    public string HeaderTitle { get; set; }
+    protected override void OnInitialized()
+    {
+        HeaderTitleService.PropertyChanged += HeaderTitleService_PropertyChanged;
+    }
+
+    private void HeaderTitleService_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(HeaderTitleService.Title))
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
 }

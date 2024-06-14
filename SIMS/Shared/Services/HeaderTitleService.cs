@@ -1,9 +1,30 @@
 ﻿using SIMS.Shared.Models;
+using System.ComponentModel;
 
 namespace SIMS.Shared.Services
 {
-    public class HeaderTitleService
+    public class HeaderTitleService : INotifyPropertyChanged
     {
-        public string Title { get; set; }
+        private string _title = "SIMS";
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public string Title
+        {
+            get => _title;
+            set
+            {
+                if (_title != value)
+                {
+                    _title = value;
+                    OnPropertyChanged(nameof(Title));
+                }
+            }
+        }
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
