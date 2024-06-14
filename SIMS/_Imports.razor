@@ -1,4 +1,8 @@
 ﻿@using System.Net.Http
+@using System.Security.Claims
+@using System.Threading.Tasks
+@using System.ComponentModel;
+
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
@@ -6,9 +10,20 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
-@using SIMS
-@using SIMS.Shared
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Authentication.Google
-@using System.Security.Claims
-@using System.Threading.Tasks
+@using Microsoft.AspNetCore.Components.Server;
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.EntityFrameworkCore;
+@using Microsoft.AspNetCore.Components;
+
+
+@using SIMS
+@using SIMS.Data;
+@using SIMS.Data.Entities;
+@using SIMS.Shared
+@using SIMS.Shared.Layouts
+@using SIMS.Shared.Models
+@using SIMS.Shared.Components
+@using SIMS.Shared.Functions
+@using SIMS.Shared.Services;

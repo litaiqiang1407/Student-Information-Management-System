@@ -1,12 +1,8 @@
 ﻿@inherits LayoutComponentBase
-@using SIMS.Shared.Components
-@using SIMS.Shared.Models
-@using Microsoft.AspNetCore.Components
-@using System.Collections.Generic
-@using SIMS.Shared.Services
-@using System.ComponentModel;
 @inject SIMS.Shared.Services.MenuService MenuService
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject NavigationManager Navigation
+@inject DisplayComponent DisplayComponent
 
 <CascadingValue Value="this">
     <div class="main-layout">
@@ -15,8 +11,16 @@
                 <Sidebar MenuItems="@MenuService.MenuItems" />
             </div>
             <div class="col col-lg-10" style="padding: 0;">
-                <Header Title="@HeaderTitleService.Title" />
-                <Table/>
+                <Header Title="@HeaderTitleService.Title" /> 
+                
+                @if (Display())
+                {
+                    <Banner/>
+                }
+                else
+                {
+                    <Table />
+                }
                 @Body
             </div>
         </div>
@@ -29,6 +33,7 @@
     protected override void OnInitialized()
     {
         HeaderTitleService.PropertyChanged += HeaderTitleService_PropertyChanged;
+        DisplayComponent.Navigation = Navigation;
     }
 
     private void HeaderTitleService_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -37,5 +42,11 @@
         {
             InvokeAsync(StateHasChanged);
         }
+    }
+
+    private bool Display()
+    {
+        string[] uris = { "admin", "student", "lecturer" };
+        return DisplayComponent.Display(uris);
     }
 }

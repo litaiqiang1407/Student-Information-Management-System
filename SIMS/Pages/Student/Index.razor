@@ -1,17 +1,17 @@
 ﻿@page "/student"
 
 @layout SIMS.Shared.Layouts.MainLayout
-@using SIMS.Shared.Layouts
-@using SIMS.Shared.Models
-@using SIMS.Shared.Components
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
 @inject SIMS.Shared.Services.MenuService MenuService
+@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+
 
 <PageTitle>Student</PageTitle>
 <h3>Student</h3>
 
 @code {
+    private string HeaderTitle = "Welcome back!";
 
     private List<MenuItem> menuItems = new List<MenuItem>
     {
@@ -27,5 +27,6 @@
     protected override void OnInitialized()
     {
         MenuService.MenuItems = menuItems;
+        HeaderTitleService.Title = HeaderTitle;
     }
 }

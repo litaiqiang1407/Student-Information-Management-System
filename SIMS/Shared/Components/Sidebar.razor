@@ -1,9 +1,8 @@
-﻿@using SIMS.Shared.Models
-@using SIMS.Shared.Layouts
+﻿@inject NavigationManager Navigation
 
 <div class="sidebar">
     <div class="sidebar-header">
-        <a href="/" class="logo">
+        <a href="@hrefLink" class="logo">
             <Logo />
         </a>
     </div>
@@ -39,11 +38,38 @@
     [Parameter]
     public List<MenuItem> MenuItems { get; set; } = new List<MenuItem>();
 
+    string hrefLink = "";
+
     private void SetActive(MenuItem item)
     {
         foreach (var menuItem in MenuItems)
         {
             menuItem.IsActive = (menuItem == item);
         }             
+    }
+
+    protected override void OnInitialized()
+    {
+        NavagateToHome();
+    }
+
+    private void NavagateToHome()
+    {
+        var uri = Navigation.ToBaseRelativePath(Navigation.Uri);
+
+        if (uri.StartsWith("/admin"))
+        {
+            hrefLink = "/admin";
+        }
+        else if (uri.Contains("/student"))
+        {
+            hrefLink = "/student";
+        }
+        else if (uri.Contains("/lecturer"))
+        {
+            hrefLink = "/lecturer";
+        }
+
+        hrefLink = "/";
     }
 }

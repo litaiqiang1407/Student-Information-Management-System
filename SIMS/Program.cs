@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SIMS.Shared.Services;
 using SIMS.Data;
+using SIMS.Shared.Functions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<MenuService>();
 builder.Services.AddSingleton<HeaderTitleService>();
+builder.Services.AddSingleton<DisplayComponent>();
 
 
 builder.Services.AddHttpContextAccessor();

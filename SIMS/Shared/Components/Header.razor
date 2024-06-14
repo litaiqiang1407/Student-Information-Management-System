@@ -1,5 +1,7 @@
-﻿@using SIMS.Shared.Models
-@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+﻿@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject DisplayComponent DisplayComponent
+@inject NavigationManager Navigation
+
 
 <header class="header">
     <div class="header-top">
@@ -17,10 +19,13 @@
             </h1>
         </div>
         <div>
-            <a class="add-button" href="add">
-                <i class="bi bi-plus-lg add-icon"></i>
+            @if (DisplayAddButton())
+            {
+                <a class="add-button" href="add">
+                    <i class="bi bi-plus-lg add-icon"></i>
                 <span class="add-content">Add</span>
             </a>
+            }
         </div>
         
     </div>
@@ -29,4 +34,15 @@
 @code {
     [Parameter]
     public string Title { get; set; }
+
+    private bool DisplayAddButton()
+    {
+        var uri = Navigation.ToBaseRelativePath(Navigation.Uri);
+
+        if (uri.EndsWith("management"))
+        {
+            return true;
+        }
+        return false;
+    }
 }
