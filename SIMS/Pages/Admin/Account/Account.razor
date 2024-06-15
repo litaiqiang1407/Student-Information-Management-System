@@ -9,17 +9,32 @@
 
 <h3>Account</h3>
 
-@foreach (var account in accounts)
-{
-    <div class="card">
-        <div class="card-body">
-            <p class="card-text">@account.MemberCode</p>
-            <p class="card-text">@account.Email</p>
-            <p class="card-text">@account.CreatedAt</p>
-            <p class="card-text">@account.UpdatedAt</p>
-        </div>
-    </div>
-}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>#</th> 
+                <th>Member Code</th>
+                <th>Email</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody class="table-group-divider">
+            @foreach (var (account, index) in accounts.Select((value, i) => (value, i)))
+            {
+                <tr>
+                    <td>@(index + 1)</td> 
+                    <td>@account.MemberCode</td>
+                    <td>@account.Email</td>
+                    <td>@account.CreatedAt</td>
+                    <td>@account.UpdatedAt</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 @code {
     private string HeaderTitle = "Account";
