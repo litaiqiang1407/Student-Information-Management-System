@@ -16,11 +16,12 @@ namespace SIMS_APIs.Controllers
             _configuration = configuration;
         }
 
+        // Accounts
         [HttpGet]
         [Route("GetAccount")]
         public JsonResult GetAccount()
         {
-            string getAccountQuery = "SELECT * FROM Account";
+            string getAccountQuery = "SELECT MemberCode, Email, CreatedAt, UpdatedAt FROM Account";
 
             DataTable dt = new DataTable();
             string sqlDataSource = _configuration.GetConnectionString("SIMSConnection");
