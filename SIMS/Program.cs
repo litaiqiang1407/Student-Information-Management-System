@@ -18,6 +18,7 @@ builder.Services.AddSingleton<MenuService>();
 builder.Services.AddSingleton<HeaderTitleService>();
 builder.Services.AddSingleton<DisplayComponent>();
 
+builder.Services.AddHttpClient();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();

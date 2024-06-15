@@ -1,11 +1,24 @@
 ﻿@page "/admin/account-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities;
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 
 <PageTitle>Account</PageTitle>
 
 <h3>Account</h3>
+
+@foreach (var account in accounts)
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@account.ID</h5>
+            <p class="card-text">@account.MemberCode</p>
+            <p class="card-text">@account.Email</p>
+        </div>
+    </div>
+}
 
 @code {
     private string HeaderTitle = "Account";
@@ -13,5 +26,29 @@
     protected override void OnInitialized()
     {
         HeaderTitleService.Title = HeaderTitle;
+    }
+
+    public class Accounts
+    {
+        public int ID { get; set; }
+        public string MemberCode { get; set; }
+        public string Email { get; set; }
+    }
+
+    string API_URL = "https://localhost:7006/";
+    private IEnumerable<Accounts> accounts = Array.Empty<Accounts>();
+
+    private async Task LoadAccounts()
+    {
+        HttpClient client = new HttpClient();
+        HttpResponseMessage response = await client.GetAsync(API_URL + "api/SIMS/GetAccount");
+        client.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        accounts = await JsonSerializer.DeserializeAsync<IEnumerable<Accounts>>(responseStream);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.LoadAccounts();
     }
 }
