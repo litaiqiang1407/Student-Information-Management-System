@@ -2,7 +2,7 @@
 
 namespace SIMS.Data.Entities
 {
-    public class Enrollment
+    public class Enrollments
     {
         private Guid ID;
         private Guid AccountID;
@@ -10,7 +10,7 @@ namespace SIMS.Data.Entities
         private Grade Grade;
         private string Status;
 
-        public Enrollment()
+        public Enrollments()
         {
             ID = Guid.NewGuid();
         }

@@ -1,6 +1,6 @@
 ﻿namespace SIMS.Data.Entities
 {
-    public class Course
+    public class Courses
     {
         private Guid ID;
         private string Name;
@@ -11,7 +11,7 @@
         private DateTime StartDate;
         private DateTime EndDate;
 
-        public Course()
+        public Courses()
         {
             ID = Guid.NewGuid();
         }

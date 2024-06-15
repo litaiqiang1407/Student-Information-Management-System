@@ -1,13 +1,13 @@
 ﻿namespace SIMS.Data.Entities
 {
-    public class Department
+    public class Roles
     {
         private Guid ID;
-        private string Name;     
+        private string Name;
 
-        public Department()
+        public Roles()
         {
-            ID = Guid.NewGuid();          
+            ID = Guid.NewGuid();
         }
 
         public Guid GetID()

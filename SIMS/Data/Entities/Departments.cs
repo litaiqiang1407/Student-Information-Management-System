@@ -1,14 +1,13 @@
 ﻿namespace SIMS.Data.Entities
 {
-    public class Major
+    public class Departments
     {
         private Guid ID;
-        private Guid DepartmentID;
-        private string Name;       
+        private string Name;     
 
-        public Major()
+        public Departments()
         {
-            ID = Guid.NewGuid();
+            ID = Guid.NewGuid();          
         }
 
         public Guid GetID()
@@ -29,16 +28,6 @@
         public void SetName(string name)
         {
             this.Name = name;
-        }
-
-        public Guid GetDepartmentID()
-        {
-            return this.DepartmentID;
-        }
-
-        public void SetDepartmentID(Guid departmentID)
-        {
-            this.DepartmentID = departmentID;
         }
     }
 }

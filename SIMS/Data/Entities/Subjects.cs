@@ -1,6 +1,6 @@
 ﻿namespace SIMS.Data.Entities
 {
-    public class Subject
+    public class Subjects
     {
         private Guid ID;
         private string SubjectCode;
@@ -9,7 +9,7 @@
         private string Slots;
         private string Fee;
 
-        public Subject()
+        public Subjects()
         {
             ID = Guid.NewGuid();
         }

@@ -1,13 +1,13 @@
 ﻿namespace SIMS.Data.Entities
 {
-    public class Semester
+    public class Semesters
     {
         private Guid ID;
         private string Name;
         private DateTime StartDate;
         private DateTime EndDate;
 
-        public Semester()
+        public Semesters()
         {
             ID = Guid.NewGuid();
         }

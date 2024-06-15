@@ -1,13 +1,13 @@
 ﻿namespace SIMS.Data.Entities
 {
-    public class StudentDetail
+    public class StudentDetails
     {
         private Guid ID;
         private Guid AccountID;
         private Guid MajorID;
         private string AdmissionCourse;
 
-        public StudentDetail()
+        public StudentDetails()
         {
             ID = Guid.NewGuid();
         }

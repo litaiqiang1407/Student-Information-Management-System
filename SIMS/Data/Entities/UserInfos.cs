@@ -2,7 +2,7 @@
 
 namespace SIMS.Data.Entities
 {
-    public class UserInfo
+    public class UserInfos
     {
         private Guid ID;
         private Guid AccountID;
@@ -17,7 +17,7 @@ namespace SIMS.Data.Entities
         private string PermanentAddress;
         private string TemporaryAddress;
 
-        public UserInfo()
+        public UserInfos()
         {
             ID = Guid.NewGuid();
         }

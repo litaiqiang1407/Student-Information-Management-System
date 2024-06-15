@@ -5,7 +5,6 @@ namespace SIMS.Data
 {
     public class SIMSDbContext : DbContext
     {
-        string connectionString = "Data Source=TAIKUN\\SQLEXPRESS;Initial Catalog=SIMS;Persist Security Info=True;User ID=lythaicuong;Password=***********;Trust Server Certificate=True"; 
         public SIMSDbContext(DbContextOptions<SIMSDbContext> options) : base(options)
         {
 
@@ -14,7 +13,6 @@ namespace SIMS.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
-            optionsBuilder.UseSqlServer(connectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,17 +20,17 @@ namespace SIMS.Data
             base.OnModelCreating(modelBuilder);
         }
 
-        public DbSet<Account> Accounts { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
-        public DbSet<UserInfo> UserInfos { get; set; }
-        public DbSet<Department> Departments { get; set; }
-        public DbSet<Major> Majors { get; set; }
-        public DbSet<Subject> Subjects { get; set; }
-        public DbSet<Semester> Semesters { get; set; }
-        public DbSet<Course> Courses { get; set; }
-        public DbSet<Enrollment> Enrollments { get; set; }
-        public DbSet<StudentDetail> StudentDetails { get; set; }
+        public DbSet<Accounts> Accounts { get; set; }
+        public DbSet<Roles> Roles { get; set; }
+        public DbSet<UserRoles> UserRoles { get; set; }
+        public DbSet<UserInfos> UserInfos { get; set; }
+        public DbSet<Departments> Departments { get; set; }
+        public DbSet<Majors> Majors { get; set; }
+        public DbSet<Subjects> Subjects { get; set; }
+        public DbSet<Semesters> Semesters { get; set; }
+        public DbSet<Courses> Courses { get; set; }
+        public DbSet<Enrollments> Enrollments { get; set; }
+        public DbSet<StudentDetails> StudentDetails { get; set; }
 
     }
 }

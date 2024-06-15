@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SIMS.Data.Entities
 {
-    public class Account
+    public class Accounts
     {
         [Key]
         public Guid ID { get; set; }
@@ -13,7 +13,7 @@ namespace SIMS.Data.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        public Account()
+        public Accounts()
         {
             ID = Guid.NewGuid();
             CreatedAt = DateTime.Now;
