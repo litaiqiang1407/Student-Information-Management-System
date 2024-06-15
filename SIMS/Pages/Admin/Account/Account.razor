@@ -4,60 +4,43 @@
 @using System.Text.Json;
 @using SIMS.Data.Entities;
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
 <PageTitle>Account</PageTitle>
 
-<h3>Account</h3>
-
-<div class="table-responsive">
-    <table class="table table-bordered table-hover">
-        <thead>
-            <tr>
-                <th>#</th> 
-                <th>Member Code</th>
-                <th>Email</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody class="table-group-divider">
-            @foreach (var (account, index) in accounts.Select((value, i) => (value, i)))
-            {
-                <tr>
-                    <td>@(index + 1)</td> 
-                    <td>@account.MemberCode</td>
-                    <td>@account.Email</td>
-                    <td>@account.CreatedAt</td>
-                    <td>@account.UpdatedAt</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+@if (accounts != null)
+{
+    <Table Data="@accounts" Columns="@columns" />
+}
+else
+{
+    <p>Loading...</p>
+}
 
 @code {
     private string HeaderTitle = "Account";
-
-    protected override void OnInitialized()
-    {
-        HeaderTitleService.Title = HeaderTitle;
-    }
-
-    string API_URL = "https://localhost:7006/";
-    private IEnumerable<Accounts> accounts = Array.Empty<Accounts>();
-
-    private async Task LoadAccounts()
-    {
-        HttpClient client = new HttpClient();
-        HttpResponseMessage response = await client.GetAsync(API_URL + "api/SIMS/GetAccount");
-        client.Dispose();
-        using var responseStream = await response.Content.ReadAsStreamAsync();
-        accounts = await JsonSerializer.DeserializeAsync<IEnumerable<Accounts>>(responseStream);
-    }
+    private IEnumerable<Accounts> accounts;
+    private List<TableColumn<Accounts>> columns;
 
     protected override async Task OnInitializedAsync()
     {
-        await this.LoadAccounts();
+        HeaderTitleService.Title = HeaderTitle;
+        await LoadAccounts();
+    }
+
+    private async Task LoadAccounts()
+    {
+        accounts = await DatabaseFunctions.LoadData<Accounts>("api/SIMS/GetAccount");
+
+        // Define columns for the table
+        columns = new List<TableColumn<Accounts>>
+        {
+            new TableColumn<Accounts> { Header = "Member Code", Value = acc => acc.MemberCode },
+            new TableColumn<Accounts> { Header = "Email", Value = acc => acc.Email },
+            new TableColumn<Accounts> { Header = "Name", Value = acc => acc.Name },
+            new TableColumn<Accounts> { Header = "Role", Value = acc => acc.Role },
+            new TableColumn<Accounts> { Header = "Created At", Value = acc => acc.CreatedAt.ToString("dd/MM/yyyy") },
+            new TableColumn<Accounts> { Header = "Updated At", Value = acc => acc.UpdatedAt.ToString("dd/MM/yyyy") },
+        };
     }
 }

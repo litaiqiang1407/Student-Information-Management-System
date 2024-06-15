@@ -21,7 +21,17 @@ namespace SIMS_APIs.Controllers
         [Route("GetAccount")]
         public JsonResult GetAccount()
         {
-            string getAccountQuery = "SELECT MemberCode, Email, CreatedAt, UpdatedAt FROM Account";
+            string getAccountQuery = "SELECT " +
+                                     "A.MemberCode, " +
+                                     "A.Email, " +
+                                     "CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, " +
+                                     "CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, " +
+                                     "UI.Name AS Name, " +
+                                     "R.Name AS Role " +
+                                     "FROM Account A " +
+                                     "LEFT JOIN UserInfo UI ON A.ID = UI.AccountID " +
+                                     "LEFT JOIN UserRole UR ON A.ID = UR.AccountID " +
+                                     "LEFT JOIN Role R ON UR.RoleID = R.ID";
 
             DataTable dt = new DataTable();
             string sqlDataSource = _configuration.GetConnectionString("SIMSConnection");

@@ -1,18 +1,71 @@
-﻿<h3>Table</h3>
+﻿@typeparam TItem
 
 <div class="container">
     @* Filter *@
     <div class="filter-container row">
         <div class="filter col col-lg-6">
-
+            @* Filter *@
         </div>
-        <div class="search col-lg-6"></div>
+        <div class="search col-lg-6">
+            @* Search *@
+        </div>
     </div>
 
     @* Table *@
-
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead >
+                <tr>
+                    <th class="table-header">NO.</th>
+                    @foreach (var col in Columns)
+                    {
+                        <th class="table-header">@col.Header</th>
+                    }
+                    <th class="table-header">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                @foreach (var (item, index) in Data.Select((value, i) => (value, i)))
+                {
+                    <tr>
+                        <td>@(index + 1)</td>
+                        @foreach (var col in Columns)
+                        {
+                            <td>@col.Value(item)</td>
+                        }
+                        <td>
+                            <div class="button-group">
+                                <button class="update-button" @onclick="@(() => UpdateItem(item))">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="delete-button" @onclick="@(() => DeleteItem(item))">
+                                    <i class="bi bi-x-square"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @code {
+    [Parameter]
+    public IEnumerable<TItem> Data { get; set; }
 
+    [Parameter]
+    public List<TableColumn<TItem>> Columns { get; set; }
+
+    private void UpdateItem(TItem item)
+    {
+        // Implement your update logic here
+        Console.WriteLine($"Update item: {item}");
+    }
+
+    private void DeleteItem(TItem item)
+    {
+        // Implement your delete logic here
+        Console.WriteLine($"Delete item: {item}");
+    }
 }

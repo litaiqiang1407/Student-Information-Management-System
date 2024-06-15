@@ -46,5 +46,9 @@
   {
     "outputFile": "Shared/Components/BannerImg.razor.css",
     "inputFile": "Shared/Components/BannerImg.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Table.razor.css",
+    "inputFile": "Shared/Components/Table.razor.scss"
   }
 ]

@@ -17,6 +17,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<MenuService>();
 builder.Services.AddSingleton<HeaderTitleService>();
 builder.Services.AddSingleton<DisplayComponent>();
+builder.Services.AddScoped<DatabaseInteractionFunctions>();
 
 builder.Services.AddHttpClient();
 

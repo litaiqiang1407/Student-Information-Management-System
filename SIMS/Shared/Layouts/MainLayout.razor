@@ -10,7 +10,7 @@
             <div class="col col-lg-2" style="padding: 0;">
                 <Sidebar MenuItems="@MenuService.MenuItems" />
             </div>
-            <div class="col col-lg-10" style="padding: 0;">
+            <div class="col col-lg-10" style="padding: 0 0 0 1px;">
                 <Header Title="@HeaderTitleService.Title" /> 
                 
                 @if (Display())
@@ -19,7 +19,7 @@
                 }
                 else
                 {
-                    <Table />
+                    
                 }
                 @Body
             </div>

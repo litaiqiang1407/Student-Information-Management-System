@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SIMS", "SIMS\SIMS.csproj", "{3277A902-FF62-4EFB-AD69-F995966D4D83}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SIMS_APIs", "SIMS_APIs\SIMS_APIs.csproj", "{0ED3041D-EB51-4127-95E6-659825300119}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SIMS_APIs", "SIMS_APIs\SIMS_APIs.csproj", "{0ED3041D-EB51-4127-95E6-659825300119}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

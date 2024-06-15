@@ -1,0 +1,16 @@
+.container {
+    padding: 20px;
+
+    .table {
+        border: var(--primary-2px-border);
+
+        .table-header {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .table-group-divider {
+            border-top: var(--primary-2px-border);
+        }
+    }
+}
