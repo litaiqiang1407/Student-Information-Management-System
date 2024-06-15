@@ -1,4 +1,12 @@
-﻿.header .header-top {
+﻿.header {
+  position: sticky;
+  top: 0;
+  right: 0;
+  height: 96px;
+  background-color: var(--white);
+  z-index: 1000;
+}
+.header .header-top {
   display: flex;
   justify-content: flex-end;
   align-items: center;
