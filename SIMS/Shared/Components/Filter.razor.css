@@ -68,3 +68,6 @@
   color: var(--primary-text-color);
   cursor: pointer;
 }
+.container .search .search-field {
+  height: 100%;
+}
