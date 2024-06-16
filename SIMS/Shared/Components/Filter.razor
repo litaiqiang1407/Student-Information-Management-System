@@ -10,21 +10,23 @@
 
         @foreach (var filter in Filters)
         {
-            <button class="filter-item filter-button" @onclick="ShowFilterItem">
-                <span class="filter-label">@filter.Header</span>
-                <i class="@filterIcon show-icon"></i>
-            </button>
-            @if (showFilter)
-            {
-                <ul></ul>
-                <select class="form-control filter-select filter-button" @bind="@filter.SelectedValue">
-                    <option value="" class="filter-option">All</option>
-                    @foreach (var option in filter.Options)
-                    {
-                        <option value="@option" class="filter-option">@option</option>
-                    }
-                </select>
-            }           
+            <div class="filter-item-wrapper">
+                <button class="filter-item filter-button" @onclick="ShowFilterItem">
+                    <span class="filter-label">@filter.Header</span>
+                    <i class="@filterIcon show-icon"></i>
+                </button>
+                <div class="filter-select-wrapper @(showFilter ? "show" : "hide")">
+                    <ul class="filter-select">
+                        @foreach (var option in filter.Options)
+                        {
+                            <li class="filter-option">
+                                <input type="checkbox" id="@($"checkbox-{filter.Header}-{option}")" class="filter-checkbox" value="@option" @onchange="() => OnOptionChanged(filter, option)" />
+                                <label for="@($"checkbox-{filter.Header}-{option}")" class="filter-label">@option</label>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
         }     
     </div>
     <div class="search col col-lg-6">
@@ -43,5 +45,10 @@
     private void ShowFilterItem()
     {
         showFilter = !showFilter;
+    }
+
+    private void OnOptionChanged(Filters<TItem> filter, string option)
+    {
+        // Handle option change logic here
     }
 }

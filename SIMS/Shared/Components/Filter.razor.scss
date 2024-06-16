@@ -1,12 +1,19 @@
 .container {
     padding: 10px 24px;
 
+    .filter {
+        display: flex;
+        align-items: center;
+    }
+
     .filter-button {
+        position: relative;
         border-radius: 100px;
         padding: 4px 12px;
         margin-right: 12px;
         background-color: var(--white);
         border: 1px solid var(--light-grey);
+        cursor: pointer;
 
         .filter-icon {
             color: var(--light-grey);
@@ -20,15 +27,58 @@
         .show-icon {
             color: var(--light-grey);
             margin-left: 4px;
+            transition: transform 0.3s ease;
+        }
+
+        &.show .show-icon {
+            transform: rotate(180deg);
         }
     }
 
-    .filter-select {
-        margin-top: 8px; 
-        width: 50%; 
-    }
+    .filter-item-wrapper {
+        position: relative;
 
-    .filter-option {
-        color: var(--primary-text-color);
+        .filter-select-wrapper {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            padding: 8px 40px 8px 12px;
+            margin-top: 8px;
+            background-color: var(--white);
+            border: 1px solid var(--light-grey);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+
+            &.show {
+                max-height: 200px;
+                opacity: 1;
+            }
+
+            .filter-select {
+                padding: 0;
+
+                .filter-option {
+                    display: flex;
+                    align-items: center;   
+
+                    &:hover {
+                        background-color: var(--primary-hover-color);
+                    }
+
+                    .filter-checkbox {
+                        margin-right: 8px;
+                    }
+
+                    .filter-label {
+                        color: var(--primary-text-color);
+                        cursor: pointer;
+                    }
+                }
+            }
+        }
     }
 }
