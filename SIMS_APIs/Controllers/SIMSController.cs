@@ -55,30 +55,7 @@ namespace SIMS_APIs.Controllers
             }
 
             return new JsonResult(roles);
-        }
-
-        // Get Account by Role
-        //[HttpGet]
-        //[Route("GetFilterAccount")]
-        //public async Task<JsonResult> GetFilterAccount([FromForm] string role)
-        //{
-        //    string getFilterAccountQuery = "SELECT " +
-        //                                   "A.MemberCode, " +
-        //                                   "A.Email, " +
-        //                                   "CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, " +
-        //                                   "CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, " +
-        //                                   "UI.Name AS Name, " +
-        //                                   "R.Name AS Role " +
-        //                                   "FROM Account A " +
-        //                                   "LEFT JOIN UserInfo UI ON A.ID = UI.AccountID " +
-        //                                   "LEFT JOIN UserRole UR ON A.ID = UR.AccountID " +
-        //                                   "LEFT JOIN Role R ON UR.RoleID = R.ID " +
-        //                                   "WHERE R.Name = @role";
-
-        //    DataTable dt = await _dbInteraction.GetData(getFilterAccountQuery);
-
-        //    return new JsonResult(dt);
-        //}
+        }    
 
         [HttpPost]
         [Route("AddAccount")]
