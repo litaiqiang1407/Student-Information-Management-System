@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SIMS.Shared.Services;
 using SIMS.Data;
 using SIMS.Shared.Functions;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,13 @@ builder.Services.AddSingleton<MenuService>();
 builder.Services.AddSingleton<HeaderTitleService>();
 builder.Services.AddSingleton<DisplayComponent>();
 builder.Services.AddScoped<DatabaseInteractionFunctions>();
+
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+    logging.AddConsole();
+    logging.AddDebug();
+});
 
 builder.Services.AddHttpClient();
 
@@ -51,7 +59,6 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

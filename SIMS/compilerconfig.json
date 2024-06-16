@@ -50,5 +50,13 @@
   {
     "outputFile": "Shared/Components/Table.razor.css",
     "inputFile": "Shared/Components/Table.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Loading.razor.css",
+    "inputFile": "Shared/Components/Loading.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Filter.razor.css",
+    "inputFile": "Shared/Components/Filter.razor.scss"
   }
 ]

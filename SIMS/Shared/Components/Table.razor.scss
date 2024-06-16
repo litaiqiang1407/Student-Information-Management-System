@@ -1,5 +1,5 @@
 .container {
-    padding: 20px;
+    padding: 10px 24px;
 
     .table {
         border: var(--primary-2px-border);
@@ -11,6 +11,32 @@
 
         .table-group-divider {
             border-top: var(--primary-2px-border);
+
+            .button-group {
+                display: flex;
+                justify-content: space-between;
+                padding: 0 8px;
+
+                .update-button {
+                    background-color: var(--update-button-color);
+                    border-radius: 4px;
+                    color: var(--white);
+
+                    &:hover {
+                        background-color: var(--primary-color);
+                    }
+                }
+
+                .delete-button {
+                    background-color: var(--delete-button-color);
+                    border-radius: 4px;
+                    color: var(--white);
+
+                    &:hover {
+                        background-color: var(--primary-color);
+                    }
+                }
+            }
         }
     }
 }

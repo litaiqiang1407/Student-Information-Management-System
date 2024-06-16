@@ -1,0 +1,28 @@
+﻿.container {
+  padding: 10px 24px;
+}
+.container .filter-button {
+  border-radius: 100px;
+  padding: 4px 12px;
+  margin-right: 12px;
+  background-color: var(--white);
+  border: 1px solid var(--light-grey);
+}
+.container .filter-button .filter-icon {
+  color: var(--light-grey);
+  margin-right: 4px;
+}
+.container .filter-button .filter-label {
+  color: var(--primary-text-color);
+}
+.container .filter-button .show-icon {
+  color: var(--light-grey);
+  margin-left: 4px;
+}
+.container .filter-select {
+  margin-top: 8px;
+  width: 50%;
+}
+.container .filter-option {
+  color: var(--primary-text-color);
+}

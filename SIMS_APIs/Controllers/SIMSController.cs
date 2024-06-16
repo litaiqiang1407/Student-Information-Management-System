@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Mvc;
+using SIMS_APIs.Functions;
 using System.Data;
 
 namespace SIMS_APIs.Controllers
@@ -9,17 +8,17 @@ namespace SIMS_APIs.Controllers
     [ApiController]
     public class SIMSController : ControllerBase
     {
-        private IConfiguration _configuration;
+        private readonly DatabaseInteraction _dbInteraction;
 
         public SIMSController(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _dbInteraction = new DatabaseInteraction(configuration);
         }
 
         // Accounts
         [HttpGet]
         [Route("GetAccount")]
-        public JsonResult GetAccount()
+        public async Task<JsonResult> GetAccount()
         {
             string getAccountQuery = "SELECT " +
                                      "A.MemberCode, " +
@@ -33,45 +32,61 @@ namespace SIMS_APIs.Controllers
                                      "LEFT JOIN UserRole UR ON A.ID = UR.AccountID " +
                                      "LEFT JOIN Role R ON UR.RoleID = R.ID";
 
-            DataTable dt = new DataTable();
-            string sqlDataSource = _configuration.GetConnectionString("SIMSConnection");
-            SqlDataReader myReader;
-            using(SqlConnection myCon = new SqlConnection(sqlDataSource))
-            {
-                myCon.Open();
-                using(SqlCommand myCommand = new SqlCommand(getAccountQuery, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    dt.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
+            DataTable dt = await _dbInteraction.GetData(getAccountQuery);
 
             return new JsonResult(dt);
         }
 
+        [HttpGet]
+        [Route("GetRole")]
+        public async Task<JsonResult> GetRoleAccount()
+        {
+            string getRoleAccountQuery = "SELECT " +
+                                         "R.Name AS Role " +
+                                         "FROM Role R";
+
+            DataTable dt = await _dbInteraction.GetData(getRoleAccountQuery);
+
+            List<string> roles = new List<string>();
+
+            foreach (DataRow row in dt.Rows)
+            {
+                roles.Add(row["Role"].ToString());
+            }
+
+            return new JsonResult(roles);
+        }
+
+        // Get Account by Role
+        //[HttpGet]
+        //[Route("GetFilterAccount")]
+        //public async Task<JsonResult> GetFilterAccount([FromForm] string role)
+        //{
+        //    string getFilterAccountQuery = "SELECT " +
+        //                                   "A.MemberCode, " +
+        //                                   "A.Email, " +
+        //                                   "CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, " +
+        //                                   "CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, " +
+        //                                   "UI.Name AS Name, " +
+        //                                   "R.Name AS Role " +
+        //                                   "FROM Account A " +
+        //                                   "LEFT JOIN UserInfo UI ON A.ID = UI.AccountID " +
+        //                                   "LEFT JOIN UserRole UR ON A.ID = UR.AccountID " +
+        //                                   "LEFT JOIN Role R ON UR.RoleID = R.ID " +
+        //                                   "WHERE R.Name = @role";
+
+        //    DataTable dt = await _dbInteraction.GetData(getFilterAccountQuery);
+
+        //    return new JsonResult(dt);
+        //}
+
         [HttpPost]
         [Route("AddAccount")]
-        public JsonResult AddAccount([FromForm] string newAccount)
+        public async Task<JsonResult> AddAccount([FromForm] string newAccount)
         {
             string addAccountQuery = "INSERT INTO Account VALUES (@newAccount)";
 
-            DataTable dt = new DataTable();
-            string sqlDataSource = _configuration.GetConnectionString("SIMSConnection");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(addAccountQuery, myCon))
-                {
-                    myCommand.Parameters.AddWithValue("@newAccount", newAccount);
-                    myReader = myCommand.ExecuteReader();
-                    dt.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
+            DataTable dt = await _dbInteraction.GetData(addAccountQuery);
 
             return new JsonResult("Add Successfully");
         }

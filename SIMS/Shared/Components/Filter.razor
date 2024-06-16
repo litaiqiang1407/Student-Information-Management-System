@@ -1,0 +1,47 @@
+﻿@typeparam TItem
+@using SIMS.Shared.Models
+
+<div class="container row">
+    <div class="filter col col-lg-6">
+        <button class="filter-button" >
+            <i class="bi bi-funnel filter-icon"></i>
+            <span class="filter-label">Filter</span>
+        </button>
+
+        @foreach (var filter in Filters)
+        {
+            <button class="filter-item filter-button" @onclick="ShowFilterItem">
+                <span class="filter-label">@filter.Header</span>
+                <i class="@filterIcon show-icon"></i>
+            </button>
+            @if (showFilter)
+            {
+                <ul></ul>
+                <select class="form-control filter-select filter-button" @bind="@filter.SelectedValue">
+                    <option value="" class="filter-option">All</option>
+                    @foreach (var option in filter.Options)
+                    {
+                        <option value="@option" class="filter-option">@option</option>
+                    }
+                </select>
+            }           
+        }     
+    </div>
+    <div class="search col col-lg-6">
+        <!-- Add your search functionality here -->
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<Filters<TItem>> Filters { get; set; }
+
+    private bool showFilter = false;
+
+    private string filterIcon => showFilter ? "bi bi-caret-up-fill" : "bi bi-caret-down-fill";
+
+    private void ShowFilterItem()
+    {
+        showFilter = !showFilter;
+    }
+}

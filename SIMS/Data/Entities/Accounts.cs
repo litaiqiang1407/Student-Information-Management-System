@@ -12,14 +12,14 @@ namespace SIMS.Data.Entities
         public string Email { get; set; }
         public string Name { get; set; }
         public string Role { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public string CreatedAt { get; set; }
+        public string UpdatedAt { get; set; }
 
         public Accounts()
         {
             ID = Guid.NewGuid();
-            CreatedAt = DateTime.Now;
-            UpdatedAt = DateTime.Now;
+            //CreatedAt = DateTime.Now;
+            //UpdatedAt = DateTime.Now;
         }
 
         public override string ToString()
