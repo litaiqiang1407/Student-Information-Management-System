@@ -12,14 +12,20 @@
 
 @if (accounts != null)
 {
-    <Filter Filters="@filters" />
-    <Table Data="@accounts" Columns="@columns" />
+    <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filteredAccounts != null && filteredAccounts.Any())
+    {
+        <Table Data="@filteredAccounts" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@accounts" Columns="@columns" />
+    }
 }
 else
 {
     <Loading />
 }
-
 
 
 @code {
@@ -28,13 +34,21 @@ else
     private List<TableColumn<Accounts>> columns;
     private List<TableColumn<Accounts>> filterColumns;
     private List<Filters<Accounts>> filters = new List<Filters<Accounts>>();
+    private List<Accounts> filteredAccounts;
 
+    private EventCallback<IEnumerable<Accounts>> filteredItemsChanged;
+
+    private void UpdateFilteredAccounts(IEnumerable<Accounts> filteredItems)
+    {
+        filteredAccounts = filteredItems.ToList();
+    }
 
     protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
         await LoadAccounts();
         await LoadFilters();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, UpdateFilteredAccounts);
     }
 
     private async Task LoadAccounts()
@@ -61,7 +75,6 @@ else
         foreach (var column in filterColumns)
         {          
             var filterData = await DatabaseFunctions.LoadData<string>($"api/SIMS/Get{column.Header.Replace(" ", "")}");
-            Logger.LogInformation($"Filter Data: {JsonSerializer.Serialize(filterData)}");
             if (filterData != null)
             {
                 filters.Add(new Filters<Accounts>

@@ -1,5 +1,8 @@
 ﻿@typeparam TItem
 @using SIMS.Shared.Models
+@using System.Text.Json
+@inject ILogger<Filter<TItem>> Logger
+
 
 <div class="container row">
     <div class="filter col col-lg-6">
@@ -20,7 +23,9 @@
                         @foreach (var option in filter.Options)
                         {
                             <li class="filter-option">
-                                <input type="checkbox" id="@($"checkbox-{filter.Header}-{option}")" class="filter-checkbox" value="@option" @onchange="() => OnOptionChanged(filter, option)" />
+                                <input type="checkbox" id="@($"checkbox-{filter.Header}-{option}")" class="filter-checkbox"
+                                       value="@option" @onchange="() => OnOptionChanged(filter, option)" />
+
                                 <label for="@($"checkbox-{filter.Header}-{option}")" class="filter-label">@option</label>
                             </li>
                         }
@@ -38,17 +43,81 @@
     [Parameter]
     public List<Filters<TItem>> Filters { get; set; }
 
+    [Parameter]
+    public IEnumerable<TItem> Items { get; set; }
+
+    [Parameter]
+    public EventCallback<IEnumerable<TItem>> FilteredItemsChanged { get; set; }
+
+    private List<TItem> filteredItems;
+
     private bool showFilter = false;
 
     private string filterIcon => showFilter ? "bi bi-caret-up-fill" : "bi bi-caret-down-fill";
+
+    private Dictionary<string, List<string>> selectedOptions = new Dictionary<string, List<string>>();
 
     private void ShowFilterItem()
     {
         showFilter = !showFilter;
     }
 
+    protected override void OnInitialized()
+    {
+        if (Items != null)
+        {
+            filteredItems = Items.ToList();
+        }
+
+    }
+
     private void OnOptionChanged(Filters<TItem> filter, string option)
     {
-        // Handle option change logic here
+        if (!selectedOptions.ContainsKey(filter.Header))
+        {
+            selectedOptions[filter.Header] = new List<string>();
+        }
+
+        if (selectedOptions[filter.Header].Contains(option))
+        {
+            selectedOptions[filter.Header].Remove(option);
+        }
+        else
+        {
+            selectedOptions[filter.Header].Add(option);
+        }
+
+        Logger.LogInformation($"Selected Options: {JsonSerializer.Serialize(selectedOptions)}");
+
+        ApplyFilters();
+
+    }
+
+    private void ApplyFilters()
+    {
+        if (Items == null)
+        {
+            filteredItems = new List<TItem>();
+            return;
+        }
+
+        filteredItems = Items.Where(item =>
+        {
+            foreach (var filter in Filters)
+            {
+                if (selectedOptions.ContainsKey(filter.Header) && selectedOptions[filter.Header].Count > 0)
+                {
+                    var propertyValue = item.GetType().GetProperty(filter.Header)?.GetValue(item)?.ToString();
+                    if (propertyValue == null || !selectedOptions[filter.Header].Contains(propertyValue))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }).ToList();
+        Logger.LogInformation($"Filtered Items: {JsonSerializer.Serialize(filteredItems)}");
+        FilteredItemsChanged.InvokeAsync(filteredItems);
+        StateHasChanged();
     }
 }
