@@ -1,6 +1,15 @@
 ﻿.container {
   padding: 10px 24px;
 }
+.container .table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.container .table-container::-webkit-scrollbar {
+  display: none;
+}
 .container .table {
   border: var(--primary-2px-border);
 }

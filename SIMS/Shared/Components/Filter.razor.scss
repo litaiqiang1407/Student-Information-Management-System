@@ -1,6 +1,12 @@
 .container {
     padding: 10px 24px;
+    position: sticky;
+    top: 96px;
+    right: 0;
+    background-color: var(--white);
+    z-index: 1000;
 
+    
     .filter {
         display: flex;
         align-items: center;
@@ -33,6 +39,15 @@
         &.show .show-icon {
             transform: rotate(180deg);
         }
+
+        &.active, &:hover {
+            border: var(--primary-1px-border);
+            color: var(--primary-color);
+
+            .filter-label, .show-icon {
+                color: var(--primary-color);
+            }
+        }
     }
 
     .filter-item-wrapper {
@@ -56,6 +71,7 @@
             &.show {
                 max-height: 200px;
                 opacity: 1;
+                border: var(--primary-1px-color);
             }
 
             .filter-select {
@@ -63,7 +79,7 @@
 
                 .filter-option {
                     display: flex;
-                    align-items: center;   
+                    align-items: center;
 
                     &:hover {
                         background-color: var(--primary-hover-color);
@@ -83,8 +99,41 @@
     }
 
     .search {
+
         .search-field {
             height: 100%;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--secondary-text-color);
+            padding: 0 12px;
+            border-radius: 4px;
+
+            &:hover {
+                border: var(--primary-1px-border);
+
+                .search-icon, .search-input, .search-input::placeholder {
+                    color: var(--primary-color);
+                }
+            }
+
+            &:focus-within {
+                border: var(--primary-1px-border);
+                box-shadow: 0 0 0 2px var(--primary-1px-border);
+
+                .search-icon, .search-input::placeholder {
+                    color: var(--primary-color);
+                }
+            }
+
+            .search-icon {
+                color: var(--secondary-text-color);
+                margin-right: 12px;
+            }
+
+            .search-input {
+                flex: 1;
+                color: var(--secondary-text-color);
+            }
         }
     }
 }

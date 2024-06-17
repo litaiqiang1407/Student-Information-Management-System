@@ -11909,6 +11909,7 @@ textarea.form-control-lg {
   --add-button-color: #2ECC40;
   --update-button-color: #FFC107;
   --primary-2px-border: 2px solid #38B6FF;
+  --primary-1px-border: 1px solid #38B6FF;
   --tranparent-border: 2px solid transparent;
   /*--primary-hover-color: #1E88E5;*/
 }

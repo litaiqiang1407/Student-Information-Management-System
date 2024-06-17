@@ -1,41 +1,44 @@
 ﻿@typeparam TItem
 @using SIMS.Shared.Models
 @using System.Text.Json
+@inject ILogger<TItem> Logger
 
-<div class="container row">
-    <div class="filter col col-lg-6">
-        <button class="filter-button" >
-            <i class="bi bi-funnel filter-icon"></i>
-            <span class="filter-label">Filter</span>
-        </button>
+<div class="container">
+    <div class="filter-container row">
+        <div class="filter col col-lg-6">
+            <button class="filter-button">
+                <i class="bi bi-funnel filter-icon"></i>
+                <span class="filter-label">Filter</span>
+            </button>
 
-        @foreach (var filter in Filters)
-        {
-            <div class="filter-item-wrapper">
-                <button class="filter-item filter-button" @onclick="ShowFilterItem">
-                    <span class="filter-label">@filter.Header</span>
-                    <i class="@filterIcon show-icon"></i>
-                </button>
-                <div class="filter-select-wrapper @(showFilter ? "show" : "hide")">
-                    <ul class="filter-select">
-                        @foreach (var option in filter.Options)
-                        {
-                            <li class="filter-option">
-                                <input type="checkbox" id="@($"checkbox-{filter.Header}-{option}")" class="filter-checkbox"
-                                       value="@option" @onchange="() => OnOptionChanged(filter, option)" />
+            @foreach (var filter in Filters)
+            {
+                <div class="filter-item-wrapper">
+                    <button class="filter-item filter-button @(showFilter ? "active" : "")" @onclick="ShowFilterItem">
+                        <span class="filter-label">@filter.Header</span>
+                        <i class="@filterIcon show-icon"></i>
+                    </button>
+                    <div class="filter-select-wrapper @(showFilter ? "show" : "hide")">
+                        <ul class="filter-select">
+                            @foreach (var option in filter.Options)
+                            {
+                                <li class="filter-option">
+                                    <input type="checkbox" id="@($"checkbox-{filter.Header}-{option}")" class="filter-checkbox"
+                                           value="@option" @onchange="() => OnOptionChanged(filter, option)" />
 
-                                <label for="@($"checkbox-{filter.Header}-{option}")" class="filter-label">@option</label>
-                            </li>
-                        }
-                    </ul>
+                                    <label for="@($"checkbox-{filter.Header}-{option}")" class="filter-label">@option</label>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 </div>
+            }
+        </div>
+        <div class="search col col-lg-6">
+            <div class="search-field">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search for anything....." @bind="searchText" @oninput="OnSearchInput" />
             </div>
-        }     
-    </div>
-    <div class="search col col-lg-6">
-        <div class="search-field">
-            <i class="bi bi-search search-icon"></i>
-            <input type="text" class="search-input" placeholder="Search for anything....." />
         </div>
     </div>
 </div>
@@ -51,6 +54,7 @@
     public EventCallback<IEnumerable<TItem>> FilteredItemsChanged { get; set; }
 
     private List<TItem> filteredItems;
+    private string searchText = "";
 
     private bool showFilter = false;
 
@@ -69,7 +73,13 @@
         {
             filteredItems = Items.ToList();
         }
+    }
 
+    private async Task OnSearchInput(ChangeEventArgs args)
+    {
+        searchText = args.Value.ToString();
+        await Task.Delay(300); 
+        ApplySearch();
     }
 
     private void OnOptionChanged(Filters<TItem> filter, string option)
@@ -113,9 +123,46 @@
                     }
                 }
             }
+
             return true;
         }).ToList();
         FilteredItemsChanged.InvokeAsync(filteredItems);
         StateHasChanged();
     }
+
+    private void ApplySearch()
+    {
+        if (Items == null)
+        {
+            filteredItems = new List<TItem>();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            filteredItems = Items.ToList(); 
+        }
+        else
+        {
+            var searchResults = Items.Where(item =>
+            {
+                var propertyValues = typeof(TItem).GetProperties()
+                                                    .Select(prop => prop.GetValue(item)?.ToString())
+                                                    .ToList();
+
+                return propertyValues.Any(value => value != null && value.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+            }).ToList();
+
+            filteredItems = searchResults; 
+
+            Logger.LogInformation($"Search Results: {JsonSerializer.Serialize(searchResults)}");
+        }
+
+        if (filteredItems.Count > 0)
+        {
+            FilteredItemsChanged.InvokeAsync(filteredItems);
+        }
+
+        StateHasChanged();
+    }    
 }
