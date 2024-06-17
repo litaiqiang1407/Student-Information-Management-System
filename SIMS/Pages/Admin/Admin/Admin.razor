@@ -3,45 +3,66 @@
 @using SIMS.Shared.Models
 @using System.Text.Json;
 @using SIMS.Data.Entities;
+@using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
 <PageTitle>Admin</PageTitle>
 
-<h3>Admin</h3>
-
-@* @foreach (var account in adminAccounts)
+@if (admins != null)
 {
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">@account.ID</h5>
-            <p class="card-text">@account.MemberCode</p>
-            <p class="card-text">@account.Email</p>
-        </div>
-    </div>
-} *@
+    <Filter Filters="@filters" Items="@admins" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@admins" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
 
 @code {
     private string HeaderTitle = "Admin";
+    private IEnumerable<Admins> admins;
+    private List<TableColumn<Admins>> columns;
+    private List<TableColumn<Admins>> filterColumns;
+    private List<Filters<Admins>> filters = new List<Filters<Admins>>();
+    private List<Admins> filtered;
 
-    protected override void OnInitialized()
+    private EventCallback<IEnumerable<Admins>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Admins> filteredItems)
     {
-        HeaderTitleService.Title = HeaderTitle;
+        filtered = filteredItems.ToList();
     }
 
-    // string API_URL = "https://localhost:7006/";
-    // private IEnumerable<Accounts> adminAccounts = Array.Empty<Accounts>();
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        // await LoadFilters();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Admins>>(this, Updatefiltered);
+    }
 
-    // private async Task LoadAdminAccounts()
-    // {
-    //     HttpClient client = new HttpClient();
-    //     HttpResponseMessage response = await client.GetAsync(API_URL + "api/SIMS/GetAdmin");
-    //     client.Dispose();
-    //     using var responseStream = await response.Content.ReadAsStreamAsync();
-    //     adminAccounts = await JsonSerializer.DeserializeAsync<IEnumerable<Accounts>>(responseStream);
-    // }
+    private async Task LoadData()
+    {
+        admins = await DatabaseFunctions.LoadData<Admins>("api/SIMS/GetAdmin");
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     await this.LoadAdminAccounts();
-    // }
+        // Define columns for the table
+        columns = new List<TableColumn<Admins>>
+        {
+            new TableColumn<Admins> { Header = "Member Code", Value = acc => acc.MemberCode },
+            new TableColumn<Admins> { Header = "Email", Value = acc => acc.Email },
+            new TableColumn<Admins> { Header = "Name", Value = acc => acc.Name },
+            new TableColumn<Admins> { Header = "Created At", Value = acc => acc.CreatedAt },
+            new TableColumn<Admins> { Header = "Updated At", Value = acc => acc.UpdatedAt },
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
+    }
 }

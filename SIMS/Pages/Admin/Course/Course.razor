@@ -1,0 +1,85 @@
+﻿@page "/admin/course-management"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities;
+@using SIMS.Shared.Components
+@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<PageTitle>Courses Management</PageTitle>
+
+@if (courses != null)
+{
+    <Filter Filters="@filters" Items="@courses" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@courses" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
+
+@code {
+    private string HeaderTitle = "Courses";
+    private IEnumerable<Courses> courses;
+    private List<TableColumn<Courses>> columns;
+    private List<TableColumn<Courses>> filterColumns;
+    private List<Filters<Courses>> filters = new List<Filters<Courses>>();
+    private List<Courses> filtered;
+
+    private EventCallback<IEnumerable<Courses>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Courses> filteredItems)
+    {
+        filtered = filteredItems.ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        await LoadFilters();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Courses>>(this, Updatefiltered);
+    }
+
+    private async Task LoadData()
+    {
+        courses = await DatabaseFunctions.LoadData<Courses>("api/SIMS/GetCourses");
+
+        columns = new List<TableColumn<Courses>>
+        {
+            new TableColumn<Courses> { Header = "Subject", Value = course => course.Subject },
+            new TableColumn<Courses> { Header = "Department", Value = course => course.Department, IsFilter = true },
+            new TableColumn<Courses> { Header = "Semester", Value = course => course.Semester, IsFilter = true },
+            new TableColumn<Courses> { Header = "Lecturer", Value = course => course.Lecturer, IsFilter = true },
+            new TableColumn<Courses> { Header = "Class", Value = course => course.Class, IsFilter = true },
+            new TableColumn<Courses> { Header = "Start Date", Value = course => course.StartDate },
+            new TableColumn<Courses> { Header = "End Date", Value = course => course.EndDate },
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
+    }
+
+    private async Task LoadFilters()
+    {
+        foreach (var column in filterColumns)
+        {
+            var filterData = await DatabaseFunctions.LoadData<string>($"api/SIMS/Get{column.Header.Replace(" ", "")}Filter");
+            if (filterData != null)
+            {
+                filters.Add(new Filters<Courses>
+                    {
+                        Header = column.Header,
+                        Options = filterData.ToList()
+                    });
+            }
+        }
+    }
+}

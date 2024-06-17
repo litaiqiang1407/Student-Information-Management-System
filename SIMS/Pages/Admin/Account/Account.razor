@@ -13,9 +13,9 @@
 @if (accounts != null)
 {
     <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@filteredItemsChanged" />
-    @if (filteredAccounts != null && filteredAccounts.Any())
+    @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filteredAccounts" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" />
     }
     else
     {
@@ -34,24 +34,24 @@ else
     private List<TableColumn<Accounts>> columns;
     private List<TableColumn<Accounts>> filterColumns;
     private List<Filters<Accounts>> filters = new List<Filters<Accounts>>();
-    private List<Accounts> filteredAccounts;
+    private List<Accounts> filtered;
 
     private EventCallback<IEnumerable<Accounts>> filteredItemsChanged;
 
-    private void UpdateFilteredAccounts(IEnumerable<Accounts> filteredItems)
+    private void Updatefiltered(IEnumerable<Accounts> filteredItems)
     {
-        filteredAccounts = filteredItems.ToList();
+        filtered = filteredItems.ToList();
     }
 
     protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
-        await LoadAccounts();
+        await LoadData();
         await LoadFilters();
-        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, UpdateFilteredAccounts);
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, Updatefiltered);
     }
 
-    private async Task LoadAccounts()
+    private async Task LoadData()
     {
         accounts = await DatabaseFunctions.LoadData<Accounts>("api/SIMS/GetAccount");
 
@@ -74,7 +74,7 @@ else
     {       
         foreach (var column in filterColumns)
         {          
-            var filterData = await DatabaseFunctions.LoadData<string>($"api/SIMS/Get{column.Header.Replace(" ", "")}");
+            var filterData = await DatabaseFunctions.LoadData<string>($"api/SIMS/Get{column.Header.Replace(" ", "")}Filter");
             if (filterData != null)
             {
                 filters.Add(new Filters<Accounts>

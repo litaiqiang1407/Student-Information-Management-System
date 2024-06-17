@@ -13,12 +13,19 @@
 .container .table {
   border: var(--primary-2px-border);
 }
+.container .table .table-head {
+  position: sticky;
+  top: -2px;
+  background-color: var(--white);
+  z-index: 1000;
+}
 .container .table .table-header {
   background-color: var(--primary-color);
   color: var(--white);
 }
 .container .table .table-group-divider {
   border-top: var(--primary-2px-border);
+  font-size: 1.3rem;
 }
 .container .table .table-group-divider .button-group {
   display: flex;

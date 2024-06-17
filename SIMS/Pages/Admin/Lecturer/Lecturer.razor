@@ -1,17 +1,69 @@
 ﻿@page "/admin/lecturer-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities;
+@using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
 <PageTitle>Lecturer</PageTitle>
 
-<h3>Lecturer</h3>
+@if (lecturers != null)
+{
+    <Filter Filters="@filters" Items="@lecturers" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@lecturers" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
 
 @code {
     private string HeaderTitle = "Lecturer";
 
-    protected override void OnInitialized()
+    private IEnumerable<Lecturers> lecturers;
+    private List<TableColumn<Lecturers>> columns;
+    private List<TableColumn<Lecturers>> filterColumns;
+    private List<Filters<Lecturers>> filters = new List<Filters<Lecturers>>();
+    private List<Lecturers> filtered;
+
+    private EventCallback<IEnumerable<Lecturers>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Lecturers> filteredItems)
+    {
+        filtered = filteredItems.ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        // await LoadFilters();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Lecturers>>(this, Updatefiltered);
+    }
+
+    private async Task LoadData()
+    {
+        lecturers = await DatabaseFunctions.LoadData<Lecturers>("api/SIMS/GetLecturer");
+
+        // Define columns for the table
+        columns = new List<TableColumn<Lecturers>>
+        {
+            new TableColumn<Lecturers> { Header = "Member Code", Value = acc => acc.MemberCode },
+            new TableColumn<Lecturers> { Header = "Email", Value = acc => acc.Email },
+            new TableColumn<Lecturers> { Header = "Name", Value = acc => acc.Name },
+            new TableColumn<Lecturers> { Header = "Created At", Value = acc => acc.CreatedAt },
+            new TableColumn<Lecturers> { Header = "Updated At", Value = acc => acc.UpdatedAt },
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
     }
 }

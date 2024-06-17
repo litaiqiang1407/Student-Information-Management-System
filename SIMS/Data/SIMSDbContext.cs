@@ -26,6 +26,9 @@ namespace SIMS.Data
         public DbSet<Roles> Roles { get; set; }
         public DbSet<UserRoles> UserRoles { get; set; }
         public DbSet<UserInfos> UserInfos { get; set; }
+        public DbSet<Admins> Admins { get; set; }
+        public DbSet<Lecturers> Lecturers { get; set; }
+        public DbSet<Students> Students { get; set; }
         public DbSet<Departments> Departments { get; set; }
         public DbSet<Majors> Majors { get; set; }
         public DbSet<Subjects> Subjects { get; set; }
