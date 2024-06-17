@@ -1,17 +1,63 @@
 ﻿@page "/admin/department-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities.Admin;
+@using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
-<PageTitle>Department</PageTitle>
+<PageTitle>Departmentss Management</PageTitle>
 
-<h3>Department</h3>
+@if (departments != null)
+{
+    <Filter Filters="@filters" Items="@departments" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@departments" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
 
 @code {
-    private string HeaderTitle = "Department";
+    private string HeaderTitle = "Departments Management";
+    private IEnumerable<Departments> departments;
+    private List<TableColumn<Departments>> columns;
+    private List<TableColumn<Departments>> filterColumns;
+    private List<Filters<Departments>> filters = new List<Filters<Departments>>();
+    private List<Departments> filtered;
 
-    protected override void OnInitialized()
+    private EventCallback<IEnumerable<Departments>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Departments> filteredItems)
+    {
+        filtered = filteredItems.ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Departments>>(this, Updatefiltered);
+    }
+
+    private async Task LoadData()
+    {
+        departments = await DatabaseFunctions.LoadData<Departments>("api/Admin/GetDepartments");
+
+        // Define columns for the table
+        columns = new List<TableColumn<Departments>>
+        {
+            new TableColumn<Departments> { Header = "Name", Value = dep => dep.Name }
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
     }
 }

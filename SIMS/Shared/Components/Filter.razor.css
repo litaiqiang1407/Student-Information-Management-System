@@ -48,6 +48,7 @@
   position: absolute;
   top: 100%;
   left: 0;
+  width: 200%;
   padding: 8px 40px 8px 12px;
   margin-top: 8px;
   background-color: var(--white);
@@ -58,6 +59,7 @@
   max-height: 0;
   opacity: 0;
   transition: max-height 0.3s ease, opacity 0.3s ease;
+  z-index: 10000;
 }
 .container .filter-item-wrapper .filter-select-wrapper.show {
   max-height: 200px;

@@ -2,7 +2,7 @@
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
 @using System.Text.Json;
-@using SIMS.Data.Entities;
+@using SIMS.Data.Entities.Admin;
 @using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
@@ -52,7 +52,7 @@ else
 
     private async Task LoadData()
     {
-        lecturers = await DatabaseFunctions.LoadData<Lecturers>("api/SIMS/GetLecturer");
+        lecturers = await DatabaseFunctions.LoadData<Lecturers>("api/Admin/GetLecturer");
 
         // Define columns for the table
         columns = new List<TableColumn<Lecturers>>

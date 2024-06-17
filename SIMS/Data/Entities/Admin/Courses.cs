@@ -1,4 +1,4 @@
-﻿namespace SIMS.Data.Entities
+﻿namespace SIMS.Data.Entities.Admin
 {
     public class Courses
     {

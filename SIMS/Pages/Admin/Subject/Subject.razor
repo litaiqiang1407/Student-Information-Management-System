@@ -1,17 +1,68 @@
 ﻿@page "/admin/subject-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities.Admin;
+@using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
-<PageTitle>Subject</PageTitle>
+<PageTitle>Subjects Management</PageTitle>
 
-<h3>Subject</h3>
+@if (subjects != null)
+{
+    <Filter Filters="@filters" Items="@subjects" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@subjects" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
 
 @code {
-    private string HeaderTitle = "Subject";
+    private string HeaderTitle = "Subjects Management";
+    private IEnumerable<Subjects> subjects;
+    private List<TableColumn<Subjects>> columns;
+    private List<TableColumn<Subjects>> filterColumns;
+    private List<Filters<Subjects>> filters = new List<Filters<Subjects>>();
+    private List<Subjects> filtered;
 
-    protected override void OnInitialized()
+    private EventCallback<IEnumerable<Subjects>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Subjects> filteredItems)
+    {
+        filtered = filteredItems.ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        // await LoadFilters();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Subjects>>(this, Updatefiltered);
+    }
+
+    private async Task LoadData()
+    {
+        subjects = await DatabaseFunctions.LoadData<Subjects>("api/Admin/GetSubjects");
+
+        // Define columns for the table
+        columns = new List<TableColumn<Subjects>>
+        {
+            new TableColumn<Subjects> { Header = "Subject Code", Value = subject => subject.SubjectCode },
+            new TableColumn<Subjects> { Header = "Name", Value = subject => subject.Name },
+            new TableColumn<Subjects> { Header = "Credits", Value = subject => subject.Credits.ToString() },
+            new TableColumn<Subjects> { Header = "Slots", Value = subject => subject.Slots.ToString() },
+            new TableColumn<Subjects> { Header = "Fee ($)", Value = subject => subject.Fee.ToString("C2") },
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
     }
 }

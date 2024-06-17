@@ -1,6 +1,6 @@
-﻿namespace SIMS.Data.Entities
+﻿namespace SIMS.Data.Entities.Admin
 {
-    public class Students
+    public class Admins
     {
         public string MemberCode { get; set; }
         public string Email { get; set; }

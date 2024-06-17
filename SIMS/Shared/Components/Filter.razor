@@ -14,11 +14,11 @@
             @foreach (var filter in Filters)
             {
                 <div class="filter-item-wrapper">
-                    <button class="filter-item filter-button @(showFilter ? "active" : "")" @onclick="ShowFilterItem">
+                    <button class="filter-item filter-button @(IsFilterShown(filter.Header) ? "active" : "")" @onclick="() => ShowFilterItem(filter.Header)">
                         <span class="filter-label">@filter.Header</span>
-                        <i class="@filterIcon show-icon"></i>
+                        <i class="@(GetFilterIcon(filter.Header)) show-icon"></i>
                     </button>
-                    <div class="filter-select-wrapper @(showFilter ? "show" : "hide")">
+                    <div class="filter-select-wrapper @(IsFilterShown(filter.Header) ? "show" : "hide")">
                         <ul class="filter-select">
                             @foreach (var option in filter.Options)
                             {
@@ -56,15 +56,30 @@
     private List<TItem> filteredItems;
     private string searchText = "";
 
-    private bool showFilter = false;
-
-    private string filterIcon => showFilter ? "bi bi-caret-up-fill" : "bi bi-caret-down-fill";
+    private Dictionary<string, bool> showFilters = new Dictionary<string, bool>();
 
     private Dictionary<string, List<string>> selectedOptions = new Dictionary<string, List<string>>();
 
-    private void ShowFilterItem()
+    private void ShowFilterItem(string header)
     {
-        showFilter = !showFilter;
+        if (showFilters.ContainsKey(header))
+        {
+            showFilters[header] = !showFilters[header];
+        }
+        else
+        {
+            showFilters[header] = true;
+        }
+    }
+
+    private bool IsFilterShown(string header)
+    {
+        return showFilters.ContainsKey(header) && showFilters[header];
+    }
+
+    private string GetFilterIcon(string header)
+    {
+        return IsFilterShown(header) ? "bi bi-caret-up-fill" : "bi bi-caret-down-fill";
     }
 
     protected override void OnInitialized()
@@ -78,7 +93,7 @@
     private async Task OnSearchInput(ChangeEventArgs args)
     {
         searchText = args.Value.ToString();
-        await Task.Delay(300); 
+        await Task.Delay(300);
         ApplySearch();
     }
 
@@ -99,7 +114,6 @@
         }
 
         ApplyFilters();
-
     }
 
     private void ApplyFilters()
@@ -140,7 +154,7 @@
 
         if (string.IsNullOrWhiteSpace(searchText))
         {
-            filteredItems = Items.ToList(); 
+            filteredItems = Items.ToList();
         }
         else
         {
@@ -153,7 +167,7 @@
                 return propertyValues.Any(value => value != null && value.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
             }).ToList();
 
-            filteredItems = searchResults; 
+            filteredItems = searchResults;
 
             Logger.LogInformation($"Search Results: {JsonSerializer.Serialize(searchResults)}");
         }
@@ -164,5 +178,5 @@
         }
 
         StateHasChanged();
-    }    
+    }
 }

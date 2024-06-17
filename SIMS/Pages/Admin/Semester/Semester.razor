@@ -1,17 +1,65 @@
 ﻿@page "/admin/semester-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities.Admin;
+@using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
-<PageTitle>Semester</PageTitle>
+<PageTitle>Semesterss Management</PageTitle>
 
-<h3>Semester</h3>
+@if (semesters != null)
+{
+    <Filter Filters="@filters" Items="@semesters" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@semesters" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
 
 @code {
-    private string HeaderTitle = "Semester";
+    private string HeaderTitle = "Semesters Management";
+    private IEnumerable<Semesters> semesters;
+    private List<TableColumn<Semesters>> columns;
+    private List<TableColumn<Semesters>> filterColumns;
+    private List<Filters<Semesters>> filters = new List<Filters<Semesters>>();
+    private List<Semesters> filtered;
 
-    protected override void OnInitialized()
+    private EventCallback<IEnumerable<Semesters>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Semesters> filteredItems)
+    {
+        filtered = filteredItems.ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Semesters>>(this, Updatefiltered);
+    }
+
+    private async Task LoadData()
+    {
+        semesters = await DatabaseFunctions.LoadData<Semesters>("api/Admin/GetSemesters");
+
+        // Define columns for the table
+        columns = new List<TableColumn<Semesters>>
+        {
+            new TableColumn<Semesters> { Header = "Name", Value = sem => sem.Name },
+            new TableColumn<Semesters> { Header = "Start Date", Value = sem => sem.StartDate },
+            new TableColumn<Semesters> { Header = "End Date", Value = sem => sem.EndDate },
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
     }
 }

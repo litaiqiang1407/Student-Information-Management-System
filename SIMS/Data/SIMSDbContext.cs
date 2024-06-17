@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SIMS.Data.Entities;
+using SIMS.Data.Entities.Admin;
 
 namespace SIMS.Data
 {

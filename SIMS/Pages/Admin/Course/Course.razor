@@ -2,7 +2,7 @@
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
 @using System.Text.Json;
-@using SIMS.Data.Entities;
+@using SIMS.Data.Entities.Admin;
 @using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
@@ -51,7 +51,7 @@ else
 
     private async Task LoadData()
     {
-        courses = await DatabaseFunctions.LoadData<Courses>("api/SIMS/GetCourses");
+        courses = await DatabaseFunctions.LoadData<Courses>("api/Admin/GetCourses");
 
         columns = new List<TableColumn<Courses>>
         {
@@ -71,7 +71,7 @@ else
     {
         foreach (var column in filterColumns)
         {
-            var filterData = await DatabaseFunctions.LoadData<string>($"api/SIMS/Get{column.Header.Replace(" ", "")}Filter");
+            var filterData = await DatabaseFunctions.LoadData<string>($"api/Admin/Get{column.Header.Replace(" ", "")}Filter");
             if (filterData != null)
             {
                 filters.Add(new Filters<Courses>

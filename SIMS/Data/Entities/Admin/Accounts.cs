@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace SIMS.Data.Entities
+namespace SIMS.Data.Entities.Admin
 {
     public class Accounts
     {

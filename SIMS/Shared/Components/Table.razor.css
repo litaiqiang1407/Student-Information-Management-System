@@ -17,7 +17,7 @@
   position: sticky;
   top: -2px;
   background-color: var(--white);
-  z-index: 1000;
+  z-index: 500;
 }
 .container .table .table-header {
   background-color: var(--primary-color);

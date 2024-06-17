@@ -1,17 +1,81 @@
 ﻿@page "/admin/major-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
+@using System.Text.Json;
+@using SIMS.Data.Entities.Admin;
+@using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
-<PageTitle>Major</PageTitle>
+<PageTitle>Majorss Management</PageTitle>
 
-<h3>Major</h3>
+@if (majors != null)
+{
+    <Filter Filters="@filters" Items="@majors" FilteredItemsChanged="@filteredItemsChanged" />
+    @if (filtered != null && filtered.Any())
+    {
+        <Table Data="@filtered" Columns="@columns" />
+    }
+    else
+    {
+        <Table Data="@majors" Columns="@columns" />
+    }
+}
+else
+{
+    <Loading />
+}
 
 @code {
-    private string HeaderTitle = "Major";
+    private string HeaderTitle = "Majors Management";
+    private IEnumerable<Majors> majors;
+    private List<TableColumn<Majors>> columns;
+    private List<TableColumn<Majors>> filterColumns;
+    private List<Filters<Majors>> filters = new List<Filters<Majors>>();
+    private List<Majors> filtered;
 
-    protected override void OnInitialized()
+    private EventCallback<IEnumerable<Majors>> filteredItemsChanged;
+
+    private void Updatefiltered(IEnumerable<Majors> filteredItems)
+    {
+        filtered = filteredItems.ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
+        await LoadData();
+        await LoadFilters();
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Majors>>(this, Updatefiltered);
+    }
+
+    private async Task LoadData()
+    {
+        majors = await DatabaseFunctions.LoadData<Majors>("api/Admin/GetMajors");
+
+        // Define columns for the table
+        columns = new List<TableColumn<Majors>>
+        {
+            new TableColumn<Majors> { Header = "Name", Value = maj => maj.Name },
+            new TableColumn<Majors> { Header = "Department", Value = maj => maj.Department, IsFilter = true }
+        };
+
+        filterColumns = columns.Where(c => c.IsFilter).ToList();
+    }
+
+    private async Task LoadFilters()
+    {
+        foreach (var column in filterColumns)
+        {
+            var filterData = await DatabaseFunctions.LoadData<string>($"api/Admin/Get{column.Header.Replace(" ", "")}Filter");
+            if (filterData != null)
+            {
+                filters.Add(new Filters<Majors>
+                    {
+                        Header = column.Header,
+                        Options = filterData.ToList()
+                    });
+            }
+        }
     }
 }
