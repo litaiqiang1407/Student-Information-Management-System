@@ -46,15 +46,19 @@
 
     [Parameter]
     public List<TableColumn<TItem>> Columns { get; set; }
-        private void UpdateItem(TItem item)
+
+    [Parameter]
+    public EventCallback<TItem> OnDelete { get; set; }
+
+    private void UpdateItem(TItem item)
     {
         // Implement your update logic here
         Console.WriteLine($"Update item: {item}");
     }
 
-    private void DeleteItem(TItem item)
+    private async Task DeleteItem(TItem item)
     {
-        // Implement your delete logic here
-        Console.WriteLine($"Delete item: {item}");
+        await OnDelete.InvokeAsync(item);
     }
+
 }

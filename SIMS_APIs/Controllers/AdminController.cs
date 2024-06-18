@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using SIMS_APIs.Functions;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace SIMS_APIs.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [ApiController]
     public class AdminController : ControllerBase
     {
@@ -23,6 +25,19 @@ namespace SIMS_APIs.Controllers
             DataTable dt = await _dbInteraction.GetData(getQuery);
 
             return new JsonResult(dt);
+        }
+
+        // Delete Data
+        private async Task<JsonResult> DeleteData(string deleteQuery, string id)
+        {
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+                new SqlParameter("@id", id)
+            };
+
+            int rowsAffected = await _dbInteraction.ExecuteQuery(deleteQuery, sqlParameters);
+
+            return new JsonResult(rowsAffected);
         }
 
         // Get Data by Filter
@@ -79,6 +94,17 @@ namespace SIMS_APIs.Controllers
 
             return new JsonResult("Add Successfully");
         }
+
+        [HttpDelete]
+        [Route("DeleteAccount/{id}")]
+        public async Task<JsonResult> DeleteAccount(string id)
+        {
+            string deleteAccountQuery = "DELETE FROM Account WHERE ID = @id";
+
+            return await DeleteData(deleteAccountQuery, id);
+        }
+
+
 
         private async Task<JsonResult> GetDataByRole(string roleName)
         {

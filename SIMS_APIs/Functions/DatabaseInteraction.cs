@@ -8,6 +8,8 @@ namespace SIMS_APIs.Functions
     {
         private readonly IConfiguration _configuration;
 
+        private string SIMSConnection => _configuration.GetConnectionString("SIMSConnection");
+
         public DatabaseInteraction(IConfiguration configuration)
         {
             _configuration = configuration;
@@ -16,10 +18,9 @@ namespace SIMS_APIs.Functions
         public async Task<DataTable> GetData(string query)
         {
             DataTable dt = new DataTable();
-            string sqlDataSource = _configuration.GetConnectionString("SIMSConnection");
             SqlDataReader myReader;
 
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
                 await myCon.OpenAsync();
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
@@ -32,6 +33,28 @@ namespace SIMS_APIs.Functions
             }
 
             return dt;
+        }
+
+        public async Task<int> ExecuteQuery(string query, SqlParameter[] sqlParameters)
+        {
+            int rowsAffected;
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    if (sqlParameters != null)
+                    {
+                        myCommand.Parameters.AddRange(sqlParameters);
+                    }
+
+                    rowsAffected = await myCommand.ExecuteNonQueryAsync();
+                    await myCon.CloseAsync();
+                }
+            }
+
+            return rowsAffected;
         }
     }
 }
