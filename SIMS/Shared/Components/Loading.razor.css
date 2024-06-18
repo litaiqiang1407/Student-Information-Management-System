@@ -1,8 +1,17 @@
-﻿.spinner {
-  width: 8rem;
-  height: 8rem;
-  color: var(--primary-color);
+﻿.loader {
+  width: 40px;
+  aspect-ratio: 1.154;
+  --_g: no-repeat radial-gradient(farthest-side,var(--primary-color) 90%,var(--primary-color));
+  background: var(--_g) 50% 0, var(--_g) 0 100%, var(--_g) 100% 100%;
+  background-size: 35% 40.39%;
+  animation: l16 1s infinite;
   position: absolute;
   top: 50%;
   left: 50%;
+}
+
+@keyframes l16 {
+  50%, 100% {
+    background-position: 100% 100%, 50% 0, 0 100%;
+  }
 }
