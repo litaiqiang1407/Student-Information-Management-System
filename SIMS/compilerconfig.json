@@ -58,5 +58,9 @@
   {
     "outputFile": "Shared/Components/Filter.razor.css",
     "inputFile": "Shared/Components/Filter.razor.scss"
+  },
+  {
+    "outputFile": "Pages/Admin/Account/AccountDetail/AccountDetail.razor.css",
+    "inputFile": "Pages/Admin/Account/AccountDetail/AccountDetail.razor.scss"
   }
 ]

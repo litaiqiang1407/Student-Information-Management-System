@@ -1,0 +1,56 @@
+﻿.blue-border {
+    border: var(--primary-2px-border); /* Sử dụng biến cho viền xanh */
+    padding: 45px; /* Thêm khoảng cách bên trong khung */
+}
+
+.container {
+    margin-top: 50px; /* Điều chỉnh khoảng cách từ tiêu đề xuống */
+}
+
+.larger-card {
+    width: 100%; /* Tăng chiều rộng của khung chính */
+    height: auto;
+}
+
+.reduced-margin-left {
+    margin-left: -10px; /* Điều chỉnh lề trái */
+}
+
+.second-row-border {
+    border-top: var(--primary-1px-border); /* Sử dụng biến cho viền trên */
+    margin-top: 10px; /* Khoảng cách giữa các hàng */
+}
+
+.first-col-border {
+    border-right: var(--primary-1px-border); /* Sử dụng biến cho viền phải */
+    border-left: var(--primary-2px-border); /* Sử dụng biến cho viền trái */
+}
+
+.avatar {
+    width: 150px;
+    height: 150px;
+    margin-top: 15px; /* Thêm lề để di chuyển avatar xuống */
+}
+
+.role-btn, .department-btn, .major-btn {
+    padding: 0.375rem 1rem;
+    font-size: 1rem;
+}
+
+.info-item {
+    height: 70px;
+    width: 100%;
+    padding: 21px; /* Thêm padding để tạo khoảng cách với đường viền */
+
+    i
+
+{
+    margin-right: 5px; /* Khoảng cách giữa biểu tượng và văn bản */
+    color: var(--primary-color); /* Màu sắc của icon */
+}
+
+}
+
+.right-section {
+    flex: 0 0 40%; /* Điều chỉnh độ rộng phần bên phải (40%) */
+}
