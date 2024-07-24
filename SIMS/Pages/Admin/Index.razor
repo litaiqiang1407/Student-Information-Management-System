@@ -1,6 +1,7 @@
 ﻿@page "/admin"
 
 @layout SIMS.Shared.Layouts.MainLayout
+@attribute [Authorize(Roles = "Admin")]
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
 @inject SIMS.Shared.Services.MenuService MenuService

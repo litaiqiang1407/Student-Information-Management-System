@@ -2,38 +2,121 @@
 
 @layout SIMS.Shared.Layouts.SubLayout
 
+@using Microsoft.AspNetCore.Authentication
 @using SIMS.Shared.Components
 @using SIMS.Shared.Layouts
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http
+@using System.Net.Http.Json
+@using System.Text.Json;
+@using SIMS.Shared.Functions
+@using SIMS.Shared.Services
+@using SIMS.Shared.Models
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing 
+
+@inject SIMS.Shared.Services.AuthenticationService AuthService
+@inject HeaderTitleService HeaderTitleService
+
 
 <PageTitle>Login</PageTitle>
 
-<SubLayout>
-    <div class="container">
-        <div class="logo">
-            <Logo />
-        </div>
-
-        <h2 class="title">Welcome Back!</h2>
-
-        <button class="google-button" >
-            <script src="https://accounts.google.com/gsi/client" async defer></script>
-            <div id="g_id_onload"
-                 data-client_id="153760737781-9skhub91t8mc5g0khkoalrh2tja01jju.apps.googleusercontent.com"
-                 data-login_uri="https://localhost:7170/login-google"
-                 data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-size="large"
-                 data-theme="outline"
-                 data-text="log_in_with"
-                 data-shape="circle"
-                 data-logo_alignment="center"
-                 data-width="400">
-            </div>
-        </button>
+<div class="container">
+    <div class="logo">
+        <Logo />
     </div>
-</SubLayout>
+
+    <h2 class="title">Welcome Back!</h2>
+
+    <EditForm Model="@loginModel" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="form">
+            <div class="form-field">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-input" id="email" @bind="loginModel.Email" />
+                <ValidationMessage For="@(() => loginModel.Email)" style="color: red;" />
+            </div>
+            <div class="form-field">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-input" id="password" @bind="loginModel.Password" />
+                <ValidationMessage For="@(() => loginModel.Password)" style="color: red;"/>
+            </div>
+            <button type="submit" class="primary-button">Login</button>
+        </div>
+    </EditForm>
+    @if (loginError != null)
+    {
+        <div class="error-message" style="color: red;">@loginError</div>
+    }
 
 
+    <!-- Uncomment to add Google login
+    <button class="google-button">
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <div id="g_id_onload"
+             data-client_id="153760737781-9skhub91t8mc5g0khkoalrh2tja01jju.apps.googleusercontent.com"
+             data-login_uri="https://localhost:7170/login-google"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-size="large"
+             data-theme="outline"
+             data-text="log_in_with"
+             data-shape="circle"
+             data-logo_alignment="center"
+             data-width="600">
+        </div>
+    </button>
+    -->
+</div>
 
+@code {
+    private LoginRequest loginModel = new LoginRequest();
+    private string loginError;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    [Inject]
+    private DatabaseInteractionFunctions DatabaseFunctions { get; set; }
+
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var response = await DatabaseFunctions.ValidateUserAsync(loginModel);
+
+            if (response.Successful)
+            {
+                Console.WriteLine("Attempting to sign in");
+
+                var userAvatar = response.UserInfo.OfficialAvatar;
+
+                HeaderTitleService.OfficialAvatar = userAvatar;
+
+                string role = response.UserInfo.Role.ToLower();
+
+                NavigationManager.NavigateTo(role switch
+                {
+                    "admin" => "/admin/",
+                    "student" => "/student/",
+                    "lecturer" => "/lecturer/",
+                    _ => "/unauthorized"
+                });
+            }
+            else
+            {
+                loginError = response.Error ?? "Login failed. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            loginError = $"An unexpected error occurred: {ex.Message}";
+            Console.WriteLine(ex);
+        }
+    }
+
+}

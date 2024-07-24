@@ -19,40 +19,32 @@ namespace SIMS_APIs.Controllers
             _dbInteraction = new DatabaseInteraction(configuration);
         }
 
-        // Get Data
-        private async Task<JsonResult> GetData(string getQuery)
-        {           
-            DataTable dt = await _dbInteraction.GetData(getQuery);
-
+        // Get List of Data
+        private async Task<JsonResult> GetList(string query)
+        {
+            DataTable dt = await _dbInteraction.GetList(query);
             return new JsonResult(dt);
         }
 
-        // Delete Data
-        private async Task<JsonResult> DeleteData(string deleteQuery, string id)
+        // Create Data
+        private async Task<JsonResult> Create(string query, SqlParameter[] sqlParameters)
         {
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-                new SqlParameter("@id", id)
-            };
-
-            int rowsAffected = await _dbInteraction.ExecuteQuery(deleteQuery, sqlParameters);
-
-            return new JsonResult(rowsAffected);
+            int rowsAffected = await _dbInteraction.Create(query, sqlParameters);
+            return new JsonResult(new { success = rowsAffected > 0 });
         }
 
-        // Get Data by Filter
-        private async Task<JsonResult> GetDataByFilter(string getQuery, string col)
+        // Update Data
+        private async Task<JsonResult> Update(string query, SqlParameter[] sqlParameters)
         {
-            DataTable dt = await _dbInteraction.GetData(getQuery);
+            int rowsAffected = await _dbInteraction.Update(query, sqlParameters);
+            return new JsonResult(new { success = rowsAffected > 0 });
+        }
 
-            List<string> filter = new List<string>();
-
-            foreach (DataRow row in dt.Rows)
-            {
-                filter.Add(row[col].ToString());
-            }
-
-            return new JsonResult(filter);
+        // Delete Data
+        private async Task<JsonResult> Delete(string query, SqlParameter[] sqlParameters)
+        {
+            int rowsAffected = await _dbInteraction.Delete(query, sqlParameters);
+            return new JsonResult(new { success = rowsAffected > 0 });
         }
 
         // Accounts
@@ -72,7 +64,7 @@ namespace SIMS_APIs.Controllers
                                        LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
                                        LEFT JOIN Role R ON UR.RoleID = R.ID";
 
-            return await GetData(getAccountQuery);
+            return await GetList(getAccountQuery);
         }
 
         [HttpGet]
@@ -81,18 +73,23 @@ namespace SIMS_APIs.Controllers
         {
             string getRoleAccountQuery = "SELECT R.Name AS Role FROM Role R";
 
-            return await GetDataByFilter(getRoleAccountQuery, "Role");
-        }    
+            return await GetList(getRoleAccountQuery);
+        }
 
         [HttpPost]
         [Route("AddAccount")]
-        public async Task<JsonResult> AddAccount([FromForm] string newAccount)
+        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email, [FromForm] string name, [FromForm] string role)
         {
-            string addAccountQuery = "INSERT INTO Account VALUES (@newAccount)";
+            string addAccountQuery = @"INSERT INTO Account (MemberCode, Email, CreatedAt, UpdatedAt) 
+                                       VALUES (@MemberCode, @Email, GETDATE(), GETDATE())";
 
-            DataTable dt = await _dbInteraction.GetData(addAccountQuery);
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+                new SqlParameter("@MemberCode", memberCode),
+                new SqlParameter("@Email", email)
+            };
 
-            return new JsonResult("Add Successfully");
+            return await Create(addAccountQuery, sqlParameters);
         }
 
         [HttpDelete]
@@ -101,12 +98,17 @@ namespace SIMS_APIs.Controllers
         {
             string deleteAccountQuery = "DELETE FROM Account WHERE ID = @id";
 
-            return await DeleteData(deleteAccountQuery, id);
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+                new SqlParameter("@id", id)
+            };
+
+            return await Delete(deleteAccountQuery, sqlParameters);
         }
 
-
-
-        private async Task<JsonResult> GetDataByRole(string roleName)
+        [HttpGet]
+        [Route("GetAdmin")]
+        public async Task<JsonResult> GetAdmin()
         {
             string getQuery = @$"SELECT 
                                 A.MemberCode, 
@@ -118,36 +120,49 @@ namespace SIMS_APIs.Controllers
                                 LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
                                 LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
                                 LEFT JOIN Role R ON UR.RoleID = R.ID 
-                                WHERE R.Name = '{roleName}'";
+                                WHERE R.Name = 'Admin'";
 
-            return await GetData(getQuery);
+            return await GetList(getQuery);
         }
 
-        // Admins
-        [HttpGet]
-        [Route("GetAdmin")]
-        public async Task<JsonResult> GetAdmin()
-        {
-            return await GetDataByRole("Admin");
-        }
-
-        // Lecturers
         [HttpGet]
         [Route("GetLecturer")]
         public async Task<JsonResult> GetLecturer()
         {
-            return await GetDataByRole("Lecturer");
+            string getQuery = @$"SELECT 
+                                A.MemberCode, 
+                                A.Email, 
+                                CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
+                                CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
+                                UI.Name AS Name 
+                                FROM Account A 
+                                LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
+                                LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
+                                LEFT JOIN Role R ON UR.RoleID = R.ID 
+                                WHERE R.Name = 'Lecturer'";
+
+            return await GetList(getQuery);
         }
 
-        // Students
         [HttpGet]
         [Route("GetStudent")]
         public async Task<JsonResult> GetStudent()
         {
-            return await GetDataByRole("Student");
+            string getQuery = @$"SELECT 
+                                A.MemberCode, 
+                                A.Email, 
+                                CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
+                                CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
+                                UI.Name AS Name 
+                                FROM Account A 
+                                LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
+                                LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
+                                LEFT JOIN Role R ON UR.RoleID = R.ID 
+                                WHERE R.Name = 'Student'";
+
+            return await GetList(getQuery);
         }
 
-        // Courses
         [HttpGet]
         [Route("GetCourses")]
         public async Task<JsonResult> GetCourses()
@@ -169,30 +184,27 @@ namespace SIMS_APIs.Controllers
                                        INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
                                        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
 
-            return await GetData(getCoursesQuery);
+            return await GetList(getCoursesQuery);
         }
 
-        // Departments for filtering
         [HttpGet]
         [Route("GetDepartmentFilter")]
         public async Task<JsonResult> GetDepartmentFilter()
         {
             string getDepartmentsQuery = "SELECT D.Name AS Department FROM Department D";
 
-            return await GetDataByFilter(getDepartmentsQuery, "Department");
+            return await GetList(getDepartmentsQuery);
         }
 
-        // Semesters for filtering
         [HttpGet]
         [Route("GetSemesterFilter")]
         public async Task<JsonResult> GetSemesterFilter()
         {
             string getSemestersQuery = "SELECT SEM.Name AS Semester FROM Semester SEM";
 
-            return await GetDataByFilter(getSemestersQuery, "Semester");
+            return await GetList(getSemestersQuery);
         }
 
-        // Lecturer for filtering
         [HttpGet]
         [Route("GetLecturerFilter")]
         public async Task<JsonResult> GetLecturerFilter()
@@ -204,20 +216,18 @@ namespace SIMS_APIs.Controllers
                                         INNER JOIN UserRole UR ON A.ID = UR.AccountID 
                                         INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'";
 
-            return await GetDataByFilter(getLecturersQuery, "Lecturer");
+            return await GetList(getLecturersQuery);
         }
 
-        // Subjects
         [HttpGet]
         [Route("GetSubjects")]
         public async Task<JsonResult> GetSubjects()
         {
             string getSubjectsQuery = @"SELECT SubjectCode, Name, Credits, Slots, Fee FROM Subject";
 
-            return await GetData(getSubjectsQuery);
+            return await GetList(getSubjectsQuery);
         }
 
-        // Semester
         [HttpGet]
         [Route("GetSemesters")]
         public async Task<JsonResult> GetSemesters()
@@ -227,20 +237,18 @@ namespace SIMS_APIs.Controllers
                                          CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
                                          FROM Semester";
 
-            return await GetData(getSemestersQuery);
+            return await GetList(getSemestersQuery);
         }
 
-        // Department
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
         {
             string getDepartmentsQuery = "SELECT Name FROM Department";
 
-            return await GetData(getDepartmentsQuery);
+            return await GetList(getDepartmentsQuery);
         }
 
-        // Major
         [HttpGet]
         [Route("GetMajors")]
         public async Task<JsonResult> GetMajors()
@@ -249,8 +257,7 @@ namespace SIMS_APIs.Controllers
                                       FROM Major M 
                                       JOIN Department D ON M.DepartmentID = D.ID";
 
-            return await GetData(getMajorsQuery);
+            return await GetList(getMajorsQuery);
         }
-
     }
 }
