@@ -1,8 +1,8 @@
-﻿@page "/admin/accountdetail-management"
+﻿@page "/admin/accountdetail-management/{ID:int}"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
 @using System.Text.Json
-@using SIMS.Data.Entities.Admin
+@using SIMS.Data.Entities
 @using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
@@ -10,52 +10,38 @@
 <PageTitle>Account Detail</PageTitle>
 
 <div class="container mt-5">
-    <!-- Added a container with margin-top -->
     <div class="body larger-card d-flex flex-column justify-content-center">
         <div class="row">
-            <!-- Phần bên trái: Avatar và Thông tin cơ bản -->
             <div class="col-md-2 text-center d-flex flex-column align-items-center justify-content-center">
-                <img src="/defaultavatar.jpg" alt="User Avatar" class="img-fluid rounded-circle avatar mb-3" />
+                <img src="@userPersonalAvatar" alt="User Avatar" class="img-fluid rounded-circle avatar mb-3" />
             </div>
             <div class="col-md-4 text-left reduced-margin-left d-flex flex-column justify-content-center align-items-start">
-                <h1 class="font-weight-bold">KuPoKaTri</h1>
-                <p class="font-weight-bold">Member Code</p> <!-- Added font-weight-bold class to the paragraph -->
-                <div class="mb-2">
-                    <button class="btn btn-primary role-btn rounded-pill">Role</button>
-                </div>
-                <div class="mb-2">
-                    <button class="btn btn-danger department-btn rounded-pill">Department</button>
-                </div>
-                <div>
-                    <button class="btn btn-success major-btn rounded-pill">Major</button>
-                </div>
+                <h1 class="font-weight-bold">@userName</h1>
             </div>
-
-            <!-- Phần bên phải: Thông tin chi tiết -->
             <div class="col-md-6 right-section d-flex align-items-center p-0">
                 <div class="w-100 p-0">
                     <div class="row p-0">
                         <div class="col-md-6 first-col-border">
                             <div class="row">
                                 <div class="col-md-12 info-item d-flex justify-content-left">
-                                    <i class="bi bi-cake2-fill"></i> <span>00/00/0000</span>
+                                    <i class="bi bi-cake2-fill"></i> <span>@dateOfBirth</span>
                                 </div>
                             </div>
                             <div class="row second-row-border">
                                 <div class="col-md-12 info-item d-flex justify-content-left">
-                                    <i class="bi bi-gender-ambiguous mr-1 blue-icon"></i> <span>Gender</span>
+                                    <i class="bi bi-gender-ambiguous mr-1 blue-icon"></i> <span>@gender</span>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="row">
                                 <div class="col-md-12 info-item d-flex justify-content-left">
-                                    <i class="bi bi-telephone mr-2 blue-icon"></i> <span>0000000000</span>
+                                    <i class="bi bi-telephone mr-2 blue-icon"></i> <span>@phoneNumber</span>
                                 </div>
                             </div>
                             <div class="row second-row-border">
                                 <div class="col-md-12 info-item d-flex justify-content-left">
-                                    <i class="bi bi-geo-alt mr-1 blue-icon"></i> <span>Address</span>
+                                    <i class="bi bi-geo-alt mr-1 blue-icon"></i> <span>@address</span>
                                 </div>
                             </div>
                         </div>
@@ -65,3 +51,70 @@
         </div>
     </div>
 </div>
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+
+    private string HeaderTitle = "Account Detail";
+
+    // Data for the profile page
+    private string userName;
+    private string dateOfBirth;
+    private string gender;
+    private string phoneNumber;
+    private string address;
+    private string userPersonalAvatar;
+
+    // Variable to hold user info
+    private UserInfos userInfo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderTitleService.Title = HeaderTitle;
+
+        try
+        {
+            // Retrieve UserInfo data based on ID
+            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/GetUserInfo/{ID}");
+
+            // Check if any user info was retrieved
+            if (userInfo != null)
+            {
+                userName = userInfo.Name; // Directly access property
+                dateOfBirth = userInfo.DateOfBirth.ToString("MM/dd/yyyy");
+                gender = userInfo.Gender.ToString(); // Convert Gender enum to string
+                phoneNumber = userInfo.PersonalPhone ?? "Not Available";
+                address = userInfo.PermanentAddress ?? "Not Available";
+                userPersonalAvatar = userInfo.PersonalAvatar ?? "https://via.placeholder.com/150?text=No+Image";
+            }
+            else
+            {
+                // Handle case where no user info is found
+                userName = "User not found";
+                dateOfBirth = string.Empty;
+                gender = string.Empty;
+                phoneNumber = "Not Available";
+                address = "Not Available";
+                userPersonalAvatar = "https://via.placeholder.com/150?text=No+Image";
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions and log if necessary
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            // Optionally set error messages or            Console.WriteLine($"An error occurred: {ex.Message}");
+            // Optionally set error messages or default values here
+            userName = "Error loading user";
+            dateOfBirth = string.Empty;
+            gender = string.Empty;
+            phoneNumber = "Not Available";
+            address = "Not Available";
+            userPersonalAvatar = "https://via.placeholder.com/150?text=No+Image";
+        }
+    }
+}
+
+
+
+

@@ -1,4 +1,8 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace SIMS.Shared.Functions
 {
@@ -25,6 +29,29 @@ namespace SIMS.Shared.Functions
 
                 using var responseStream = await response.Content.ReadAsStreamAsync();
                 data = await JsonSerializer.DeserializeAsync<IEnumerable<T>>(responseStream);
+                _logger.LogInformation("Data loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error loading data: {ex.Message}");
+            }
+
+            return data;
+        }
+
+        public async Task<T> LoadSingleData<T>(string methodURL)
+        {
+            T data = default(T);
+
+            try
+            {
+                _logger.LogInformation($"Loading data from {API_URL + methodURL}");
+                HttpClient client = new HttpClient();
+                HttpResponseMessage response = await client.GetAsync(API_URL + methodURL);
+                response.EnsureSuccessStatusCode();
+
+                using var responseStream = await response.Content.ReadAsStreamAsync();
+                data = await JsonSerializer.DeserializeAsync<T>(responseStream);
                 _logger.LogInformation("Data loaded successfully");
             }
             catch (Exception ex)
