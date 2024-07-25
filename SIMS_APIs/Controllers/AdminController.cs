@@ -254,27 +254,48 @@ namespace SIMS_APIs.Controllers
             return await GetData(getMajorsQuery);
         }
 
+        //Userinfos
         [HttpGet]
         [Route("GetUserInfo/{id}")]
         public async Task<IActionResult> GetUserInfo(int id)
         {
-            string getUserInfoByIdQuery = @"SELECT 
-                [ID],
-                [AccountID],
-                [Name],
-                [Gender],
-                [DateOfBirth],
-                [PersonalAvatar],
-                [OfficialAvatar],
-                [PersonalPhone],
-                [ContactPhone1],
-                [ContactPhone2],
-                [PermanentAddress],
-                [TemporaryAddress]
-                FROM [SIMS].[dbo].[UserInfo]
-                WHERE [ID] = @id";
+            string getUserInfoByIdQuery = @"
+        SELECT 
+    UI.[ID],
+    UI.[AccountID],
+    UI.[Name] AS UserName,
+    UI.[Gender],
+    UI.[DateOfBirth],
+    UI.[PersonalAvatar],
+    UI.[OfficialAvatar],
+    UI.[PersonalPhone],
+    UI.[ContactPhone1],
+    UI.[ContactPhone2],
+    UI.[PermanentAddress],
+    UI.[TemporaryAddress],
+    R.[Name] AS RoleName,  
+    M.[Name] AS MajorName, 
+    D.[Name] AS DepartmentName 
+FROM 
+    [SIMS].[dbo].[UserInfo] UI
+LEFT JOIN 
+    [SIMS].[dbo].[StudentDetail] SD
+    ON UI.[AccountID] = SD.[AccountID]
+LEFT JOIN 
+    [SIMS].[dbo].[Major] M
+    ON SD.[MajorID] = M.[ID]
+LEFT JOIN 
+    [SIMS].[dbo].[Department] D
+    ON M.[DepartmentID] = D.[ID]
+JOIN 
+    [SIMS].[dbo].[UserRole] UR
+    ON UI.[AccountID] = UR.[AccountID]
+JOIN 
+    [SIMS].[dbo].[Role] R
+    ON UR.[RoleID] = R.[ID]
+WHERE 
+    UI.[ID] = @id";
 
-            // Define SQL parameters
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
         new SqlParameter("@id", id)
@@ -285,18 +306,23 @@ namespace SIMS_APIs.Controllers
                 var dbInteraction = new DatabaseInteraction(_configuration);
                 DataTable dt = await dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
 
-                // Check if data is retrieved
+                // Debug: Print column names
+                foreach (DataColumn column in dt.Columns)
+                {
+                    Console.WriteLine($"Column Name: {column.ColumnName}");
+                }
+
                 if (dt.Rows.Count == 0)
                 {
                     return NotFound("User not found.");
                 }
 
-                // Convert DataTable to a list of objects (you can create a model class for UserInfo)
+                // Convert DataTable to an anonymous object
                 var userInfo = dt.AsEnumerable().Select(row => new
                 {
                     ID = row.Field<int>("ID"),
                     AccountID = row.Field<int>("AccountID"),
-                    Name = row.Field<string>("Name"),
+                    Name = row.Field<string>("UserName"), // Note: Changed to 'UserName'
                     Gender = row.Field<string>("Gender"),
                     DateOfBirth = row.Field<DateTime>("DateOfBirth"),
                     PersonalAvatar = row.Field<string>("PersonalAvatar"),
@@ -305,14 +331,18 @@ namespace SIMS_APIs.Controllers
                     ContactPhone1 = row.Field<string>("ContactPhone1"),
                     ContactPhone2 = row.Field<string>("ContactPhone2"),
                     PermanentAddress = row.Field<string>("PermanentAddress"),
-                    TemporaryAddress = row.Field<string>("TemporaryAddress")
+                    TemporaryAddress = row.Field<string>("TemporaryAddress"),
+                    RoleName = row.Field<string>("RoleName"),
+                    MajorName = row.Field<string>("MajorName"),
+                    DepartmentName = row.Field<string>("DepartmentName")
                 }).FirstOrDefault();
 
                 return Ok(userInfo);
             }
             catch (Exception ex)
             {
-                // Log the exception (you can use a logging framework)
+                // Log detailed exception
+                Console.WriteLine($"Exception: {ex}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
