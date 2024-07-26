@@ -2,8 +2,8 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SIMS_APIs.Functions;
-using SIMS.Data.Entities; // Add this line to include the namespace for UserInfos
-using SIMS.Data.Entities.Enums; // Add this line to include the namespace for Gender enum
+using SIMS.Data.Entities.Enums;
+using SIMS.Data.Entities;
 using System;
 using System.Data;
 using System.Threading.Tasks;
@@ -222,7 +222,6 @@ namespace SIMS_APIs.Controllers
                                          FROM Semester";
             return await GetList(getSemestersQuery);
         }
-
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
@@ -230,40 +229,51 @@ namespace SIMS_APIs.Controllers
             string getDepartmentsQuery = "SELECT Name FROM Department";
             return await GetList(getDepartmentsQuery);
         }
+
         [HttpGet("userinfo/{id}")]
         public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getUserInfoByIdQuery = @"
-                    SELECT 
-                        UI.[ID],
-                        UI.[AccountID],
-                        UI.[Name],
-                        UI.[Gender],
-                        UI.[DateOfBirth],
-                        UI.[PersonalAvatar],
-                        UI.[OfficialAvatar],
-                        UI.[PersonalPhone],
-                        UI.[ContactPhone1],
-                        UI.[ContactPhone2],
-                        UI.[PermanentAddress],
-                        UI.[TemporaryAddress],
-                        R.[Name] AS [Role]
-                    FROM 
-                        [SIMS].[dbo].[UserInfo] UI
-                    LEFT JOIN 
-                        [SIMS].[dbo].[Account] A
-                        ON UI.[AccountID] = A.[ID]
-                    LEFT JOIN 
-                        [SIMS].[dbo].[UserRole] UR
-                        ON A.[ID] = UR.[AccountID]
-                    LEFT JOIN 
-                        [SIMS].[dbo].[Role] R
-                        ON UR.[RoleID] = R.[ID]
-                    WHERE 
-                        UI.[ID] = @ID";
+            SELECT 
+                UI.[ID],
+                UI.[AccountID],
+                UI.[Name] AS UserName,
+                UI.[Gender],
+                UI.[DateOfBirth],
+                UI.[PersonalAvatar],
+                UI.[OfficialAvatar],
+                UI.[PersonalPhone],
+                UI.[ContactPhone1],
+                UI.[ContactPhone2],
+                UI.[PermanentAddress],
+                UI.[TemporaryAddress],
+                R.[Name] AS RoleName,  
+                M.[Name] AS MajorName, 
+                D.[Name] AS DepartmentName 
+            FROM 
+                [SIMS].[dbo].[UserInfo] UI
+            LEFT JOIN 
+                [SIMS].[dbo].[StudentDetail] SD
+                ON UI.[AccountID] = SD.[AccountID]
+            LEFT JOIN 
+                [SIMS].[dbo].[Major] M
+                ON SD.[MajorID] = M.[ID]
+            LEFT JOIN 
+                [SIMS].[dbo].[Department] D
+                ON M.[DepartmentID] = D.[ID]
+            JOIN 
+                [SIMS].[dbo].[UserRole] UR
+                ON UI.[AccountID] = UR.[AccountID]
+            JOIN 
+                [SIMS].[dbo].[Role] R
+                ON UR.[RoleID] = R.[ID]
+            WHERE 
+                UI.[ID] = @ID
+        ";
+
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
-        new SqlParameter("@ID", id)
+            new SqlParameter("@ID", id)
             };
 
             DataTable dataTable = await _dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
@@ -282,8 +292,8 @@ namespace SIMS_APIs.Controllers
             {
                 ID = Convert.ToInt32(row["ID"]),
                 AccountID = Convert.ToInt32(row["AccountID"]),
-                Name = Convert.ToString(row["Name"]),
-                Gender = genderParsed ? genderEnum : Gender.Other, // Gán giá trị mặc định nếu không thành công
+                Name = Convert.ToString(row["UserName"]),
+                Gender = genderParsed ? genderEnum : Gender.Other,
                 DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
                 PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
                 OfficialAvatar = Convert.ToString(row["OfficialAvatar"]),
@@ -291,7 +301,10 @@ namespace SIMS_APIs.Controllers
                 ContactPhone1 = Convert.ToString(row["ContactPhone1"]),
                 ContactPhone2 = Convert.ToString(row["ContactPhone2"]),
                 PermanentAddress = Convert.ToString(row["PermanentAddress"]),
-                TemporaryAddress = Convert.ToString(row["TemporaryAddress"])
+                TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
+                RoleName = Convert.ToString(row["RoleName"]),
+                MajorName = Convert.ToString(row["MajorName"]),
+                DepartmentName = Convert.ToString(row["DepartmentName"])
             };
 
             return Ok(userInfos);
