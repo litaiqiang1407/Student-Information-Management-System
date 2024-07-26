@@ -1,4 +1,4 @@
-﻿﻿using SIMS.Data.Entities.Enums;
+﻿using SIMS.Data.Entities.Enums;
 
 namespace SIMS.Data.Entities
 {
@@ -8,7 +8,7 @@ namespace SIMS.Data.Entities
         public int AccountID { get; set; }
         public string Name { get; set; }
         public string RoleName { get; set; }
-        public string Gender { get; set; }
+        public Gender Gender { get; set; } // Thay đổi từ string sang enum
         public DateTime DateOfBirth { get; set; }
         public string PersonalAvatar { get; set; }
         public string OfficialAvatar { get; set; }
@@ -19,6 +19,5 @@ namespace SIMS.Data.Entities
         public string TemporaryAddress { get; set; }
         public string MajorName { get; set; }
         public string DepartmentName { get; set; }
-        public string AccountName { get; set; }
     }
 }

@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SIMS_APIs.Functions;
+using SIMS.Data.Entities; // Add this line to include the namespace for UserInfos
+using SIMS.Data.Entities.Enums; // Add this line to include the namespace for Gender enum
+using System;
 using System.Data;
 using System.Threading.Tasks;
 
@@ -14,52 +16,44 @@ namespace SIMS_APIs.Controllers
     public class AdminController : ControllerBase
     {
         private readonly DatabaseInteraction _dbInteraction;
-
-        private readonly IConfiguration _configuration; // Khai báo biến _configuration
+        private readonly IConfiguration _configuration;
 
         public AdminController(IConfiguration configuration)
         {
-            _configuration = configuration; // Khởi tạo biến _configuration
+            _configuration = configuration;
             _dbInteraction = new DatabaseInteraction(configuration);
         }
 
-        // Get Data
-        private async Task<JsonResult> GetData(string getQuery)
+        private async Task<JsonResult> GetList(string query)
         {
-            DataTable dt = await _dbInteraction.GetData(getQuery);
-
+            DataTable dt = await _dbInteraction.GetData(query);
             return new JsonResult(dt);
         }
 
-        // Delete Data
-        private async Task<JsonResult> DeleteData(string deleteQuery, string id)
+        private async Task<JsonResult> GetData(string query, SqlParameter[] sqlParameters = null)
         {
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-                new SqlParameter("@id", id)
-            };
-
-            int rowsAffected = await _dbInteraction.ExecuteQuery(deleteQuery, sqlParameters);
-
-            return new JsonResult(rowsAffected);
+            DataTable dt = await _dbInteraction.GetData(query, sqlParameters);
+            return new JsonResult(dt);
         }
 
-        // Get Data by Filter
-        private async Task<JsonResult> GetDataByFilter(string getQuery, string col)
+        private async Task<JsonResult> Create(string query, SqlParameter[] sqlParameters)
         {
-            DataTable dt = await _dbInteraction.GetData(getQuery);
-
-            List<string> filter = new List<string>();
-
-            foreach (DataRow row in dt.Rows)
-            {
-                filter.Add(row[col].ToString());
-            }
-
-            return new JsonResult(filter);
+            int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
+            return new JsonResult(new { success = rowsAffected > 0 });
         }
 
-        // Accounts
+        private async Task<JsonResult> Update(string query, SqlParameter[] sqlParameters)
+        {
+            int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
+            return new JsonResult(new { success = rowsAffected > 0 });
+        }
+
+        private async Task<JsonResult> Delete(string query, SqlParameter[] sqlParameters)
+        {
+            int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
+            return new JsonResult(new { success = rowsAffected > 0 });
+        }
+
         [HttpGet]
         [Route("GetAccount")]
         public async Task<JsonResult> GetAccount()
@@ -76,7 +70,7 @@ namespace SIMS_APIs.Controllers
                                        LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
                                        LEFT JOIN Role R ON UR.RoleID = R.ID";
 
-            return await GetData(getAccountQuery);
+            return await GetList(getAccountQuery);
         }
 
         [HttpGet]
@@ -84,19 +78,23 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetRoleFilter()
         {
             string getRoleAccountQuery = "SELECT R.Name AS Role FROM Role R";
-
-            return await GetDataByFilter(getRoleAccountQuery, "Role");
+            return await GetList(getRoleAccountQuery);
         }
 
         [HttpPost]
         [Route("AddAccount")]
-        public async Task<JsonResult> AddAccount([FromForm] string newAccount)
+        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email)
         {
-            string addAccountQuery = "INSERT INTO Account VALUES (@newAccount)";
+            string addAccountQuery = @"INSERT INTO Account (MemberCode, Email, CreatedAt, UpdatedAt) 
+                                       VALUES (@MemberCode, @Email, GETDATE(), GETDATE())";
 
-            DataTable dt = await _dbInteraction.GetData(addAccountQuery);
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+                new SqlParameter("@MemberCode", memberCode),
+                new SqlParameter("@Email", email)
+            };
 
-            return new JsonResult("Add Successfully");
+            return await Create(addAccountQuery, sqlParameters);
         }
 
         [HttpDelete]
@@ -105,29 +103,14 @@ namespace SIMS_APIs.Controllers
         {
             string deleteAccountQuery = "DELETE FROM Account WHERE ID = @id";
 
-            return await DeleteData(deleteAccountQuery, id);
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+                new SqlParameter("@id", id)
+            };
+
+            return await Delete(deleteAccountQuery, sqlParameters);
         }
 
-
-        private async Task<JsonResult> GetDataByRole(string roleName)
-        {
-            string getQuery = @$"SELECT 
-                        A.ID,
-                        A.MemberCode, 
-                        A.Email, 
-                        CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
-                        CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
-                        UI.Name AS Name 
-                        FROM Account A 
-                        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
-                        LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
-                        LEFT JOIN Role R ON UR.RoleID = R.ID 
-                        WHERE R.Name = '{roleName}'";
-
-            return await GetData(getQuery);
-        }
-
-        // Admins
         [HttpGet]
         [Route("GetAdmin")]
         public async Task<JsonResult> GetAdmin()
@@ -135,7 +118,24 @@ namespace SIMS_APIs.Controllers
             return await GetDataByRole("Admin");
         }
 
-        // Lecturers
+        private async Task<JsonResult> GetDataByRole(string roleName)
+        {
+            string getQuery = @$"SELECT
+                                A.ID,
+                                A.MemberCode, 
+                                A.Email, 
+                                CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
+                                CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
+                                UI.Name AS Name 
+                                FROM Account A 
+                                LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
+                                LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
+                                LEFT JOIN Role R ON UR.RoleID = R.ID 
+                                WHERE R.Name = '{roleName}'";
+
+            return await GetList(getQuery);
+        }
+
         [HttpGet]
         [Route("GetLecturer")]
         public async Task<JsonResult> GetLecturer()
@@ -143,7 +143,6 @@ namespace SIMS_APIs.Controllers
             return await GetDataByRole("Lecturer");
         }
 
-        // Students
         [HttpGet]
         [Route("GetStudent")]
         public async Task<JsonResult> GetStudent()
@@ -151,7 +150,6 @@ namespace SIMS_APIs.Controllers
             return await GetDataByRole("Student");
         }
 
-        // Courses
         [HttpGet]
         [Route("GetCourses")]
         public async Task<JsonResult> GetCourses()
@@ -169,33 +167,29 @@ namespace SIMS_APIs.Controllers
                                        INNER JOIN Department D ON C.DepartmentID = D.ID
                                        INNER JOIN Semester SEM ON C.SemesterID = SEM.ID
                                        INNER JOIN Account A ON C.AccountID = A.ID
-                                       INNER JOIN UserRole UR ON A.ID = UR.AccountIDINNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
+                                       INNER JOIN UserRole UR ON A.ID = UR.AccountID
+                                       INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
                                        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
 
-            return await GetData(getCoursesQuery);
+            return await GetList(getCoursesQuery);
         }
 
-        // Departments for filtering
         [HttpGet]
         [Route("GetDepartmentFilter")]
         public async Task<JsonResult> GetDepartmentFilter()
         {
             string getDepartmentsQuery = "SELECT D.Name AS Department FROM Department D";
-
-            return await GetDataByFilter(getDepartmentsQuery, "Department");
+            return await GetList(getDepartmentsQuery);
         }
 
-        // Semesters for filtering
         [HttpGet]
         [Route("GetSemesterFilter")]
         public async Task<JsonResult> GetSemesterFilter()
         {
             string getSemestersQuery = "SELECT SEM.Name AS Semester FROM Semester SEM";
-
-            return await GetDataByFilter(getSemestersQuery, "Semester");
+            return await GetList(getSemestersQuery);
         }
 
-        // Lecturer for filtering
         [HttpGet]
         [Route("GetLecturerFilter")]
         public async Task<JsonResult> GetLecturerFilter()
@@ -207,20 +201,17 @@ namespace SIMS_APIs.Controllers
                                         INNER JOIN UserRole UR ON A.ID = UR.AccountID 
                                         INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'";
 
-            return await GetDataByFilter(getLecturersQuery, "Lecturer");
+            return await GetList(getLecturersQuery);
         }
 
-        // Subjects
         [HttpGet]
         [Route("GetSubjects")]
         public async Task<JsonResult> GetSubjects()
         {
             string getSubjectsQuery = @"SELECT SubjectCode, Name, Credits, Slots, Fee FROM Subject";
-
-            return await GetData(getSubjectsQuery);
+            return await GetList(getSubjectsQuery);
         }
 
-        // Semester
         [HttpGet]
         [Route("GetSemesters")]
         public async Task<JsonResult> GetSemesters()
@@ -229,121 +220,81 @@ namespace SIMS_APIs.Controllers
                                          CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
                                          CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
                                          FROM Semester";
-
-            return await GetData(getSemestersQuery);
+            return await GetList(getSemestersQuery);
         }
 
-        // Department
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
         {
             string getDepartmentsQuery = "SELECT Name FROM Department";
-
-            return await GetData(getDepartmentsQuery);
+            return await GetList(getDepartmentsQuery);
         }
-
-        // Major
-        [HttpGet]
-        [Route("GetMajors")]
-        public async Task<JsonResult> GetMajors()
+        [HttpGet("userinfo/{id}")]
+        public async Task<IActionResult> GetUserInfoById(int id)
         {
-            string getMajorsQuery = @"SELECT M.Name, D.Name AS Department 
-                                      FROM Major M 
-                                      JOIN Department D ON M.DepartmentID = D.ID";
-            return await GetData(getMajorsQuery);
-        }
-
-        //Userinfos
-        [HttpGet]
-        [Route("GetUserInfo/{id}")]
-        public async Task<IActionResult> GetUserInfo(int id)
-        {
-            string getUserInfoByIdQuery = @"SELECT 
-    UI.[ID],
-    UI.[AccountID],
-    UI.[Name] AS UserName,
-    UI.[Gender],
-    UI.[DateOfBirth],
-    UI.[PersonalAvatar],
-    UI.[OfficialAvatar],
-    UI.[PersonalPhone],
-    UI.[ContactPhone1],
-    UI.[ContactPhone2],
-    UI.[PermanentAddress],
-    UI.[TemporaryAddress],
-    R.[Name] AS RoleName,  
-    M.[Name] AS MajorName, 
-    D.[Name] AS DepartmentName 
-FROM 
-    [SIMS].[dbo].[UserInfo] UI
-LEFT JOIN 
-    [SIMS].[dbo].[StudentDetail] SD
-    ON UI.[AccountID] = SD.[AccountID]
-LEFT JOIN 
-    [SIMS].[dbo].[Major] M
-    ON SD.[MajorID] = M.[ID]
-LEFT JOIN 
-    [SIMS].[dbo].[Department] D
-    ON M.[DepartmentID] = D.[ID]
-JOIN 
-    [SIMS].[dbo].[UserRole] UR
-    ON UI.[AccountID] = UR.[AccountID]
-JOIN 
-    [SIMS].[dbo].[Role] R
-    ON UR.[RoleID] = R.[ID]
-WHERE 
-    UI.[ID] = @id";
+            string getUserInfoByIdQuery = @"
+                    SELECT 
+                        UI.[ID],
+                        UI.[AccountID],
+                        UI.[Name],
+                        UI.[Gender],
+                        UI.[DateOfBirth],
+                        UI.[PersonalAvatar],
+                        UI.[OfficialAvatar],
+                        UI.[PersonalPhone],
+                        UI.[ContactPhone1],
+                        UI.[ContactPhone2],
+                        UI.[PermanentAddress],
+                        UI.[TemporaryAddress],
+                        R.[Name] AS [Role]
+                    FROM 
+                        [SIMS].[dbo].[UserInfo] UI
+                    LEFT JOIN 
+                        [SIMS].[dbo].[Account] A
+                        ON UI.[AccountID] = A.[ID]
+                    LEFT JOIN 
+                        [SIMS].[dbo].[UserRole] UR
+                        ON A.[ID] = UR.[AccountID]
+                    LEFT JOIN 
+                        [SIMS].[dbo].[Role] R
+                        ON UR.[RoleID] = R.[ID]
+                    WHERE 
+                        UI.[ID] = @ID";
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
-        new SqlParameter("@id", id)
+        new SqlParameter("@ID", id)
             };
 
-            try
+            DataTable dataTable = await _dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
+
+            if (dataTable.Rows.Count == 0)
             {
-                var dbInteraction = new DatabaseInteraction(_configuration);
-                DataTable dt = await dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
-
-                // Debug: Print column names
-                foreach (DataColumn column in dt.Columns)
-                {
-                    Console.WriteLine($"Column Name: {column.ColumnName}");
-                }
-
-                if (dt.Rows.Count == 0)
-                {
-                    return NotFound("User not found.");
-                }
-
-                // Convert DataTable to an anonymous object
-                var userInfo = dt.AsEnumerable().Select(row => new
-                {
-                    ID = row.Field<int>("ID"),
-                    AccountID = row.Field<int>("AccountID"),
-                    //AccountName = row.Field<string>("AccountName"),
-                    Name = row.Field<string>("UserName"),
-                    Gender = row.Field<string>("Gender"),
-                    DateOfBirth = row.Field<DateTime>("DateOfBirth"),
-                    PersonalAvatar = row.Field<string>("PersonalAvatar"),
-                    OfficialAvatar = row.Field<string>("OfficialAvatar"),
-                    PersonalPhone = row.Field<string>("PersonalPhone"),
-                    ContactPhone1 = row.Field<string>("ContactPhone1"),
-                    ContactPhone2 = row.Field<string>("ContactPhone2"),
-                    PermanentAddress = row.Field<string>("PermanentAddress"),
-                    TemporaryAddress = row.Field<string>("TemporaryAddress"),
-                    RoleName = row.Field<string>("RoleName"),
-                    MajorName = row.Field<string>("MajorName"),
-                    DepartmentName = row.Field<string>("DepartmentName")
-                }).FirstOrDefault();
-
-                return Ok(userInfo);
+                return NotFound();
             }
-            catch (Exception ex)
+
+            DataRow row = dataTable.Rows[0];
+
+            // Chuyển đổi Gender từ chuỗi sang enum
+            bool genderParsed = Enum.TryParse(row["Gender"].ToString(), out Gender genderEnum);
+
+            UserInfos userInfos = new UserInfos
             {
-                // Log detailed exception
-                Console.WriteLine($"Exception: {ex}");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+                ID = Convert.ToInt32(row["ID"]),
+                AccountID = Convert.ToInt32(row["AccountID"]),
+                Name = Convert.ToString(row["Name"]),
+                Gender = genderParsed ? genderEnum : Gender.Other, // Gán giá trị mặc định nếu không thành công
+                DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
+                PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
+                OfficialAvatar = Convert.ToString(row["OfficialAvatar"]),
+                PersonalPhone = Convert.ToString(row["PersonalPhone"]),
+                ContactPhone1 = Convert.ToString(row["ContactPhone1"]),
+                ContactPhone2 = Convert.ToString(row["ContactPhone2"]),
+                PermanentAddress = Convert.ToString(row["PermanentAddress"]),
+                TemporaryAddress = Convert.ToString(row["TemporaryAddress"])
+            };
+
+            return Ok(userInfos);
         }
 
     }

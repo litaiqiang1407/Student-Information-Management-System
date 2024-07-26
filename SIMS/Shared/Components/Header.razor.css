@@ -25,6 +25,12 @@
 .header .header-top .action-link .action-icon:hover {
   color: var(--primary-hover-color);
 }
+.header .header-top .action-link .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-left: 16px;
+}
 .header .header-bottom {
   display: flex;
   justify-content: space-between;

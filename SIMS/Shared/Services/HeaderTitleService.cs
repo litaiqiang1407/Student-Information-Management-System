@@ -6,6 +6,7 @@ namespace SIMS.Shared.Services
     public class HeaderTitleService : INotifyPropertyChanged
     {
         private string _title = "Student Information Management System";
+        public string OfficialAvatar { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
