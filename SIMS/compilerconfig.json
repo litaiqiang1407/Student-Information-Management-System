@@ -60,6 +60,10 @@
     "inputFile": "Shared/Components/Filter.razor.scss"
   },
   {
+    "outputFile": "Pages/Admin/Account/AccountDetail/AccountDetail.razor.css",
+    "inputFile": "Pages/Admin/Account/AccountDetail/AccountDetail.razor.scss"
+  },
+  {
     "outputFile": "Shared/Components/Form.razor.css",
     "inputFile": "Shared/Components/Form.razor.scss"
   },

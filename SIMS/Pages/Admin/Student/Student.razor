@@ -1,11 +1,12 @@
 ﻿@page "/admin/student-management"
 @layout SIMS.Shared.Layouts.MainLayout
 @using SIMS.Shared.Models
-@using System.Text.Json;
-@using SIMS.Data.Entities.Admin;
+@using System.Text.Json
+@using SIMS.Data.Entities.Admin
 @using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+@inject NavigationManager Navigation
 
 <PageTitle>Admin</PageTitle>
 
@@ -14,11 +15,11 @@
     <Filter Filters="@filters" Items="@students" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
     }
     else
     {
-        <Table Data="@students" Columns="@columns" />
+        <Table Data="@students" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
     }
 }
 else
@@ -36,17 +37,20 @@ else
 
     private EventCallback<IEnumerable<Students>> filteredItemsChanged;
 
-    private void Updatefiltered(IEnumerable<Students> filteredItems)
+    private void UpdateFiltered(IEnumerable<Students> filteredItems)
     {
         filtered = filteredItems.ToList();
     }
+
+    private EventCallback<Students> HandleRowClickCallback =>
+        EventCallback.Factory.Create<Students>(this, HandleRowClick);
 
     protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
         await LoadData();
         // await LoadFilters();
-        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Students>>(this, Updatefiltered);
+        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Students>>(this, UpdateFiltered);
     }
 
     private async Task LoadData()
@@ -64,5 +68,10 @@ else
         };
 
         filterColumns = columns.Where(c => c.IsFilter).ToList();
+    }
+
+    private void HandleRowClick(Students student)
+    {
+        Navigation.NavigateTo($"/admin/accountdetail-management/{student.ID}");
     }
 }

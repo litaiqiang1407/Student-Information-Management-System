@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using SIMS_APIs.Functions;
 using System.Data;
 using System.Threading.Tasks;
@@ -14,14 +15,17 @@ namespace SIMS_APIs.Controllers
     {
         private readonly DatabaseInteraction _dbInteraction;
 
+        private readonly IConfiguration _configuration; // Khai báo biến _configuration
+
         public AdminController(IConfiguration configuration)
         {
+            _configuration = configuration; // Khởi tạo biến _configuration
             _dbInteraction = new DatabaseInteraction(configuration);
         }
 
         // Get Data
         private async Task<JsonResult> GetData(string getQuery)
-        {           
+        {
             DataTable dt = await _dbInteraction.GetData(getQuery);
 
             return new JsonResult(dt);
@@ -82,7 +86,7 @@ namespace SIMS_APIs.Controllers
             string getRoleAccountQuery = "SELECT R.Name AS Role FROM Role R";
 
             return await GetDataByFilter(getRoleAccountQuery, "Role");
-        }    
+        }
 
         [HttpPost]
         [Route("AddAccount")]
@@ -105,20 +109,20 @@ namespace SIMS_APIs.Controllers
         }
 
 
-
         private async Task<JsonResult> GetDataByRole(string roleName)
         {
             string getQuery = @$"SELECT 
-                                A.MemberCode, 
-                                A.Email, 
-                                CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
-                                CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
-                                UI.Name AS Name 
-                                FROM Account A 
-                                LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
-                                LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
-                                LEFT JOIN Role R ON UR.RoleID = R.ID 
-                                WHERE R.Name = '{roleName}'";
+                        A.ID,
+                        A.MemberCode, 
+                        A.Email, 
+                        CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
+                        CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
+                        UI.Name AS Name 
+                        FROM Account A 
+                        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
+                        LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
+                        LEFT JOIN Role R ON UR.RoleID = R.ID 
+                        WHERE R.Name = '{roleName}'";
 
             return await GetData(getQuery);
         }
@@ -165,8 +169,7 @@ namespace SIMS_APIs.Controllers
                                        INNER JOIN Department D ON C.DepartmentID = D.ID
                                        INNER JOIN Semester SEM ON C.SemesterID = SEM.ID
                                        INNER JOIN Account A ON C.AccountID = A.ID
-                                       INNER JOIN UserRole UR ON A.ID = UR.AccountID
-                                       INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
+                                       INNER JOIN UserRole UR ON A.ID = UR.AccountIDINNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
                                        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
 
             return await GetData(getCoursesQuery);
@@ -248,8 +251,99 @@ namespace SIMS_APIs.Controllers
             string getMajorsQuery = @"SELECT M.Name, D.Name AS Department 
                                       FROM Major M 
                                       JOIN Department D ON M.DepartmentID = D.ID";
-
             return await GetData(getMajorsQuery);
+        }
+
+        //Userinfos
+        [HttpGet]
+        [Route("GetUserInfo/{id}")]
+        public async Task<IActionResult> GetUserInfo(int id)
+        {
+            string getUserInfoByIdQuery = @"SELECT 
+    UI.[ID],
+    UI.[AccountID],
+    UI.[Name] AS UserName,
+    UI.[Gender],
+    UI.[DateOfBirth],
+    UI.[PersonalAvatar],
+    UI.[OfficialAvatar],
+    UI.[PersonalPhone],
+    UI.[ContactPhone1],
+    UI.[ContactPhone2],
+    UI.[PermanentAddress],
+    UI.[TemporaryAddress],
+    R.[Name] AS RoleName,  
+    M.[Name] AS MajorName, 
+    D.[Name] AS DepartmentName 
+FROM 
+    [SIMS].[dbo].[UserInfo] UI
+LEFT JOIN 
+    [SIMS].[dbo].[StudentDetail] SD
+    ON UI.[AccountID] = SD.[AccountID]
+LEFT JOIN 
+    [SIMS].[dbo].[Major] M
+    ON SD.[MajorID] = M.[ID]
+LEFT JOIN 
+    [SIMS].[dbo].[Department] D
+    ON M.[DepartmentID] = D.[ID]
+JOIN 
+    [SIMS].[dbo].[UserRole] UR
+    ON UI.[AccountID] = UR.[AccountID]
+JOIN 
+    [SIMS].[dbo].[Role] R
+    ON UR.[RoleID] = R.[ID]
+WHERE 
+    UI.[ID] = @id";
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+        new SqlParameter("@id", id)
+            };
+
+            try
+            {
+                var dbInteraction = new DatabaseInteraction(_configuration);
+                DataTable dt = await dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
+
+                // Debug: Print column names
+                foreach (DataColumn column in dt.Columns)
+                {
+                    Console.WriteLine($"Column Name: {column.ColumnName}");
+                }
+
+                if (dt.Rows.Count == 0)
+                {
+                    return NotFound("User not found.");
+                }
+
+                // Convert DataTable to an anonymous object
+                var userInfo = dt.AsEnumerable().Select(row => new
+                {
+                    ID = row.Field<int>("ID"),
+                    AccountID = row.Field<int>("AccountID"),
+                    //AccountName = row.Field<string>("AccountName"),
+                    Name = row.Field<string>("UserName"),
+                    Gender = row.Field<string>("Gender"),
+                    DateOfBirth = row.Field<DateTime>("DateOfBirth"),
+                    PersonalAvatar = row.Field<string>("PersonalAvatar"),
+                    OfficialAvatar = row.Field<string>("OfficialAvatar"),
+                    PersonalPhone = row.Field<string>("PersonalPhone"),
+                    ContactPhone1 = row.Field<string>("ContactPhone1"),
+                    ContactPhone2 = row.Field<string>("ContactPhone2"),
+                    PermanentAddress = row.Field<string>("PermanentAddress"),
+                    TemporaryAddress = row.Field<string>("TemporaryAddress"),
+                    RoleName = row.Field<string>("RoleName"),
+                    MajorName = row.Field<string>("MajorName"),
+                    DepartmentName = row.Field<string>("DepartmentName")
+                }).FirstOrDefault();
+
+                return Ok(userInfo);
+            }
+            catch (Exception ex)
+            {
+                // Log detailed exception
+                Console.WriteLine($"Exception: {ex}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
     }

@@ -1,7 +1,7 @@
 ﻿@typeparam TItem
 
 <div class="container">
-    @* Table *@
+    <!-- Table UI -->
     <div class="table-responsive table-container">
         <table class="table table-bordered table-hover">
             <thead class="table-head">
@@ -17,7 +17,7 @@
             <tbody class="table-group-divider">
                 @foreach (var (item, index) in Data.Select((value, i) => (value, i)))
                 {
-                    <tr>
+                    <tr @onclick="@(async () => await OnRowClick.InvokeAsync(item))">
                         <td>@(index + 1)</td>
                         @foreach (var col in Columns)
                         {
@@ -25,10 +25,10 @@
                         }
                         <td>
                             <div class="button-group">
-                                <button class="update-button" @onclick="@(() => UpdateItem(item))">
+                                <button class="update-button" @onclick="@(e => UpdateItem(item))">
                                     <i class="bi bi-pencil-square update-icon"></i>
                                 </button>
-                                <button class="delete-button" @onclick="@(() => DeleteItem(item))">
+                                <button class="delete-button" @onclick="@(async e => await DeleteItem(item))">
                                     <i class="bi bi-x-square delete-icon"></i>
                                 </button>
                             </div>
@@ -50,6 +50,9 @@
     public List<TableColumn<TItem>> Columns { get; set; }
 
     [Parameter]
+    public EventCallback<TItem> OnRowClick { get; set; }
+
+    [Parameter]
     public EventCallback<TItem> OnDelete { get; set; }
 
     private void UpdateItem(TItem item)
@@ -61,12 +64,5 @@
     private async Task DeleteItem(TItem item)
     {
         await OnDelete.InvokeAsync(item);
-    }
-
-    private string GetItemId(TItem item)
-    {
-        // Implement logic to get the ID from the item
-        // This will depend on your TItem implementation
-        return item.GetType().GetProperty("Id")?.GetValue(item)?.ToString();
     }
 }

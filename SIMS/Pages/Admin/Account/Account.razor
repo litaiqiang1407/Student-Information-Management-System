@@ -7,6 +7,7 @@
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 @inject ILogger<Account> Logger
+@inject NavigationManager Navigation
 
 <PageTitle>Account</PageTitle>
 
@@ -15,18 +16,17 @@
     <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" OnDelete="@DeleteAccount" />
+        <Table Data="@filtered" Columns="@columns" OnRowClick="@handleRowClickCallback" OnDelete="@deleteAccount" />
     }
     else
     {
-        <Table Data="@accounts" Columns="@columns" OnDelete="@DeleteAccount" />
+        <Table Data="@accounts" Columns="@columns" OnRowClick="@handleRowClickCallback" OnDelete="@deleteAccount" />
     }
 }
 else
 {
     <Loading />
 } *@
-
 
 @code {
     private string HeaderTitle = "Account";
@@ -37,6 +37,8 @@ else
     private List<Accounts> filtered;
 
     private EventCallback<IEnumerable<Accounts>> filteredItemsChanged;
+    private EventCallback<Accounts> deleteAccount;
+    private EventCallback<Accounts> handleRowClickCallback;
 
     private void Updatefiltered(IEnumerable<Accounts> filteredItems)
     {
@@ -49,6 +51,8 @@ else
         await LoadData();
         await LoadFilters();
         filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, Updatefiltered);
+        deleteAccount = EventCallback.Factory.Create<Accounts>(this, DeleteAccount);
+        handleRowClickCallback = EventCallback.Factory.Create<Accounts>(this, HandleRowClick);
     }
 
     private async Task LoadData()
@@ -67,7 +71,6 @@ else
         };
 
         filterColumns = columns.Where(c => c.IsFilter).ToList();
-        //Logger.LogInformation($"Filter Columns: {JsonSerializer.Serialize(filterColumns)}");
     }
 
     private async Task LoadFilters()
@@ -100,4 +103,8 @@ else
         }
     }
 
+    private void HandleRowClick(Accounts account)
+    {
+        Navigation.NavigateTo($"/admin/accountdetail/{account.ID}");
+    }
 }

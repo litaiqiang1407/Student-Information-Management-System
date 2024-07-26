@@ -6,19 +6,20 @@
 @using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+@inject NavigationManager Navigation
 
 <PageTitle>Admin</PageTitle>
 
 @if (admins != null)
 {
-    <Filter Filters="@filters" Items="@admins" FilteredItemsChanged="@filteredItemsChanged" />
+    <Filter Filters="@filters" Items="@admins" FilteredItemsChanged="@FilteredItemsChangedCallback" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
     }
     else
     {
-        <Table Data="@admins" Columns="@columns" />
+        <Table Data="@admins" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
     }
 }
 else
@@ -30,13 +31,16 @@ else
     private string HeaderTitle = "Admin";
     private IEnumerable<Admins> admins;
     private List<TableColumn<Admins>> columns;
-    private List<TableColumn<Admins>> filterColumns;
     private List<Filters<Admins>> filters = new List<Filters<Admins>>();
     private List<Admins> filtered;
 
-    private EventCallback<IEnumerable<Admins>> filteredItemsChanged;
+    private EventCallback<IEnumerable<Admins>> FilteredItemsChangedCallback =>
+        EventCallback.Factory.Create<IEnumerable<Admins>>(this, UpdateFilteredItems);
 
-    private void Updatefiltered(IEnumerable<Admins> filteredItems)
+    private EventCallback<Admins> HandleRowClickCallback =>
+        EventCallback.Factory.Create<Admins>(this, HandleRowClick);
+
+    private void UpdateFilteredItems(IEnumerable<Admins> filteredItems)
     {
         filtered = filteredItems.ToList();
     }
@@ -45,8 +49,6 @@ else
     {
         HeaderTitleService.Title = HeaderTitle;
         await LoadData();
-        // await LoadFilters();
-        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Admins>>(this, Updatefiltered);
     }
 
     private async Task LoadData()
@@ -62,7 +64,10 @@ else
             new TableColumn<Admins> { Header = "Created At", Value = acc => acc.CreatedAt },
             new TableColumn<Admins> { Header = "Updated At", Value = acc => acc.UpdatedAt },
         };
+    }
 
-        filterColumns = columns.Where(c => c.IsFilter).ToList();
+    private void HandleRowClick(Admins admin)
+    {
+        Navigation.NavigateTo($"/admin/accountdetail-management/{admin.ID}");
     }
 }
