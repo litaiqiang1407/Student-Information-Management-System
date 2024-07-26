@@ -260,44 +260,43 @@ namespace SIMS_APIs.Controllers
         public async Task<IActionResult> GetUserInfo(int id)
         {
             string getUserInfoByIdQuery = @"SELECT 
-    UI.[ID],
-    UI.[AccountID],
-    UI.[Name] AS UserName,
-    UI.[Gender],
-    UI.[DateOfBirth],
-    UI.[PersonalAvatar],
-    UI.[OfficialAvatar],
-    UI.[PersonalPhone],
-    UI.[ContactPhone1],
-    UI.[ContactPhone2],
-    UI.[PermanentAddress],
-    UI.[TemporaryAddress],
-    R.[Name] AS RoleName,  
-    M.[Name] AS MajorName, 
-    D.[Name] AS DepartmentName 
-FROM 
-    [SIMS].[dbo].[UserInfo] UI
-LEFT JOIN 
-    [SIMS].[dbo].[StudentDetail] SD
-    ON UI.[AccountID] = SD.[AccountID]
-LEFT JOIN 
-    [SIMS].[dbo].[Major] M
-    ON SD.[MajorID] = M.[ID]
-LEFT JOIN 
-    [SIMS].[dbo].[Department] D
-    ON M.[DepartmentID] = D.[ID]
-JOIN 
-    [SIMS].[dbo].[UserRole] UR
-    ON UI.[AccountID] = UR.[AccountID]
-JOIN 
-    [SIMS].[dbo].[Role] R
-    ON UR.[RoleID] = R.[ID]
-WHERE 
-    UI.[ID] = @id";
-
+                UI.[ID],
+                UI.[AccountID],
+                UI.[Name] AS UserName,
+                UI.[Gender],
+                UI.[DateOfBirth],
+                UI.[PersonalAvatar],
+                UI.[OfficialAvatar],
+                UI.[PersonalPhone],
+                UI.[ContactPhone1],
+                UI.[ContactPhone2],
+                UI.[PermanentAddress],
+                UI.[TemporaryAddress],
+                R.[Name] AS RoleName,  
+                M.[Name] AS MajorName, 
+                D.[Name] AS DepartmentName 
+            FROM 
+                [SIMS].[dbo].[UserInfo] UI
+            LEFT JOIN 
+                [SIMS].[dbo].[StudentDetail] SD
+                ON UI.[AccountID] = SD.[AccountID]
+            LEFT JOIN 
+                [SIMS].[dbo].[Major] M
+                ON SD.[MajorID] = M.[ID]
+            LEFT JOIN 
+                [SIMS].[dbo].[Department] D
+                ON M.[DepartmentID] = D.[ID]
+            JOIN 
+                [SIMS].[dbo].[UserRole] UR
+                ON UI.[AccountID] = UR.[AccountID]
+            JOIN 
+                [SIMS].[dbo].[Role] R
+                ON UR.[RoleID] = R.[ID]
+            WHERE 
+                UI.[ID] = @id";
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
-        new SqlParameter("@id", id)
+            new SqlParameter("@id", id)
             };
 
             try
@@ -321,8 +320,7 @@ WHERE
                 {
                     ID = row.Field<int>("ID"),
                     AccountID = row.Field<int>("AccountID"),
-                    //AccountName = row.Field<string>("AccountName"),
-                    Name = row.Field<string>("UserName"),
+                    Name = row.Field<string>("UserName"), // Note: Changed to 'UserName'
                     Gender = row.Field<string>("Gender"),
                     DateOfBirth = row.Field<DateTime>("DateOfBirth"),
                     PersonalAvatar = row.Field<string>("PersonalAvatar"),

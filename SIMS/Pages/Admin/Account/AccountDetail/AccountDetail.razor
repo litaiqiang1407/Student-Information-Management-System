@@ -89,7 +89,6 @@
     private string roleName = string.Empty;
     private string majorName = string.Empty;
     private string departmentName = string.Empty;
-    private string accountName = string.Empty;
 
     private UserInfos userInfo;
 
@@ -112,7 +111,6 @@
                 roleName = userInfo.RoleName ?? roleName;
                 majorName = userInfo.MajorName ?? majorName;
                 departmentName = userInfo.DepartmentName ?? departmentName;
-                accountName = userInfo.AccountName ?? accountName;
             }
         }
         catch (Exception ex)
