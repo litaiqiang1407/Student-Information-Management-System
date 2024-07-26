@@ -97,7 +97,7 @@
 
                 HeaderTitleService.OfficialAvatar = userAvatar;
 
-                string role = response.UserInfo.Role.ToLower();
+                string role = response.UserInfo.RoleName.ToLower();
 
                 NavigationManager.NavigateTo(role switch
                 {

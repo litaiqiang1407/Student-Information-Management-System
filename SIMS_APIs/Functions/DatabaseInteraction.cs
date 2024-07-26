@@ -1,30 +1,30 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using SIMS.Data.Entities;
 using SIMS.Data.Entities.Enums;
-using System.Threading.Tasks;
 
 namespace SIMS_APIs.Functions
 {
     public class DatabaseInteraction
     {
         private readonly IConfiguration _configuration;
-
-        private string SIMSConnection => _configuration.GetConnectionString("SIMSConnection");
+        private readonly string _simsConnection;
 
         public DatabaseInteraction(IConfiguration configuration)
         {
             _configuration = configuration;
+            _simsConnection = _configuration.GetConnectionString("SIMSConnection");
         }
 
-        public async Task<DataTable> GetList(string query)
         // Method to get data without parameters
         public async Task<DataTable> GetData(string query)
         {
-            return await GetData(query);
+            return await GetData(query, null);
         }
 
+        // Method to get data with parameters
         public async Task<DataTable> GetDataByID(string query, SqlParameter[] sqlParameters)
         {
             return await GetData(query, sqlParameters);
@@ -45,41 +45,14 @@ namespace SIMS_APIs.Functions
             return await ExecuteNonQuery(query, sqlParameters);
         }
 
-        public async Task<DataTable> GetData(string query, SqlParameter[] sqlParameters = null)
-        {
-            DataTable dt = new DataTable();
-            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
-            {
-                await myCon.OpenAsync();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
-                {
-                    using (SqlDataReader myReader = await myCommand.ExecuteReaderAsync())
-                    {
-                        dt.Load(myReader);
-                    }
-                }
-            }
-            return dt;
-        }
-
-        // Overloaded method to get data with parameters
         public async Task<DataTable> GetData(string query, SqlParameter[] sqlParameters)
         {
             DataTable dt = new DataTable();
-            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            using (SqlConnection myCon = new SqlConnection(_simsConnection))
             {
                 await myCon.OpenAsync();
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
                 {
-                    if (sqlParameters != null)
-                    {
-                        myCommand.Parameters.AddRange(sqlParameters);
-                    }
-
-                    myReader = await myCommand.ExecuteReaderAsync();
-                    dt.Load(myReader);
-                    myReader.Close();
-                    await myCon.CloseAsync();
                     if (sqlParameters != null)
                     {
                         myCommand.Parameters.AddRange(sqlParameters);
@@ -98,7 +71,7 @@ namespace SIMS_APIs.Functions
         {
             int rowsAffected;
 
-            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            using (SqlConnection myCon = new SqlConnection(_simsConnection))
             {
                 await myCon.OpenAsync();
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
@@ -122,7 +95,7 @@ namespace SIMS_APIs.Functions
 
         public async Task<bool> ValidateUserAsync(string email, string password)
         {
-            using (SqlConnection connection = new SqlConnection(SIMSConnection))
+            using (SqlConnection connection = new SqlConnection(_simsConnection))
             {
                 await connection.OpenAsync();
                 SqlCommand command = new SqlCommand("SELECT COUNT(1) FROM Account WHERE Email = @Email AND Password = @Password", connection);
@@ -136,7 +109,7 @@ namespace SIMS_APIs.Functions
 
         public async Task<UserInfos> GetUserInfoAsync(string email)
         {
-            using (SqlConnection connection = new SqlConnection(SIMSConnection))
+            using (SqlConnection connection = new SqlConnection(_simsConnection))
             {
                 await connection.OpenAsync();
                 string query = @"SELECT UI.*, R.Name AS Role
@@ -174,5 +147,5 @@ namespace SIMS_APIs.Functions
 
             return null;
         }
-    }  
+    }
 }

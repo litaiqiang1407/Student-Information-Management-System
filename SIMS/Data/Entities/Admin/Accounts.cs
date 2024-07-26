@@ -7,7 +7,6 @@ namespace SIMS.Data.Entities.Admin
     {
         [Key]
         public Guid ID { get; set; }
-
         public string MemberCode { get; set; }
         public string Email { get; set; }
         public string Name { get; set; }

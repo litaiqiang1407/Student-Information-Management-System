@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using SIMS.Shared.Models;
 
 namespace SIMS.Shared.Functions
 {
@@ -47,12 +48,18 @@ namespace SIMS.Shared.Functions
             try
             {
                 _logger.LogInformation($"Loading data from {API_URL + methodURL}");
-                HttpClient client = new HttpClient();
-                HttpResponseMessage response = await client.GetAsync(API_URL + methodURL);
+                HttpResponseMessage response = await _httpClient.GetAsync(API_URL + methodURL);
                 response.EnsureSuccessStatusCode();
 
-                using var responseStream = await response.Content.ReadAsStreamAsync();
-                data = await JsonSerializer.DeserializeAsync<T>(responseStream);
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Raw response content: {content}");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                data = JsonSerializer.Deserialize<T>(content, options);
                 _logger.LogInformation("Data loaded successfully");
             }
             catch (Exception ex)
