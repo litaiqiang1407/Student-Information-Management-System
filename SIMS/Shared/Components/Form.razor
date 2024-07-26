@@ -1,4 +1,4 @@
-﻿@page "/add"
+﻿@page "/addedit/{Mode}/{Id?}"
 @layout SIMS.Shared.Layouts.MainLayout
 @using Microsoft.AspNetCore.Components.Forms
 @inject IWebHostEnvironment env
@@ -16,33 +16,60 @@
         <div class="form-group">
             <div class="input-container">
                 <label for="member-code">Member Code</label>
-                <input type="text" id="member-code" placeholder="Enter member code..." class="input-field" />
+                <input type="text" id="member-code" placeholder="Enter member code..." class="input-field" value="@MemberCode" />
             </div>
             <div class="input-container">
                 <label for="email">Email</label>
-                <input type="email" id="email" placeholder="Enter email..." class="input-field" />
+                <input type="email" id="email" placeholder="Enter email..." class="input-field" value="@Email" />
             </div>
         </div>
         <div class="form-group">
             <div class="input-container">
                 <label for="name">Name</label>
-                <input type="text" id="name" placeholder="Enter name..." class="input-field" />
+                <input type="text" id="name" placeholder="Enter name..." class="input-field" value="@Name" />
             </div>
             <div class="input-container">
                 <label for="role">Role</label>
-                <select id="role" class="input-field">
+                <select id="role" class="input-field" value="@Role">
                     <option value="" disabled selected>Choose a role...</option>
                     <!-- Add more options here -->
                 </select>
             </div>
         </div>
-        <button class="btn btn-primary custom-button">ADD</button>
+        <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
     </div>
 </div>
 
 @code {
+    [Parameter]
+    public string Mode { get; set; }
+
+    [Parameter]
+    public string Id { get; set; }
+
+    private string ButtonText => Mode == "add" ? "ADD" : "UPDATE";
     private string photoUrl;
     private string filePath;
+
+    private string MemberCode { get; set; }
+    private string Email { get; set; }
+    private string Name { get; set; }
+    private string Role { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Mode == "edit" && !string.IsNullOrEmpty(Id))
+        {
+            // Load data for editing using Id
+            await LoadItemAsync(Id);
+        }
+    }
+
+    private async Task LoadItemAsync(string id)
+    {
+        // Implement logic to load item details based on Id
+        // e.g., call a service to get item details and set properties
+    }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -87,5 +114,17 @@
 
         using var stream = new FileStream(filePath, FileMode.Create);
         await file.OpenReadStream().CopyToAsync(stream);
+    }
+
+    private void HandleSubmit()
+    {
+        if (Mode == "add")
+        {
+            // Logic to handle adding a new entry
+        }
+        else if (Mode == "edit")
+        {
+            // Logic to handle updating an existing entry
+        }
     }
 }

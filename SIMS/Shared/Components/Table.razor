@@ -41,6 +41,8 @@
 </div>
 
 @code {
+    [Inject] private NavigationManager Navigation { get; set; }
+
     [Parameter]
     public IEnumerable<TItem> Data { get; set; }
 
@@ -52,8 +54,8 @@
 
     private void UpdateItem(TItem item)
     {
-        // Implement your update logic here
-        Console.WriteLine($"Update item: {item}");
+        var itemId = GetItemId(item);
+        Navigation.NavigateTo($"/addedit/edit/{itemId}");
     }
 
     private async Task DeleteItem(TItem item)
@@ -61,4 +63,10 @@
         await OnDelete.InvokeAsync(item);
     }
 
+    private string GetItemId(TItem item)
+    {
+        // Implement logic to get the ID from the item
+        // This will depend on your TItem implementation
+        return item.GetType().GetProperty("Id")?.GetValue(item)?.ToString();
+    }
 }
