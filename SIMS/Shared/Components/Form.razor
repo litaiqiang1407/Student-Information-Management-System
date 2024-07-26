@@ -1,0 +1,91 @@
+﻿@page "/add"
+@layout SIMS.Shared.Layouts.MainLayout
+@using Microsoft.AspNetCore.Components.Forms
+@inject IWebHostEnvironment env
+
+<div class="bordered-container">
+    <div class="container">
+        <div class="upload-photo">
+            <label class="photo-icon">
+                <img id="photo-preview" src="@photoUrl" alt="Preview" style="@(string.IsNullOrEmpty(photoUrl) ? "display:none;" : "display:block;")" />
+                <i class="bi bi-camera"></i>
+                <InputFile id="photo-upload" accept="image/*" OnChange="HandleFileSelected" style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
+            </label>
+            <p>Upload Photo</p>
+        </div>
+        <div class="form-group">
+            <div class="input-container">
+                <label for="member-code">Member Code</label>
+                <input type="text" id="member-code" placeholder="Enter member code..." class="input-field" />
+            </div>
+            <div class="input-container">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter email..." class="input-field" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="input-container">
+                <label for="name">Name</label>
+                <input type="text" id="name" placeholder="Enter name..." class="input-field" />
+            </div>
+            <div class="input-container">
+                <label for="role">Role</label>
+                <select id="role" class="input-field">
+                    <option value="" disabled selected>Choose a role...</option>
+                    <!-- Add more options here -->
+                </select>
+            </div>
+        </div>
+        <button class="btn btn-primary custom-button">ADD</button>
+    </div>
+</div>
+
+@code {
+    private string photoUrl;
+    private string filePath;
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (IsValidImageFile(file))
+        {
+            photoUrl = await ConvertToBase64Async(file);
+            await SaveFileAsync(file);
+            StateHasChanged(); // Ensure UI update after file is selected
+        }
+        else
+        {
+            photoUrl = null; // Or show an error message
+                             // Optional: Add logic to display an error message to the user
+        }
+    }
+
+    private bool IsValidImageFile(IBrowserFile file)
+    {
+        return file != null && file.ContentType.StartsWith("image/") && file.Size <= 5 * 1024 * 1024; // File size limit of 5MB
+    }
+
+    private async Task<string> ConvertToBase64Async(IBrowserFile file)
+    {
+        using var stream = file.OpenReadStream();
+        var buffer = new byte[file.Size];
+        await stream.ReadAsync(buffer);
+        return $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+    }
+
+    private async Task SaveFileAsync(IBrowserFile file)
+    {
+        var uploadsFolder = Path.Combine(env.WebRootPath, "Uploads");
+        if (!Directory.Exists(uploadsFolder))
+        {
+            Directory.CreateDirectory(uploadsFolder);
+        }
+
+        var uniqueFileName = $"{Guid.NewGuid()}_{file.Name}";
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await file.OpenReadStream().CopyToAsync(stream);
+    }
+}
