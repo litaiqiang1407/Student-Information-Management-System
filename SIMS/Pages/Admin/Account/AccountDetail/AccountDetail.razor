@@ -89,7 +89,6 @@
     private string roleName = string.Empty;
     private string majorName = string.Empty;
     private string departmentName = string.Empty;
-    private string accountName = string.Empty;
 
     private UserInfos userInfo;
 
@@ -99,20 +98,19 @@
 
         try
         {
-            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/GetUserInfo/{ID}");
+            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/userinfo/{ID}");
 
             if (userInfo != null)
             {
                 userName = userInfo.Name ?? userName;
                 dateOfBirth = userInfo.DateOfBirth.ToString("MM/dd/yyyy") ?? dateOfBirth;
-                gender = userInfo.Gender?.ToString() ?? gender;
+                gender = userInfo.Gender.ToString() ?? gender;
                 phoneNumber = userInfo.PersonalPhone ?? phoneNumber;
                 address = userInfo.PermanentAddress ?? address;
                 userPersonalAvatar = userInfo.OfficialAvatar ?? userPersonalAvatar;
                 roleName = userInfo.RoleName ?? roleName;
                 majorName = userInfo.MajorName ?? majorName;
                 departmentName = userInfo.DepartmentName ?? departmentName;
-                accountName = userInfo.AccountName ?? accountName;
             }
         }
         catch (Exception ex)
