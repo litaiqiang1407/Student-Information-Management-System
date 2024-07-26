@@ -1,4 +1,6 @@
-﻿@using SIMS.Shared.Layouts
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using SIMS.Shared.Layouts
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
@@ -21,7 +23,7 @@
         if (page == typeof(MainLayout))
         {
             return typeof(MainLayout);
-        } 
+        }
         else
         {
             return typeof(SubLayout);
