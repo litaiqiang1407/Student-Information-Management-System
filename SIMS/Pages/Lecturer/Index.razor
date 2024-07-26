@@ -1,6 +1,7 @@
 ﻿@page "/lecturer"
 
 @layout SIMS.Shared.Layouts.MainLayout
+@attribute [Authorize(Roles = "Student")]
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
 @inject SIMS.Shared.Services.MenuService MenuService
