@@ -234,34 +234,33 @@ namespace SIMS_APIs.Controllers
         public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getUserInfoByIdQuery = @"
-    SELECT 
-        UI.[ID],
-        UI.[AccountID],
-        UI.[Name],
-        UI.[Gender],
-        UI.[DateOfBirth],
-        UI.[PersonalAvatar],
-        UI.[OfficialAvatar],
-        UI.[PersonalPhone],
-        UI.[ContactPhone1],
-        UI.[ContactPhone2],
-        UI.[PermanentAddress],
-        UI.[TemporaryAddress],
-        R.[Name] AS [Role]
-    FROM 
-        [SIMS].[dbo].[UserInfo] UI
-    LEFT JOIN 
-        [SIMS].[dbo].[Account] A
-        ON UI.[AccountID] = A.[ID]
-    LEFT JOIN 
-        [SIMS].[dbo].[UserRole] UR
-        ON A.[ID] = UR.[AccountID]
-    LEFT JOIN 
-        [SIMS].[dbo].[Role] R
-        ON UR.[RoleID] = R.[ID]
-    WHERE 
-        UI.[ID] = @ID";
-
+                    SELECT 
+                        UI.[ID],
+                        UI.[AccountID],
+                        UI.[Name],
+                        UI.[Gender],
+                        UI.[DateOfBirth],
+                        UI.[PersonalAvatar],
+                        UI.[OfficialAvatar],
+                        UI.[PersonalPhone],
+                        UI.[ContactPhone1],
+                        UI.[ContactPhone2],
+                        UI.[PermanentAddress],
+                        UI.[TemporaryAddress],
+                        R.[Name] AS [Role]
+                    FROM 
+                        [SIMS].[dbo].[UserInfo] UI
+                    LEFT JOIN 
+                        [SIMS].[dbo].[Account] A
+                        ON UI.[AccountID] = A.[ID]
+                    LEFT JOIN 
+                        [SIMS].[dbo].[UserRole] UR
+                        ON A.[ID] = UR.[AccountID]
+                    LEFT JOIN 
+                        [SIMS].[dbo].[Role] R
+                        ON UR.[RoleID] = R.[ID]
+                    WHERE 
+                        UI.[ID] = @ID";
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
         new SqlParameter("@ID", id)
