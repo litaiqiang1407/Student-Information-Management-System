@@ -17,5 +17,8 @@ namespace SIMS.Data.Entities
         public string ContactPhone2 { get; set; }
         public string PermanentAddress { get; set; }
         public string TemporaryAddress { get; set; }
+        public string RoleName { get; set; }
+        public string MajorName { get; set; }
+        public string DepartmentName { get; set; }
     }
 }
