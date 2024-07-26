@@ -294,7 +294,6 @@ JOIN
     ON UR.[RoleID] = R.[ID]
 WHERE 
     UI.[ID] = @id";
-
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
         new SqlParameter("@id", id)
