@@ -259,42 +259,45 @@ namespace SIMS_APIs.Controllers
         [Route("GetUserInfo/{id}")]
         public async Task<IActionResult> GetUserInfo(int id)
         {
-            string getUserInfoByIdQuery = @"
-        SELECT 
-    UI.[ID],
-    UI.[AccountID],
-    UI.[Name] AS UserName,
-    UI.[Gender],
-    UI.[DateOfBirth],
-    UI.[PersonalAvatar],
-    UI.[OfficialAvatar],
-    UI.[PersonalPhone],
-    UI.[ContactPhone1],
-    UI.[ContactPhone2],
-    UI.[PermanentAddress],
-    UI.[TemporaryAddress],
-    R.[Name] AS RoleName,  
-    M.[Name] AS MajorName, 
-    D.[Name] AS DepartmentName 
-FROM 
-    [SIMS].[dbo].[UserInfo] UI
-LEFT JOIN 
-    [SIMS].[dbo].[StudentDetail] SD
-    ON UI.[AccountID] = SD.[AccountID]
-LEFT JOIN 
-    [SIMS].[dbo].[Major] M
-    ON SD.[MajorID] = M.[ID]
-LEFT JOIN 
-    [SIMS].[dbo].[Department] D
-    ON M.[DepartmentID] = D.[ID]
-JOIN 
-    [SIMS].[dbo].[UserRole] UR
-    ON UI.[AccountID] = UR.[AccountID]
-JOIN 
-    [SIMS].[dbo].[Role] R
-    ON UR.[RoleID] = R.[ID]
-WHERE 
-    UI.[ID] = @id";
+            string getUserInfoByIdQuery = @"SELECT 
+                    UI.[ID],
+                    UI.[AccountID],
+                    A.[Name] AS AccountName,  -- Thêm cột AccountName
+                    UI.[Name] AS UserName,
+                    UI.[Gender],
+                    UI.[DateOfBirth],
+                    UI.[PersonalAvatar],
+                    UI.[OfficialAvatar],
+                    UI.[PersonalPhone],
+                    UI.[ContactPhone1],
+                    UI.[ContactPhone2],
+                    UI.[PermanentAddress],
+                    UI.[TemporaryAddress],
+                    R.[Name] AS RoleName,  
+                    M.[Name] AS MajorName, 
+                    D.[Name] AS DepartmentName 
+                FROM 
+                    [SIMS].[dbo].[UserInfo] UI
+                LEFT JOIN 
+                    [SIMS].[dbo].[StudentDetail] SD
+                    ON UI.[AccountID] = SD.[AccountID]
+                LEFT JOIN 
+                    [SIMS].[dbo].[Major] M
+                    ON SD.[MajorID] = M.[ID]
+                LEFT JOIN 
+                    [SIMS].[dbo].[Department] D
+                    ON M.[DepartmentID] = D.[ID]
+                JOIN 
+                    [SIMS].[dbo].[UserRole] UR
+                    ON UI.[AccountID] = UR.[AccountID]
+                JOIN 
+                    [SIMS].[dbo].[Role] R
+                    ON UR.[RoleID] = R.[ID]
+                JOIN
+                    [SIMS].[dbo].[Account] A
+                    ON UI.[AccountID] = A.[ID] -- Join với bảng Account để lấy tên tài khoản
+                WHERE 
+                    UI.[ID] = @id";
 
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
@@ -322,7 +325,8 @@ WHERE
                 {
                     ID = row.Field<int>("ID"),
                     AccountID = row.Field<int>("AccountID"),
-                    Name = row.Field<string>("UserName"), // Note: Changed to 'UserName'
+                    AccountName = row.Field<string>("AccountName"), // Thêm phần AccountName
+                    Name = row.Field<string>("UserName"),
                     Gender = row.Field<string>("Gender"),
                     DateOfBirth = row.Field<DateTime>("DateOfBirth"),
                     PersonalAvatar = row.Field<string>("PersonalAvatar"),

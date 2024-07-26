@@ -19,5 +19,6 @@ namespace SIMS.Data.Entities
         public string TemporaryAddress { get; set; }
         public string MajorName { get; set; }
         public string DepartmentName { get; set; }
+        public string AccountName { get; set; }
     }
 }
