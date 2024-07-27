@@ -15,11 +15,11 @@ x
     <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" OnDelete="@DeleteAccount" />
+        <Table Data="@filtered" Columns="@columns" OnDelete="@deleteAccount" />
     }
     else
     {
-        <Table Data="@accounts" Columns="@columns" OnDelete="@DeleteAccount" />
+        <Table Data="@accounts" Columns="@columns" OnDelete="@deleteAccount" />
     }
 }
 else
@@ -37,6 +37,7 @@ else
     private List<Accounts> filtered;
 
     private EventCallback<IEnumerable<Accounts>> filteredItemsChanged;
+    private EventCallback<Accounts> deleteAccount;
 
     private void Updatefiltered(IEnumerable<Accounts> filteredItems)
     {
@@ -49,6 +50,7 @@ else
         await LoadData();
         await LoadFilters();
         filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, Updatefiltered);
+        deleteAccount = EventCallback.Factory.Create<Accounts>(this, DeleteAccount);
     }
 
     private async Task LoadData()

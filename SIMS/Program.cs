@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SIMS.Shared.Services;
-using SIMS.Data;
-using SIMS.Shared.Functions;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using SIMS.Data;
+using SIMS.Data.Entities;
+using SIMS.Shared.Functions;
+using SIMS.Shared.Services;
 using System.Text;
+using AuthenticationService = SIMS.Shared.Services.AuthenticationService;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,15 +22,33 @@ builder.Services.AddServerSideBlazor();
 
 builder.Services.AddSingleton<MenuService>();
 builder.Services.AddSingleton<HeaderTitleService>();
+builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddSingleton<DisplayComponent>();
 
 builder.Services.AddScoped<DatabaseInteractionFunctions>();
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<Users, Roles>()
     .AddEntityFrameworkStores<SIMSDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+})
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/login"; // Redirect to login page if not authenticated
+        options.LogoutPath = "/logout"; // Redirect to logout page
+    })
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+        options.CallbackPath = "/signin-google";
+        options.SaveTokens = true;
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -56,27 +75,19 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<SIMSDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddAuthentication(options =>
+builder.Services.AddAuthorization(options =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-})
-        .AddCookie()
-        .AddGoogle(options =>
-        {
-            options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-            options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-            options.CallbackPath = "/login-google";
-            options.SaveTokens = true;
-        });
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("StudentOnly", policy => policy.RequireRole("Student"));
+    options.AddPolicy("LecturerOnly", policy => policy.RequireRole("Lecturer"));
+});
 
 var app = builder.Build();
- 
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -90,6 +101,10 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseEndpoints(endpoints => {
+    endpoints.MapControllers();
+});
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

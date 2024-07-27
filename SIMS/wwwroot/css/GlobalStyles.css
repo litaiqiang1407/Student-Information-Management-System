@@ -11947,7 +11947,6 @@ input:focus,
 
 a[href] {
   text-decoration: none;
-  color: var(--primary-text-color);
 }
 
 ul {
@@ -11962,13 +11961,30 @@ ul {
   padding: 6px 32px;
   font-size: 1.6rem;
   font-weight: 600;
-  cursor: pointer;
   border: var(--tranparent-border);
   border-radius: 100px;
   transition: all 0.3s ease;
+  width: 100%;
 }
 .primary-button:hover {
   background-color: var(--white);
   color: var(--primary-color);
+  border: var(--primary-2px-border);
+}
+
+.secondary-button {
+  background-color: var(--white);
+  color: var(--primary-color);
+  padding: 6px 32px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  border: var(--primary-2px-border);
+  border-radius: 100px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+.secondary-button:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
   border: var(--primary-2px-border);
 }
