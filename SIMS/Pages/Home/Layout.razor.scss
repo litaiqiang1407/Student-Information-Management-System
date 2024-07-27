@@ -284,6 +284,7 @@
 
         .logo img {
             max-width: 150px;
+            float: left;
         }
 
         .content {
@@ -318,7 +319,7 @@
                             content: '\25B6';
                             color: #38b6ff;
                             display: inline-block;
-                            margin-right: 0.5rem;
+                            margin-right: 10px;
                         }
                     }
                 }
@@ -337,12 +338,12 @@
 
                 phone {
                     .row {
-                        align-items: flex-start; 
+                        align-items: flex-start;
                     }
 
                     i.bi-telephone-fill {
-                        color: #3498db;
-                        margin-right: 0.5rem; 
+                        color: #38b6ff;
+                        margin-right: 0.5rem;
                     }
 
                     a {

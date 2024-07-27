@@ -249,6 +249,7 @@
 }
 .footer .container .logo img {
   max-width: 150px;
+  float: left;
 }
 .footer .container .content {
   display: flex;
@@ -280,7 +281,7 @@
   content: "▶";
   color: #38b6ff;
   display: inline-block;
-  margin-right: 0.5rem;
+  margin-right: 10px;
 }
 .footer .container .content .section address {
   font-style: normal;
@@ -296,7 +297,7 @@
   align-items: flex-start;
 }
 .footer .container .content .section phone i.bi-telephone-fill {
-  color: #3498db;
+  color: #38b6ff;
   margin-right: 0.5rem;
 }
 .footer .container .content .section phone a {
