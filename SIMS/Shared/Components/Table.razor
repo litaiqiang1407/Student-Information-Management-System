@@ -25,10 +25,10 @@
                         }
                         <td>
                             <div class="button-group">
-                                <button class="update-button" @onclick="@(e => UpdateItem(item))">
+                                <button class="update-button" @onclick:stopPropagation @onclick="@(e => UpdateItem(item))">
                                     <i class="bi bi-pencil-square update-icon"></i>
                                 </button>
-                                <button class="delete-button" @onclick="@(async e => await DeleteItem(item))">
+                                <button class="delete-button" @onclick:stopPropagation @onclick="@(async e => await DeleteItem(item))">
                                     <i class="bi bi-x-square delete-icon"></i>
                                 </button>
                             </div>
@@ -57,7 +57,6 @@
 
     private void UpdateItem(TItem item)
     {
-        // Implement your update logic here
         var itemId = GetItemId(item);
         Navigation.NavigateTo($"/addedit/edit/{itemId}");
     }
@@ -67,10 +66,9 @@
         await OnDelete.InvokeAsync(item);
     }
 
-    // You may need to implement this method based on your item structure
     private object GetItemId(TItem item)
     {
-        // Placeholder for extracting item ID
-        return item?.GetHashCode(); // Replace with actual ID extraction logic
+        var propertyInfo = typeof(TItem).GetProperty("MemberCode");
+        return propertyInfo?.GetValue(item);
     }
 }

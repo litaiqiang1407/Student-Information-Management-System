@@ -285,7 +285,6 @@ namespace SIMS_APIs.Controllers
 
             DataRow row = dataTable.Rows[0];
 
-            // Chuyển đổi Gender từ chuỗi sang enum
             bool genderParsed = Enum.TryParse(row["Gender"].ToString(), out Gender genderEnum);
 
             UserInfos userInfos = new UserInfos
