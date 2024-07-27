@@ -7,10 +7,10 @@
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 @inject ILogger<Account> Logger
-
+x
 <PageTitle>Account</PageTitle>
 
-@if (accounts != null)
+@* @if (accounts != null)
 {
     <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
@@ -25,7 +25,7 @@
 else
 {
     <Loading />
-}
+} *@
 
 
 @code {
