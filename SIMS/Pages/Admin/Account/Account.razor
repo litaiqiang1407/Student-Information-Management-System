@@ -51,7 +51,7 @@ else
         await LoadData();
         await LoadFilters();
         filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, Updatefiltered);
-        deleteAccount = EventCallback.Factory.Create<Accounts>(this, DeleteAccount);
+        // deleteAccount = EventCallback.Factory.Create<Accounts>(this, DeleteAccount);
         handleRowClickCallback = EventCallback.Factory.Create<Accounts>(this, HandleRowClick);
     }
 
@@ -89,22 +89,22 @@ else
         }
     }
 
-    private async Task DeleteAccount(Accounts account)
-    {
-        var success = await DatabaseFunctions.DeleteData("api/Admin/DeleteAccount", account.ID);
-        if (success)
-        {
-            accounts = accounts.Where(a => a.ID != account.ID).ToList();
-            Updatefiltered(accounts);
-        }
-        else
-        {
-            Logger.LogError($"Failed to delete account: {account.ID}");
-        }
-    }
+    // private async Task DeleteAccount(Accounts account)
+    // {
+    //     var success = await DatabaseFunctions.DeleteData("api/Admin/DeleteAccount", account.ID);
+    //     if (success)
+    //     {
+    //         accounts = accounts.Where(a => a.ID != account.ID).ToList();
+    //         Updatefiltered(accounts);
+    //     }
+    //     else
+    //     {
+    //         Logger.LogError($"Failed to delete account: {account.ID}");
+    //     }
+    // }
 
     private void HandleRowClick(Accounts account)
     {
-        Navigation.NavigateTo($"/admin/accountdetail/{account.ID}");
+        Navigation.NavigateTo($"/admin/accountdetail-management/{account.ID}");
     }
 }
