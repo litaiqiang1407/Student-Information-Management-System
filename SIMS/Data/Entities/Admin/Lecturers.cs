@@ -2,6 +2,7 @@
 {
     public class Lecturers
     {
+        public int ID { get; set; } // Add this line
         public string MemberCode { get; set; }
         public string Email { get; set; }
         public string Name { get; set; }

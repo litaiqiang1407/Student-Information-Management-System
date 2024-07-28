@@ -6,6 +6,7 @@
 @using SIMS.Shared.Components
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+@inject NavigationManager Navigation
 
 <PageTitle>Lecturer</PageTitle>
 
@@ -14,11 +15,11 @@
     <Filter Filters="@filters" Items="@lecturers" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
     }
     else
     {
-        <Table Data="@lecturers" Columns="@columns" />
+        <Table Data="@lecturers" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
     }
 }
 else
@@ -28,7 +29,6 @@ else
 
 @code {
     private string HeaderTitle = "Lecturer";
-
     private IEnumerable<Lecturers> lecturers;
     private List<TableColumn<Lecturers>> columns;
     private List<TableColumn<Lecturers>> filterColumns;
@@ -42,11 +42,13 @@ else
         filtered = filteredItems.ToList();
     }
 
+    private EventCallback<Lecturers> HandleRowClickCallback =>
+        EventCallback.Factory.Create<Lecturers>(this, HandleRowClick);
+
     protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
         await LoadData();
-        // await LoadFilters();
         filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Lecturers>>(this, Updatefiltered);
     }
 
@@ -65,5 +67,10 @@ else
         };
 
         filterColumns = columns.Where(c => c.IsFilter).ToList();
+    }
+
+    private void HandleRowClick(Lecturers lecturer)
+    {
+        Navigation.NavigateTo($"/admin/accountdetail-management/{lecturer.ID}");
     }
 }

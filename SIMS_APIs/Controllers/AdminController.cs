@@ -58,7 +58,8 @@ namespace SIMS_APIs.Controllers
         [Route("GetAccount")]
         public async Task<JsonResult> GetAccount()
         {
-            string getAccountQuery = @"SELECT 
+            string getAccountQuery = @"SELECT
+A.ID,
                                        A.MemberCode, 
                                        A.Email, 
                                        CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt,
@@ -196,9 +197,8 @@ namespace SIMS_APIs.Controllers
             return await GetList(getSubjectsQuery);
         }
 
-        [HttpGet]
-        [Route("GetSemesters")]
-        public async Task<JsonResult> GetSemesters()
+        [HttpGet("UserInfos/{id}")]
+        public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getSemestersQuery = @"SELECT Name,
                                          CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
