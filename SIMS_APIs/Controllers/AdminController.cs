@@ -214,47 +214,53 @@ namespace SIMS_APIs.Controllers
             return await GetList(getDepartmentsQuery);
         }
 
-        [HttpGet("userinfo/{id}")]
+        [HttpGet("UserInfos/{id}")]
         public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getUserInfoByIdQuery = @"
-            SELECT 
-            UI.[AccountID],
-            UI.[Name] AS UserName,
-            UI.[Gender],
-            UI.[DateOfBirth],
-            UI.[PersonalAvatar],
-            UI.[OfficialAvatar],
-            UI.[PersonalPhone],
-            UI.[ContactPhone1],
-            UI.[ContactPhone2],
-            UI.[PermanentAddress],
-            UI.[TemporaryAddress],
-            R.[Name] AS RoleName,  
-            M.[Name] AS MajorName, 
-            D.[Name] AS DepartmentName 
-        FROM 
-            [SIMS].[dbo].[UserInfo] UI
-        LEFT JOIN 
-            [SIMS].[dbo].[StudentDetail] SD
-            ON UI.[AccountID] = SD.[AccountID]
-        LEFT JOIN 
-            [SIMS].[dbo].[Major] M
-            ON SD.[MajorID] = M.[ID]
-        LEFT JOIN 
-            [SIMS].[dbo].[Department] D
-            ON M.[DepartmentID] = D.[ID]
-        JOIN 
-            [SIMS].[dbo].[UserRole] UR
-            ON UI.[AccountID] = UR.[AccountID]
-        JOIN 
-            [SIMS].[dbo].[Role] R
-            ON UR.[RoleID] = R.[ID]
-        WHERE 
-            UI.[AccountID] = @id";
+    SELECT 
+        UI.[ID],
+        UI.[AccountID],
+        UI.[Name] AS UserName,
+        UI.[Gender],
+        UI.[DateOfBirth],
+        UI.[PersonalAvatar],
+        UI.[OfficialAvatar],
+        UI.[PersonalPhone],
+        UI.[ContactPhone1],
+        UI.[ContactPhone2],
+        UI.[PermanentAddress],
+        UI.[TemporaryAddress],
+        A.[MemberCode],
+        R.[Name] AS RoleName,  
+        M.[Name] AS MajorName, 
+        D.[Name] AS DepartmentName 
+    FROM 
+        [SIMS].[dbo].[UserInfo] UI
+    LEFT JOIN 
+        [SIMS].[dbo].[StudentDetail] SD
+        ON UI.[AccountID] = SD.[AccountID]
+    LEFT JOIN 
+        [SIMS].[dbo].[Major] M
+        ON SD.[MajorID] = M.[ID]
+    LEFT JOIN 
+        [SIMS].[dbo].[Department] D
+        ON M.[DepartmentID] = D.[ID]
+    JOIN 
+        [SIMS].[dbo].[UserRole] UR
+        ON UI.[AccountID] = UR.[AccountID]
+    JOIN 
+        [SIMS].[dbo].[Role] R
+        ON UR.[RoleID] = R.[ID]
+    JOIN 
+        [SIMS].[dbo].[Account] A
+        ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode
+    WHERE 
+        UI.[ID] = @ID";
+
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
-            new SqlParameter("@ID", id)
+        new SqlParameter("@ID", id)
             };
 
             DataTable dataTable = await _dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
@@ -266,10 +272,12 @@ namespace SIMS_APIs.Controllers
 
             DataRow row = dataTable.Rows[0];
 
+            // Convert Gender from string to enum
             bool genderParsed = Enum.TryParse(row["Gender"].ToString(), out Gender genderEnum);
 
             UserInfos userInfos = new UserInfos
             {
+                ID = Convert.ToInt32(row["ID"]),
                 AccountID = Convert.ToInt32(row["AccountID"]),
                 Name = Convert.ToString(row["UserName"]),
                 Gender = genderParsed ? genderEnum : Gender.Other,
@@ -283,7 +291,8 @@ namespace SIMS_APIs.Controllers
                 TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
                 RoleName = Convert.ToString(row["RoleName"]),
                 MajorName = Convert.ToString(row["MajorName"]),
-                DepartmentName = Convert.ToString(row["DepartmentName"])
+                DepartmentName = Convert.ToString(row["DepartmentName"]),
+                MemberCode = Convert.ToString(row["MemberCode"]) // Include MemberCode
             };
 
             return Ok(userInfos);
