@@ -196,16 +196,6 @@ A.ID,
             string getSubjectsQuery = @"SELECT SubjectCode, Name, Credits, Slots, Fee FROM Subject";
             return await GetList(getSubjectsQuery);
         }
-
-        [HttpGet("UserInfos/{id}")]
-        public async Task<IActionResult> GetUserInfoById(int id)
-        {
-            string getSemestersQuery = @"SELECT Name,
-                                         CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
-                                         CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
-                                         FROM Semester";
-            return await GetList(getSemestersQuery);
-        }
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
@@ -277,6 +267,7 @@ A.ID,
 
             UserInfos userInfos = new UserInfos
             {
+
                 ID = Convert.ToInt32(row["ID"]),
                 AccountID = Convert.ToInt32(row["AccountID"]),
                 Name = Convert.ToString(row["UserName"]),
