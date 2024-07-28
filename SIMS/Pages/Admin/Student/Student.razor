@@ -15,11 +15,11 @@
     <Filter Filters="@filters" Items="@students" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
+        <Table Data="@filtered" Columns="@columns" OnDataUpdated="LoadData" />
     }
     else
     {
-        <Table Data="@students" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
+        <Table Data="@students" Columns="@columns" OnDataUpdated="LoadData" />
     }
 }
 else
@@ -31,7 +31,6 @@ else
     private string HeaderTitle = "Admin";
     private IEnumerable<Students> students;
     private List<TableColumn<Students>> columns;
-    private List<TableColumn<Students>> filterColumns;
     private List<Filters<Students>> filters = new List<Filters<Students>>();
     private List<Students> filtered;
 
@@ -42,14 +41,10 @@ else
         filtered = filteredItems.ToList();
     }
 
-    private EventCallback<Students> HandleRowClickCallback =>
-        EventCallback.Factory.Create<Students>(this, HandleRowClick);
-
     protected override async Task OnInitializedAsync()
     {
         HeaderTitleService.Title = HeaderTitle;
         await LoadData();
-        // await LoadFilters();
         filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Students>>(this, UpdateFiltered);
     }
 
@@ -66,12 +61,5 @@ else
             new TableColumn<Students> { Header = "Created At", Value = acc => acc.CreatedAt },
             new TableColumn<Students> { Header = "Updated At", Value = acc => acc.UpdatedAt },
         };
-
-        filterColumns = columns.Where(c => c.IsFilter).ToList();
-    }
-
-    private void HandleRowClick(Students student)
-    {
-        Navigation.NavigateTo($"/admin/accountdetail-management/{student.ID}");
     }
 }

@@ -15,18 +15,17 @@
     <Filter Filters="@filters" Items="@admins" FilteredItemsChanged="@FilteredItemsChangedCallback" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
+        <Table Data="@filtered" Columns="@columns" OnDataUpdated="LoadData" />
     }
     else
     {
-        <Table Data="@admins" Columns="@columns" OnRowClick="@HandleRowClickCallback" />
+        <Table Data="@admins" Columns="@columns" OnDataUpdated="LoadData" />
     }
 }
 else
 {
     <Loading />
 }
-
 @code {
     private string HeaderTitle = "Admin";
     private IEnumerable<Admins> admins;
@@ -36,9 +35,6 @@ else
 
     private EventCallback<IEnumerable<Admins>> FilteredItemsChangedCallback =>
         EventCallback.Factory.Create<IEnumerable<Admins>>(this, UpdateFilteredItems);
-
-    private EventCallback<Admins> HandleRowClickCallback =>
-        EventCallback.Factory.Create<Admins>(this, HandleRowClick);
 
     private void UpdateFilteredItems(IEnumerable<Admins> filteredItems)
     {
@@ -55,7 +51,6 @@ else
     {
         admins = await DatabaseFunctions.LoadData<Admins>("api/Admin/GetAdmin");
 
-        // Define columns for the table
         columns = new List<TableColumn<Admins>>
         {
             new TableColumn<Admins> { Header = "Member Code", Value = acc => acc.MemberCode },
@@ -64,10 +59,5 @@ else
             new TableColumn<Admins> { Header = "Created At", Value = acc => acc.CreatedAt },
             new TableColumn<Admins> { Header = "Updated At", Value = acc => acc.UpdatedAt },
         };
-    }
-
-    private void HandleRowClick(Admins admin)
-    {
-        Navigation.NavigateTo($"/admin/accountdetail-management/{admin.ID}");
     }
 }

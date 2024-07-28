@@ -65,7 +65,7 @@ namespace SIMS.Shared.Functions
             return data;
         }
 
-        public async Task<bool> DeleteData(string methodURL, Guid id)
+        public async Task<bool> DeleteData(string methodURL, int id)
         {
             try
             {

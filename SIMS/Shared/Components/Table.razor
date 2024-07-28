@@ -17,7 +17,7 @@
             <tbody class="table-group-divider">
                 @foreach (var (item, index) in Data.Select((value, i) => (value, i)))
                 {
-                    <tr @onclick="@(async () => await OnRowClick.InvokeAsync(item))">
+                    <tr @onclick="@(async () => await NavigateToDetails(item))">
                         <td>@(index + 1)</td>
                         @foreach (var col in Columns)
                         {
@@ -42,6 +42,7 @@
 
 @code {
     [Inject] private NavigationManager Navigation { get; set; }
+    [Inject] private SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions { get; set; }
 
     [Parameter]
     public IEnumerable<TItem> Data { get; set; }
@@ -50,10 +51,7 @@
     public List<TableColumn<TItem>> Columns { get; set; }
 
     [Parameter]
-    public EventCallback<TItem> OnRowClick { get; set; }
-
-    [Parameter]
-    public EventCallback<TItem> OnDelete { get; set; }
+    public EventCallback OnDataUpdated { get; set; }
 
     private void UpdateItem(TItem item)
     {
@@ -63,12 +61,28 @@
 
     private async Task DeleteItem(TItem item)
     {
-        await OnDelete.InvokeAsync(item);
+        var itemId = GetItemId(item);
+
+        if (itemId is int accountId)
+        {
+            await DatabaseFunctions.DeleteData("api/Admin/DeleteAccount", accountId);
+            await OnDataUpdated.InvokeAsync();
+        }
+        else
+        {
+            Console.WriteLine("Invalid account ID.");
+        }
+    }
+
+    private async Task NavigateToDetails(TItem item)
+    {
+        var itemId = GetItemId(item);
+        Navigation.NavigateTo($"/admin/accountdetail-management/{itemId}");
     }
 
     private object GetItemId(TItem item)
     {
-        var propertyInfo = typeof(TItem).GetProperty("MemberCode");
+        var propertyInfo = typeof(TItem).GetProperty("ID");
         return propertyInfo?.GetValue(item);
     }
 }
