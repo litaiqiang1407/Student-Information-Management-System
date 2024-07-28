@@ -2,6 +2,7 @@
   height: 80px;
   background-color: var(--white);
   border-bottom: var(--primary-2px-color);
+  position: relative; /* Ensure the header content is positioned relative to the video background */
 }
 .header .header-container {
   height: 100%;
@@ -44,4 +45,30 @@
 }
 .header .header-container .header-button .primary-button:hover {
   color: var(--primary-color);
+}
+
+.main-content {
+  position: relative; /* Ensure the main content is positioned relative to the video background */
+  height: 100vh; /* Adjust height as needed */
+  overflow: hidden;
+}
+.main-content .video-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -1; /* Ensure the video is behind the main content */
+}
+.main-content .video-background video {
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1; /* Ensure the video is behind the main content */
 }

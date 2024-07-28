@@ -2,6 +2,7 @@
 @layout SIMS.Shared.Layouts.MainLayout
 @using Microsoft.AspNetCore.Components.Forms
 @inject IWebHostEnvironment env
+@inject HttpClient Http
 
 <div class="bordered-container">
     <div class="container">
@@ -16,27 +17,36 @@
         <div class="form-group">
             <div class="input-container">
                 <label for="member-code">Member Code</label>
-                <input type="text" id="member-code" placeholder="Enter member code..." class="input-field" value="@MemberCode" />
+                <input type="text" id="member-code" placeholder="Enter member code..." class="input-field" @bind="MemberCode" />
             </div>
             <div class="input-container">
                 <label for="email">Email</label>
-                <input type="email" id="email" placeholder="Enter email..." class="input-field" value="@Email" />
+                <input type="email" id="email" placeholder="Enter email..." class="input-field" @bind="Email" />
             </div>
         </div>
         <div class="form-group">
             <div class="input-container">
                 <label for="name">Name</label>
-                <input type="text" id="name" placeholder="Enter name..." class="input-field" value="@Name" />
+                <input type="text" id="name" placeholder="Enter name..." class="input-field" @bind="Name" />
             </div>
             <div class="input-container">
                 <label for="role">Role</label>
-                <select id="role" class="input-field" value="@Role">
+                <select id="role" class="input-field" @bind="Role">
                     <option value="" disabled selected>Choose a role...</option>
-                    <!-- Add more options here -->
+                    <option value="Student">Student</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Lecture">Lecture</option>
                 </select>
             </div>
         </div>
         <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
+
+        @if (!string.IsNullOrEmpty(NotificationMessage))
+        {
+            <div class="alert alert-@(NotificationSuccess ? "success" : "danger")" role="alert">
+                @NotificationMessage
+            </div>
+        }
     </div>
 </div>
 
@@ -55,6 +65,9 @@
     private string Email { get; set; }
     private string Name { get; set; }
     private string Role { get; set; }
+
+    private string NotificationMessage { get; set; }
+    private bool NotificationSuccess { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -75,17 +88,15 @@
     {
         var file = e.File;
 
-        if (IsValidImageFile(file))
+        if (!IsValidImageFile(file))
         {
-            photoUrl = await ConvertToBase64Async(file);
-            await SaveFileAsync(file);
-            StateHasChanged(); // Ensure UI update after file is selected
+            photoUrl = null;
+            return;
         }
-        else
-        {
-            photoUrl = null; // Or show an error message
-                             // Optional: Add logic to display an error message to the user
-        }
+
+        photoUrl = await ConvertToBase64Async(file);
+        await SaveFileAsync(file);
+        StateHasChanged();
     }
 
     private bool IsValidImageFile(IBrowserFile file)
@@ -95,36 +106,67 @@
 
     private async Task<string> ConvertToBase64Async(IBrowserFile file)
     {
-        using var stream = file.OpenReadStream();
-        var buffer = new byte[file.Size];
-        await stream.ReadAsync(buffer);
+        using var stream = new MemoryStream();
+        await file.OpenReadStream().CopyToAsync(stream);
+        var buffer = stream.ToArray();
         return $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
 
     private async Task SaveFileAsync(IBrowserFile file)
     {
         var uploadsFolder = Path.Combine(env.WebRootPath, "Uploads");
-        if (!Directory.Exists(uploadsFolder))
-        {
-            Directory.CreateDirectory(uploadsFolder);
-        }
+        Directory.CreateDirectory(uploadsFolder);
 
         var uniqueFileName = $"{Guid.NewGuid()}_{file.Name}";
-        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+        filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
         using var stream = new FileStream(filePath, FileMode.Create);
         await file.OpenReadStream().CopyToAsync(stream);
+
+        filePath = Path.Combine("Uploads", uniqueFileName);
     }
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        if (Mode == "add")
+        if (string.IsNullOrEmpty(MemberCode) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(Role))
         {
-            // Logic to handle adding a new entry
+            // Show an error message to the user
+            NotificationMessage = "Please fill out all fields.";
+            NotificationSuccess = false;
+            return;
         }
-        else if (Mode == "edit")
+
+        if (string.IsNullOrEmpty(filePath))
         {
-            // Logic to handle updating an existing entry
+            filePath = "https://cdn-icons-png.freepik.com/256/7666/7666584.png";
+        }
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(MemberCode), "memberCode");
+        content.Add(new StringContent(Email), "email");
+        content.Add(new StringContent(Name), "name");
+        content.Add(new StringContent(Role), "role");
+        content.Add(new StringContent(filePath), "imagePath");
+
+        var result = await Http.PostAsync("https://localhost:7006/api/Admin/AddAccount", content);
+
+        if (result.IsSuccessStatusCode)
+        {
+            var responseContent = await result.Content.ReadFromJsonAsync<ApiResponse>();
+            NotificationMessage = responseContent.Message;
+            NotificationSuccess = responseContent.Success;
+        }
+        else
+        {
+            NotificationMessage = "Failed to add account.";
+            NotificationSuccess = false;
         }
     }
+
+    public class ApiResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+    }
 }
+

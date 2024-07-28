@@ -18,10 +18,10 @@ namespace SIMS_APIs.Controllers
         private readonly DatabaseInteraction _dbInteraction;
         private readonly IConfiguration _configuration;
 
-        public AdminController(IConfiguration configuration)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment env)
         {
             _configuration = configuration;
-            _dbInteraction = new DatabaseInteraction(configuration);
+            _dbInteraction = new DatabaseInteraction(configuration, env);
         }
 
         private async Task<JsonResult> GetList(string query)
@@ -83,32 +83,16 @@ namespace SIMS_APIs.Controllers
 
         [HttpPost]
         [Route("AddAccount")]
-        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email)
+        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email, [FromForm] string name, [FromForm] string role, [FromForm] string imagePath)
         {
-            string addAccountQuery = @"INSERT INTO Account (MemberCode, Email, CreatedAt, UpdatedAt) 
-                                       VALUES (@MemberCode, @Email, GETDATE(), GETDATE())";
-
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-                new SqlParameter("@MemberCode", memberCode),
-                new SqlParameter("@Email", email)
-            };
-
-            return await Create(addAccountQuery, sqlParameters);
+            return await _dbInteraction.AddAccountWithTransaction(memberCode, email, name, role, imagePath);
         }
 
         [HttpDelete]
         [Route("DeleteAccount/{id}")]
-        public async Task<JsonResult> DeleteAccount(string id)
+        public async Task<JsonResult> DeleteAccount(int id)
         {
-            string deleteAccountQuery = "DELETE FROM Account WHERE ID = @id";
-
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-                new SqlParameter("@id", id)
-            };
-
-            return await Delete(deleteAccountQuery, sqlParameters);
+            return await _dbInteraction.DeleteAccountAndRelatedData(id);
         }
 
         [HttpGet]
@@ -235,42 +219,39 @@ namespace SIMS_APIs.Controllers
         {
             string getUserInfoByIdQuery = @"
             SELECT 
-                UI.[ID],
-                UI.[AccountID],
-                UI.[Name] AS UserName,
-                UI.[Gender],
-                UI.[DateOfBirth],
-                UI.[PersonalAvatar],
-                UI.[OfficialAvatar],
-                UI.[PersonalPhone],
-                UI.[ContactPhone1],
-                UI.[ContactPhone2],
-                UI.[PermanentAddress],
-                UI.[TemporaryAddress],
-                R.[Name] AS RoleName,  
-                M.[Name] AS MajorName, 
-                D.[Name] AS DepartmentName 
-            FROM 
-                [SIMS].[dbo].[UserInfo] UI
-            LEFT JOIN 
-                [SIMS].[dbo].[StudentDetail] SD
-                ON UI.[AccountID] = SD.[AccountID]
-            LEFT JOIN 
-                [SIMS].[dbo].[Major] M
-                ON SD.[MajorID] = M.[ID]
-            LEFT JOIN 
-                [SIMS].[dbo].[Department] D
-                ON M.[DepartmentID] = D.[ID]
-            JOIN 
-                [SIMS].[dbo].[UserRole] UR
-                ON UI.[AccountID] = UR.[AccountID]
-            JOIN 
-                [SIMS].[dbo].[Role] R
-                ON UR.[RoleID] = R.[ID]
-            WHERE 
-                UI.[ID] = @ID
-        ";
-
+            UI.[AccountID],
+            UI.[Name] AS UserName,
+            UI.[Gender],
+            UI.[DateOfBirth],
+            UI.[PersonalAvatar],
+            UI.[OfficialAvatar],
+            UI.[PersonalPhone],
+            UI.[ContactPhone1],
+            UI.[ContactPhone2],
+            UI.[PermanentAddress],
+            UI.[TemporaryAddress],
+            R.[Name] AS RoleName,  
+            M.[Name] AS MajorName, 
+            D.[Name] AS DepartmentName 
+        FROM 
+            [SIMS].[dbo].[UserInfo] UI
+        LEFT JOIN 
+            [SIMS].[dbo].[StudentDetail] SD
+            ON UI.[AccountID] = SD.[AccountID]
+        LEFT JOIN 
+            [SIMS].[dbo].[Major] M
+            ON SD.[MajorID] = M.[ID]
+        LEFT JOIN 
+            [SIMS].[dbo].[Department] D
+            ON M.[DepartmentID] = D.[ID]
+        JOIN 
+            [SIMS].[dbo].[UserRole] UR
+            ON UI.[AccountID] = UR.[AccountID]
+        JOIN 
+            [SIMS].[dbo].[Role] R
+            ON UR.[RoleID] = R.[ID]
+        WHERE 
+            UI.[AccountID] = @id";
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
             new SqlParameter("@ID", id)
@@ -289,7 +270,6 @@ namespace SIMS_APIs.Controllers
 
             UserInfos userInfos = new UserInfos
             {
-                ID = Convert.ToInt32(row["ID"]),
                 AccountID = Convert.ToInt32(row["AccountID"]),
                 Name = Convert.ToString(row["UserName"]),
                 Gender = genderParsed ? genderEnum : Gender.Other,
@@ -308,6 +288,5 @@ namespace SIMS_APIs.Controllers
 
             return Ok(userInfos);
         }
-
     }
 }
