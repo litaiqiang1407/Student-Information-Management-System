@@ -99,7 +99,7 @@
 
         try
         {
-            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/userinfo/{ID}");
+            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/UserInfos/{ID}");
 
             if (userInfo != null)
             {

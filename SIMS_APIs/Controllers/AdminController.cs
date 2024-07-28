@@ -213,7 +213,7 @@ A.ID,
             return await GetList(getSubjectsQuery);
         }
 
-        [HttpGet("userinfo/{id}")]
+        [HttpGet("UserInfos/{id}")]
         public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getUserInfoByIdQuery = @"
@@ -230,7 +230,7 @@ A.ID,
         UI.[ContactPhone2],
         UI.[PermanentAddress],
         UI.[TemporaryAddress],
-        A.[MemberCode], -- Ensure MemberCode is selected
+        A.[MemberCode],
         R.[Name] AS RoleName,  
         M.[Name] AS MajorName, 
         D.[Name] AS DepartmentName 
