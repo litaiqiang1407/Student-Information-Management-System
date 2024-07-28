@@ -11,36 +11,34 @@
 
 <PageTitle>Account</PageTitle>
 
-@* @if (accounts != null)
+@if (accounts != null)
 {
-    <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@filteredItemsChanged" />
+    <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@FilteredItemsChangedCallback" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" OnRowClick="@handleRowClickCallback" OnDelete="@deleteAccount" />
+        <Table Data="@filtered" Columns="@columns" OnDataUpdated="LoadData" />
     }
     else
     {
-        <Table Data="@accounts" Columns="@columns" OnRowClick="@handleRowClickCallback" OnDelete="@deleteAccount" />
+        <Table Data="@accounts" Columns="@columns" OnDataUpdated="LoadData" />
     }
 }
 else
 {
     <Loading />
-} *@
+}
 
 @code {
     private string HeaderTitle = "Account";
     private IEnumerable<Accounts> accounts;
     private List<TableColumn<Accounts>> columns;
-    private List<TableColumn<Accounts>> filterColumns;
     private List<Filters<Accounts>> filters = new List<Filters<Accounts>>();
     private List<Accounts> filtered;
 
-    private EventCallback<IEnumerable<Accounts>> filteredItemsChanged;
-    private EventCallback<Accounts> deleteAccount;
-    private EventCallback<Accounts> handleRowClickCallback;
+    private EventCallback<IEnumerable<Accounts>> FilteredItemsChangedCallback =>
+        EventCallback.Factory.Create<IEnumerable<Accounts>>(this, UpdateFilteredItems);
 
-    private void Updatefiltered(IEnumerable<Accounts> filteredItems)
+    private void UpdateFilteredItems(IEnumerable<Accounts> filteredItems)
     {
         filtered = filteredItems.ToList();
     }
@@ -50,33 +48,27 @@ else
         HeaderTitleService.Title = HeaderTitle;
         await LoadData();
         await LoadFilters();
-        filteredItemsChanged = EventCallback.Factory.Create<IEnumerable<Accounts>>(this, Updatefiltered);
-        // deleteAccount = EventCallback.Factory.Create<Accounts>(this, DeleteAccount);
-        handleRowClickCallback = EventCallback.Factory.Create<Accounts>(this, HandleRowClick);
     }
 
     private async Task LoadData()
     {
         accounts = await DatabaseFunctions.LoadData<Accounts>("api/Admin/GetAccount");
 
-        // Define columns for the table
         columns = new List<TableColumn<Accounts>>
         {
             new TableColumn<Accounts> { Header = "Member Code", Value = acc => acc.MemberCode },
             new TableColumn<Accounts> { Header = "Email", Value = acc => acc.Email },
             new TableColumn<Accounts> { Header = "Name", Value = acc => acc.Name },
-            new TableColumn<Accounts> { Header = "Role", Value = acc => acc.Role, IsFilter = true  },
+            new TableColumn<Accounts> { Header = "Role", Value = acc => acc.Role, IsFilter = true },
             new TableColumn<Accounts> { Header = "Created At", Value = acc => acc.CreatedAt },
             new TableColumn<Accounts> { Header = "Updated At", Value = acc => acc.UpdatedAt },
         };
-
-        filterColumns = columns.Where(c => c.IsFilter).ToList();
     }
 
     private async Task LoadFilters()
-    {       
-        foreach (var column in filterColumns)
-        {          
+    {
+        foreach (var column in columns.Where(c => c.IsFilter))
+        {
             var filterData = await DatabaseFunctions.LoadData<string>($"api/Admin/Get{column.Header.Replace(" ", "")}Filter");
             if (filterData != null)
             {
@@ -87,24 +79,5 @@ else
                     });
             }
         }
-    }
-
-    // private async Task DeleteAccount(Accounts account)
-    // {
-    //     var success = await DatabaseFunctions.DeleteData("api/Admin/DeleteAccount", account.ID);
-    //     if (success)
-    //     {
-    //         accounts = accounts.Where(a => a.ID != account.ID).ToList();
-    //         Updatefiltered(accounts);
-    //     }
-    //     else
-    //     {
-    //         Logger.LogError($"Failed to delete account: {account.ID}");
-    //     }
-    // }
-
-    private void HandleRowClick(Accounts account)
-    {
-        Navigation.NavigateTo($"/admin/accountdetail-management/{account.ID}");
     }
 }

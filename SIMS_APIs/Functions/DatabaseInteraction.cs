@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using SIMS.Data.Entities;
 using SIMS.Data.Entities.Enums;
@@ -207,10 +208,9 @@ namespace SIMS_APIs.Functions
 
         public async Task<DataTable> GetList(string query)
         {
-            return await GetData(query, null);
+            return await GetData(query);
         }
 
-        // Method to get data with parameters
         public async Task<DataTable> GetDataByID(string query, SqlParameter[] sqlParameters)
         {
             return await GetData(query, sqlParameters);
@@ -260,7 +260,7 @@ namespace SIMS_APIs.Functions
         {
             int rowsAffected;
 
-            using (SqlConnection myCon = new SqlConnection(_simsConnection))
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
                 await myCon.OpenAsync();
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
@@ -285,7 +285,7 @@ namespace SIMS_APIs.Functions
 
         public async Task<bool> ValidateUserAsync(string email, string password)
         {
-            using (SqlConnection connection = new SqlConnection(_simsConnection))
+            using (SqlConnection connection = new SqlConnection(SIMSConnection))
             {
                 await connection.OpenAsync();
                 SqlCommand command = new SqlCommand("SELECT COUNT(1) FROM Account WHERE Email = @Email AND Password = @Password", connection);
@@ -299,7 +299,7 @@ namespace SIMS_APIs.Functions
 
         public async Task<UserInfos> GetUserInfoAsync(string email)
         {
-            using (SqlConnection connection = new SqlConnection(_simsConnection))
+            using (SqlConnection connection = new SqlConnection(SIMSConnection))
             {
                 await connection.OpenAsync();
                 string query = @"SELECT UI.*, R.Name AS Role
