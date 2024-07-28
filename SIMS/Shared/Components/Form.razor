@@ -68,6 +68,7 @@
 
     private string NotificationMessage { get; set; }
     private bool NotificationSuccess { get; set; }
+    private IBrowserFile selectedFile;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -91,11 +92,12 @@
         if (!IsValidImageFile(file))
         {
             photoUrl = null;
+            selectedFile = null;
             return;
         }
 
+        selectedFile = file;
         photoUrl = await ConvertToBase64Async(file);
-        await SaveFileAsync(file);
         StateHasChanged();
     }
 
@@ -136,7 +138,11 @@
             return;
         }
 
-        if (string.IsNullOrEmpty(filePath))
+        if (selectedFile != null)
+        {
+            await SaveFileAsync(selectedFile);
+        }
+        else
         {
             filePath = "https://cdn-icons-png.freepik.com/256/7666/7666584.png";
         }
@@ -162,6 +168,7 @@
             NotificationSuccess = false;
         }
     }
+
 
     public class ApiResponse
     {

@@ -59,7 +59,7 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetAccount()
         {
             string getAccountQuery = @"SELECT
-A.ID,
+                                       A.ID,
                                        A.MemberCode, 
                                        A.Email, 
                                        CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt,
@@ -209,7 +209,6 @@ A.ID,
         {
             string getUserInfoByIdQuery = @"
     SELECT 
-        UI.[ID],
         UI.[AccountID],
         UI.[Name] AS UserName,
         UI.[Gender],
@@ -246,7 +245,7 @@ A.ID,
         [SIMS].[dbo].[Account] A
         ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode
     WHERE 
-        UI.[ID] = @ID";
+        UI.[AccountID] = @ID";
 
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
@@ -267,8 +266,6 @@ A.ID,
 
             UserInfos userInfos = new UserInfos
             {
-
-                ID = Convert.ToInt32(row["ID"]),
                 AccountID = Convert.ToInt32(row["AccountID"]),
                 Name = Convert.ToString(row["UserName"]),
                 Gender = genderParsed ? genderEnum : Gender.Other,

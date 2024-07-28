@@ -74,6 +74,34 @@
             display: block;
             object-fit: cover;
         }
+
+        .video-background {
+            position: relative;
+            width: 100%;
+            height: auto;
+            padding: 0;
+
+            video {
+                width: 100%;
+                height: auto;
+                display: block;
+                object-fit: cover;
+            }
+        }
+
+        .text-center {
+            margin-top: 15px;
+
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+
+                i {
+                    font-size: 20px;
+                }
+            }
+        }
     }
 
     .content-home {

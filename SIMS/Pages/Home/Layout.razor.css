@@ -66,6 +66,29 @@
   display: block;
   object-fit: cover;
 }
+.body .custom-banner .video-background {
+  position: relative;
+  width: 100%;
+  height: auto;
+  padding: 0;
+}
+.body .custom-banner .video-background video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+.body .custom-banner .text-center {
+  margin-top: 15px;
+}
+.body .custom-banner .text-center .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.body .custom-banner .text-center .btn i {
+  font-size: 20px;
+}
 .body .content-home {
   position: relative;
   width: 100%;
