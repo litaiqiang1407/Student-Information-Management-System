@@ -18,7 +18,7 @@
             </div>
             <div class="col-md-4 text-left reduced-margin-left d-flex flex-column justify-content-center align-items-start">
                 <h1 class="font-weight-bold">@userName</h1>
-                <p class="font-weight-bold">Member Code</p>
+                <p class="font-weight-bold">@memberCode</p>
                 @if (!string.IsNullOrEmpty(roleName))
                 {
                     <div class="mb-2">
@@ -89,6 +89,7 @@
     private string roleName = string.Empty;
     private string majorName = string.Empty;
     private string departmentName = string.Empty;
+    private string memberCode = "Membercode not found";
 
     private UserInfos userInfo;
 
@@ -111,6 +112,7 @@
                 roleName = userInfo.RoleName ?? roleName;
                 majorName = userInfo.MajorName ?? majorName;
                 departmentName = userInfo.DepartmentName ?? departmentName;
+                memberCode = userInfo.MemberCode ?? memberCode;
             }
         }
         catch (Exception ex)
