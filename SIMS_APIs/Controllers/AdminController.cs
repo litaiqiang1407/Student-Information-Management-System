@@ -7,6 +7,8 @@ using SIMS.Data.Entities;
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 
 namespace SIMS_APIs.Controllers
 {
@@ -208,45 +210,46 @@ namespace SIMS_APIs.Controllers
         public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getUserInfoByIdQuery = @"
-    SELECT 
-        UI.[AccountID],
-        UI.[Name] AS UserName,
-        UI.[Gender],
-        UI.[DateOfBirth],
-        UI.[PersonalAvatar],
-        UI.[OfficialAvatar],
-        UI.[PersonalPhone],
-        UI.[ContactPhone1],
-        UI.[ContactPhone2],
-        UI.[PermanentAddress],
-        UI.[TemporaryAddress],
-        A.[MemberCode],
-        R.[Name] AS RoleName,  
-        M.[Name] AS MajorName, 
-        D.[Name] AS DepartmentName 
-    FROM 
-        [SIMS].[dbo].[UserInfo] UI
-    LEFT JOIN 
-        [SIMS].[dbo].[StudentDetail] SD
-        ON UI.[AccountID] = SD.[AccountID]
-    LEFT JOIN 
-        [SIMS].[dbo].[Major] M
-        ON SD.[MajorID] = M.[ID]
-    LEFT JOIN 
-        [SIMS].[dbo].[Department] D
-        ON M.[DepartmentID] = D.[ID]
-    JOIN 
-        [SIMS].[dbo].[UserRole] UR
-        ON UI.[AccountID] = UR.[AccountID]
-    JOIN 
-        [SIMS].[dbo].[Role] R
-        ON UR.[RoleID] = R.[ID]
-    JOIN 
-        [SIMS].[dbo].[Account] A
-        ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode
-    WHERE 
-        UI.[AccountID] = @ID";
-
+        SELECT 
+    UI.[AccountID],
+    UI.[Name] AS UserName,
+    UI.[Gender],
+    UI.[DateOfBirth],
+    UI.[PersonalAvatar],
+    UI.[OfficialAvatar],
+    UI.[PersonalPhone],
+    UI.[ContactPhone1],
+    UI.[ContactPhone2],
+    UI.[PermanentAddress],
+    UI.[TemporaryAddress],
+	UI.OfficialAvatar,
+    A.[MemberCode],
+    A.[Email],
+    R.[Name] AS RoleName,  
+    M.[Name] AS MajorName, 
+    D.[Name] AS DepartmentName 
+FROM 
+    [SIMS].[dbo].[UserInfo] UI
+LEFT JOIN 
+    [SIMS].[dbo].[StudentDetail] SD
+    ON UI.[AccountID] = SD.[AccountID]
+LEFT JOIN 
+    [SIMS].[dbo].[Major] M
+    ON SD.[MajorID] = M.[ID]
+LEFT JOIN 
+    [SIMS].[dbo].[Department] D
+    ON M.[DepartmentID] = D.[ID]
+JOIN 
+    [SIMS].[dbo].[UserRole] UR
+    ON UI.[AccountID] = UR.[AccountID]
+JOIN 
+    [SIMS].[dbo].[Role] R
+    ON UR.[RoleID] = R.[ID]
+JOIN 
+    [SIMS].[dbo].[Account] A
+    ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode and Email
+WHERE 
+    UI.[AccountID] = @id";
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
         new SqlParameter("@ID", id)
@@ -277,13 +280,57 @@ namespace SIMS_APIs.Controllers
                 ContactPhone2 = Convert.ToString(row["ContactPhone2"]),
                 PermanentAddress = Convert.ToString(row["PermanentAddress"]),
                 TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
+                Email = Convert.ToString(row["Email"]),
                 RoleName = Convert.ToString(row["RoleName"]),
                 MajorName = Convert.ToString(row["MajorName"]),
                 DepartmentName = Convert.ToString(row["DepartmentName"]),
                 MemberCode = Convert.ToString(row["MemberCode"]) // Include MemberCode
             };
-
             return Ok(userInfos);
+        }
+        [HttpPut("UpdateUserInfos/{id}")]
+        public async Task<IActionResult> UpdateUserInfos(int id, [FromBody] UserUpdateRequest request)
+        {
+            Console.WriteLine($"Received data: {JsonConvert.SerializeObject(request)}");
+
+            if (id <= 0)
+            {
+                return BadRequest("Invalid ID.");
+            }
+
+            try
+            {
+                var success = await _dbInteraction.UpdateUserInfosAsync(
+                    id,
+                    request.MemberCode,
+                    request.Email,
+                    request.Name,
+                    request.Role,
+                    request.ImagePath
+                );
+
+                if (success)
+                {
+                    return NoContent(); // 204 No Content
+                }
+                else
+                {
+                    return NotFound(); // 404 Not Found
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}"); // 500 Internal Server Error
+            }
+        }
+
+        public class UserUpdateRequest
+        {
+            public string MemberCode { get; set; }
+            public string Email { get; set; }
+            public string Name { get; set; }
+            public string Role { get; set; }
+            public string ImagePath { get; set; }
         }
     }
 }

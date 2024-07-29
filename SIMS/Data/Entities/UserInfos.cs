@@ -20,5 +20,7 @@ namespace SIMS.Data.Entities
         public string MajorName { get; set; }
         public string DepartmentName { get; set; }
         public string MemberCode { get; set; } // Add this line
+        public string Email { get; set; }
+        public string ImagePath { get; set; }
     }
 }

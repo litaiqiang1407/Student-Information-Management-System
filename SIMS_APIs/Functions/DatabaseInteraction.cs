@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using SIMS.Data.Entities;
 using SIMS.Data.Entities.Enums;
+using static SIMS_APIs.Functions.DatabaseInteraction;
 
 namespace SIMS_APIs.Functions
 {
@@ -19,6 +20,46 @@ namespace SIMS_APIs.Functions
             _env = env;
         }
 
+        public async Task<JsonResult> UpdateAccountWithTransaction(int accountId, string memberCode, string email, string name, string role, string imagePath)
+        {
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (SqlTransaction transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        string storedProcedure = "UpdateAccountAndRelatedData";
+
+                        using (SqlCommand cmd = new SqlCommand(storedProcedure, myCon, transaction))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@AccountID", accountId);
+                            cmd.Parameters.AddWithValue("@MemberCode", memberCode);
+                            cmd.Parameters.AddWithValue("@Email", email);
+                            cmd.Parameters.AddWithValue("@Name", name);
+                            cmd.Parameters.AddWithValue("@Role", role);
+                            cmd.Parameters.AddWithValue("@ImagePath", imagePath);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        // Commit transaction if no errors
+                        transaction.Commit();
+
+                        return new JsonResult(new { success = true, message = "Account updated successfully" });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback transaction if there is an error
+                        transaction.Rollback();
+
+                        return new JsonResult(new { success = false, message = ex.Message });
+                    }
+                }
+            }
+        }
+        
         public async Task<JsonResult> AddAccountWithTransaction(string memberCode, string email, string name, string role, string imagePath)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
@@ -320,7 +361,7 @@ namespace SIMS_APIs.Functions
                             ID = reader.IsDBNull(reader.GetOrdinal("ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("ID")),
                             AccountID = reader.IsDBNull(reader.GetOrdinal("AccountID")) ? 0 : reader.GetInt32(reader.GetOrdinal("AccountID")),
                             Name = reader.IsDBNull(reader.GetOrdinal("Name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Name")),
-                            Role = reader.IsDBNull(reader.GetOrdinal("Role")) ? string.Empty : reader.GetString(reader.GetOrdinal("Role")),
+                            RoleName = reader.IsDBNull(reader.GetOrdinal("Role")) ? string.Empty : reader.GetString(reader.GetOrdinal("Role")),
                             Gender = reader.IsDBNull(reader.GetOrdinal("Gender")) ? Gender.Unknown : (Gender)Enum.Parse(typeof(Gender), reader.GetString(reader.GetOrdinal("Gender"))),
                             DateOfBirth = reader.IsDBNull(reader.GetOrdinal("DateOfBirth")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("DateOfBirth")),
                             PersonalAvatar = reader.IsDBNull(reader.GetOrdinal("PersonalAvatar")) ? string.Empty : reader.GetString(reader.GetOrdinal("PersonalAvatar")),
@@ -336,6 +377,42 @@ namespace SIMS_APIs.Functions
             }
 
             return null;
+        }
+        public async Task<bool> UpdateUserInfosAsync(int accountId, string memberCode, string email, string name, string role, string imagePath)
+        {
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+
+                using (var command = new SqlCommand("UpdateAccountAndRelatedData", myCon))
+                {
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    // Thêm các tham số vào câu lệnh
+                    command.Parameters.AddWithValue("@AccountID", accountId);
+                    command.Parameters.AddWithValue("@MemberCode", (object)memberCode ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Email", (object)email ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Name", (object)name ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Role", (object)role ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@ImagePath", (object)imagePath ?? DBNull.Value);
+
+                    try
+                    {
+                        await command.ExecuteNonQueryAsync();
+                        return true; 
+                    }
+                    catch (SqlException ex)
+                    {
+                        Console.WriteLine($"SQL Error: {ex.Message}");
+                        return false; 
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error: {ex.Message}");
+                        return false; 
+                    }
+                }
+            }
         }
     }
 }
