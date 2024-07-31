@@ -70,5 +70,9 @@
   {
     "outputFile": "Pages/Admin/Account/Form2.razor.css",
     "inputFile": "Pages/Admin/Account/Form2.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/UploadPhoto.razor.css",
+    "inputFile": "Shared/Components/UploadPhoto.razor.scss"
   }
 ]

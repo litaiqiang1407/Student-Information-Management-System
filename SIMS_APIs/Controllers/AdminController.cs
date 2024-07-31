@@ -289,7 +289,7 @@ WHERE
             return Ok(userInfos);
         }
         [HttpPut("UpdateUserInfos/{id}")]
-        public async Task<IActionResult> UpdateUserInfos(int id, [FromBody] UserUpdateRequest request)
+        public async Task<IActionResult> UpdateUserInfos(int id, [FromForm] UserUpdateRequest request)
         {
             Console.WriteLine($"Received data: {JsonConvert.SerializeObject(request)}");
 

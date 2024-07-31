@@ -1,23 +1,16 @@
 ﻿@page "/addedit/{Mode}/{Id?}"
 @layout SIMS.Shared.Layouts.MainLayout
-@using Microsoft.AspNetCore.Components.Forms
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 @inject IWebHostEnvironment env
 @inject HttpClient Http
 @using Newtonsoft.Json
 @using System.Text
-@using System.Net
+@using System.Net;
+@using System.Net.Http.Headers;
 
 <div class="bordered-container">
     <div class="container">
-        <div class="upload-photo">
-            <label class="photo-icon">
-                <img id="photo-preview" src="@photoUrl" alt="Preview" style="@(string.IsNullOrEmpty(photoUrl) ? "display:none;" : "display:block;")" />
-                <i class="bi bi-camera"></i>
-                <InputFile id="photo-upload" accept="image/*" OnChange="HandleFileSelected" style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
-            </label>
-            <p>Upload Photo</p>
-        </div>
+        <UploadPhoto PhotoUrl="@photoUrl" PhotoUrlChanged="OnPhotoUrlChanged" OnFileSelected="OnFileSelected" />
         <div class="form-group">
             <div class="input-container">
                 <label for="member-code">Member Code</label>
@@ -83,22 +76,6 @@
             // Load data for editing using Id
             await LoadItemAsync(Id);
         }
-        else if (Mode == "add")
-        {
-            // Initialize the form for adding a new user
-            ClearForm();
-        }
-    }
-
-    private void ClearForm()
-    {
-        // Clear or reset form fields for adding a new user
-        MemberCode = string.Empty;
-        Email = string.Empty;
-        Name = string.Empty;
-        Role = string.Empty;
-        photoUrl = null;
-        selectedFile = null;
     }
 
     private async Task LoadItemAsync(string id)
@@ -132,33 +109,14 @@
         }
     }
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    private async Task OnPhotoUrlChanged(string newPhotoUrl)
     {
-        var file = e.File;
+        photoUrl = newPhotoUrl;
+    }
 
-        if (!IsValidImageFile(file))
-        {
-            photoUrl = null;
-            selectedFile = null;
-            return;
-        }
-
+    private void OnFileSelected(IBrowserFile file)
+    {
         selectedFile = file;
-        photoUrl = await ConvertToBase64Async(file);
-        StateHasChanged();
-    }
-
-    private bool IsValidImageFile(IBrowserFile file)
-    {
-        return file != null && file.ContentType.StartsWith("image/") && file.Size <= 5 * 1024 * 1024; // File size limit of 5MB
-    }
-
-    private async Task<string> ConvertToBase64Async(IBrowserFile file)
-    {
-        using var stream = new MemoryStream();
-        await file.OpenReadStream().CopyToAsync(stream);
-        var buffer = stream.ToArray();
-        return $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
 
     private async Task SaveFileAsync(IBrowserFile file)
@@ -174,7 +132,6 @@
 
         filePath = Path.Combine("Uploads", uniqueFileName);
     }
-
     private async Task HandleSubmit()
     {
         // Check for missing required fields
@@ -185,27 +142,36 @@
             return;
         }
 
-        // Default image path if no file is selected
+        var formData = new MultipartFormDataContent();
+
+        // Add text fields
+        formData.Add(new StringContent(MemberCode), "MemberCode");
+        formData.Add(new StringContent(Email), "Email");
+        formData.Add(new StringContent(Name), "Name");
+        formData.Add(new StringContent(Role), "Role");
+
         if (selectedFile != null)
         {
-            await SaveFileAsync(selectedFile);
+            try
+            {
+                var fileContent = new StreamContent(selectedFile.OpenReadStream(10 * 1024 * 1024)); // Adjust max file size if needed
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
+
+                formData.Add(fileContent, "ImagePath", selectedFile.Name);
+            }
+            catch (Exception ex)
+            {
+                NotificationMessage = $"Error uploading file: {ex.Message}";
+                NotificationSuccess = false;
+                return;
+            }
         }
         else
         {
-            filePath = "https://cdn-icons-png.freepik.com/256/7666/7666584.png"; // Ensure this is a valid fallback image
+            formData.Add(new StringContent("https://cdn-icons-png.freepik.com/256/7666/7666584.png"), "ImagePath");
         }
 
-        var formData = new MultipartFormDataContent
-    {
-        { new StringContent(MemberCode), "memberCode" },
-        { new StringContent(Email), "email" },
-        { new StringContent(Name), "name" },
-        { new StringContent(Role), "role" },
-        { new StringContent(filePath), "imagePath" }
-    };
-
-        // Log the form data for debugging
-        Console.WriteLine($"MemberCode: {MemberCode}, Email: {Email}, Name: {Name}, Role: {Role}, ImagePath: {filePath}");
+        Console.WriteLine($"MemberCode: {MemberCode}, Email: {Email}, Name: {Name}, Role: {Role}");
 
         HttpResponseMessage result;
 
@@ -245,7 +211,7 @@
             NotificationMessage = $"Exception occurred: {ex.Message}";
             NotificationSuccess = false;
         }
-    }   
+    }
 
     public class ApiResponse
     {
