@@ -6,7 +6,7 @@ namespace SIMS.Shared.Services
     public class HeaderTitleService : INotifyPropertyChanged
     {
         private string _title = "Student Information Management System";
-        public string OfficialAvatar { get; set; }
+        private string _officialAvatar = "default-avatar.png"; // Default value or path to the default avatar
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -19,6 +19,19 @@ namespace SIMS.Shared.Services
                 {
                     _title = value;
                     OnPropertyChanged(nameof(Title));
+                }
+            }
+        }
+
+        public string OfficialAvatar
+        {
+            get => _officialAvatar;
+            set
+            {
+                if (_officialAvatar != value)
+                {
+                    _officialAvatar = value;
+                    OnPropertyChanged(nameof(OfficialAvatar));
                 }
             }
         }

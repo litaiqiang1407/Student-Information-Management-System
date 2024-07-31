@@ -37,7 +37,18 @@
 <body class="body conten">
 
     <div class="col-12 col-md-6 container-fluid custom-banner">
-        <img src="/bannerHome.jpg" alt="Education Knowledge" class="img-fluid">
+        <img id="bannerImage" src="/bannerHome.jpg" alt="Education Knowledge" class="img-fluid">
+        <div id="videoContainer" class="video-background" style="display: none;">
+            <video id="backgroundVideo" autoplay loop muted>
+                <source src="Videos/demovideo.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="text-center mt-3">
+            <button id="toggleButton" class="btn btn-primary" onclick="toggleMedia()">
+                <i class="bi bi-toggle-on"></i> Switch
+            </button>
+        </div>
     </div>
 
     <div class=" container-fluid content-home">
@@ -88,7 +99,6 @@
                 </div>
 
             </div>
-
         </div>
 
     </div>
@@ -184,3 +194,25 @@
         © 2024 KUPOKATRI. All rights reserved.
     </div>
 </footer>
+
+<script>
+    function toggleMedia() {
+        const bannerImage = document.getElementById('bannerImage');
+        const videoContainer = document.getElementById('videoContainer');
+        const backgroundVideo = document.getElementById('backgroundVideo');
+        const toggleButton = document.getElementById('toggleButton');
+
+        if (bannerImage.style.display === 'none') {
+            bannerImage.style.display = 'block';
+            videoContainer.style.display = 'none';
+            backgroundVideo.pause();
+            toggleButton.innerHTML = '<i class="bi bi-toggle-on"></i> Switch';
+        } else {
+            bannerImage.style.display = 'none';
+            videoContainer.style.display = 'block';
+            backgroundVideo.muted = false;
+            backgroundVideo.play();
+            toggleButton.innerHTML = '<i class="bi bi-toggle-off"></i> Switch';
+        }
+    }
+</script>

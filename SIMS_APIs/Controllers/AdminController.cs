@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 using SIMS_APIs.Functions;
+using SIMS.Data.Entities.Enums;
+using SIMS.Data.Entities;
+using System;
 using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 
 namespace SIMS_APIs.Controllers
 {
@@ -13,46 +18,50 @@ namespace SIMS_APIs.Controllers
     public class AdminController : ControllerBase
     {
         private readonly DatabaseInteraction _dbInteraction;
+        private readonly IConfiguration _configuration;
 
-        public AdminController(IConfiguration configuration)
+        public AdminController(IConfiguration configuration, IWebHostEnvironment env)
         {
-            _dbInteraction = new DatabaseInteraction(configuration);
+            _configuration = configuration;
+            _dbInteraction = new DatabaseInteraction(configuration, env);
         }
 
-        // Get List of Data
         private async Task<JsonResult> GetList(string query)
         {
-            DataTable dt = await _dbInteraction.GetList(query);
+            DataTable dt = await _dbInteraction.GetData(query);
             return new JsonResult(dt);
         }
 
-        // Create Data
+        private async Task<JsonResult> GetData(string query, SqlParameter[] sqlParameters = null)
+        {
+            DataTable dt = await _dbInteraction.GetData(query, sqlParameters);
+            return new JsonResult(dt);
+        }
+
         private async Task<JsonResult> Create(string query, SqlParameter[] sqlParameters)
         {
-            int rowsAffected = await _dbInteraction.Create(query, sqlParameters);
+            int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
             return new JsonResult(new { success = rowsAffected > 0 });
         }
 
-        // Update Data
         private async Task<JsonResult> Update(string query, SqlParameter[] sqlParameters)
         {
-            int rowsAffected = await _dbInteraction.Update(query, sqlParameters);
+            int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
             return new JsonResult(new { success = rowsAffected > 0 });
         }
 
-        // Delete Data
         private async Task<JsonResult> Delete(string query, SqlParameter[] sqlParameters)
         {
-            int rowsAffected = await _dbInteraction.Delete(query, sqlParameters);
+            int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
             return new JsonResult(new { success = rowsAffected > 0 });
         }
 
-        // Accounts
         [HttpGet]
         [Route("GetAccount")]
         public async Task<JsonResult> GetAccount()
         {
-            string getAccountQuery = @"SELECT 
+            string getAccountQuery = @"SELECT
+                                       A.ID,
                                        A.MemberCode, 
                                        A.Email, 
                                        CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt,
@@ -72,45 +81,34 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetRoleFilter()
         {
             string getRoleAccountQuery = "SELECT R.Name AS Role FROM Role R";
-
             return await GetList(getRoleAccountQuery);
         }
 
         [HttpPost]
         [Route("AddAccount")]
-        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email, [FromForm] string name, [FromForm] string role)
+        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email, [FromForm] string name, [FromForm] string role, [FromForm] string imagePath)
         {
-            string addAccountQuery = @"INSERT INTO Account (MemberCode, Email, CreatedAt, UpdatedAt) 
-                                       VALUES (@MemberCode, @Email, GETDATE(), GETDATE())";
-
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-                new SqlParameter("@MemberCode", memberCode),
-                new SqlParameter("@Email", email)
-            };
-
-            return await Create(addAccountQuery, sqlParameters);
+            return await _dbInteraction.AddAccountWithTransaction(memberCode, email, name, role, imagePath);
         }
 
         [HttpDelete]
         [Route("DeleteAccount/{id}")]
-        public async Task<JsonResult> DeleteAccount(string id)
+        public async Task<JsonResult> DeleteAccount(int id)
         {
-            string deleteAccountQuery = "DELETE FROM Account WHERE ID = @id";
-
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-                new SqlParameter("@id", id)
-            };
-
-            return await Delete(deleteAccountQuery, sqlParameters);
+            return await _dbInteraction.DeleteAccountAndRelatedData(id);
         }
 
         [HttpGet]
         [Route("GetAdmin")]
         public async Task<JsonResult> GetAdmin()
         {
-            string getQuery = @$"SELECT 
+            return await GetDataByRole("Admin");
+        }
+
+        private async Task<JsonResult> GetDataByRole(string roleName)
+        {
+            string getQuery = @$"SELECT
+                                A.ID,
                                 A.MemberCode, 
                                 A.Email, 
                                 CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
@@ -120,7 +118,7 @@ namespace SIMS_APIs.Controllers
                                 LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
                                 LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
                                 LEFT JOIN Role R ON UR.RoleID = R.ID 
-                                WHERE R.Name = 'Admin'";
+                                WHERE R.Name = '{roleName}'";
 
             return await GetList(getQuery);
         }
@@ -129,38 +127,14 @@ namespace SIMS_APIs.Controllers
         [Route("GetLecturer")]
         public async Task<JsonResult> GetLecturer()
         {
-            string getQuery = @$"SELECT 
-                                A.MemberCode, 
-                                A.Email, 
-                                CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
-                                CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
-                                UI.Name AS Name 
-                                FROM Account A 
-                                LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
-                                LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
-                                LEFT JOIN Role R ON UR.RoleID = R.ID 
-                                WHERE R.Name = 'Lecturer'";
-
-            return await GetList(getQuery);
+            return await GetDataByRole("Lecturer");
         }
 
         [HttpGet]
         [Route("GetStudent")]
         public async Task<JsonResult> GetStudent()
         {
-            string getQuery = @$"SELECT 
-                                A.MemberCode, 
-                                A.Email, 
-                                CONVERT(VARCHAR(10), A.CreatedAt, 103) AS CreatedAt, 
-                                CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
-                                UI.Name AS Name 
-                                FROM Account A 
-                                LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
-                                LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
-                                LEFT JOIN Role R ON UR.RoleID = R.ID 
-                                WHERE R.Name = 'Student'";
-
-            return await GetList(getQuery);
+            return await GetDataByRole("Student");
         }
 
         [HttpGet]
@@ -192,7 +166,6 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetDepartmentFilter()
         {
             string getDepartmentsQuery = "SELECT D.Name AS Department FROM Department D";
-
             return await GetList(getDepartmentsQuery);
         }
 
@@ -201,7 +174,6 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetSemesterFilter()
         {
             string getSemestersQuery = "SELECT SEM.Name AS Semester FROM Semester SEM";
-
             return await GetList(getSemestersQuery);
         }
 
@@ -224,40 +196,141 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetSubjects()
         {
             string getSubjectsQuery = @"SELECT SubjectCode, Name, Credits, Slots, Fee FROM Subject";
-
             return await GetList(getSubjectsQuery);
         }
-
-        [HttpGet]
-        [Route("GetSemesters")]
-        public async Task<JsonResult> GetSemesters()
-        {
-            string getSemestersQuery = @"SELECT Name,
-                                         CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
-                                         CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
-                                         FROM Semester";
-
-            return await GetList(getSemestersQuery);
-        }
-
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
         {
             string getDepartmentsQuery = "SELECT Name FROM Department";
-
             return await GetList(getDepartmentsQuery);
         }
 
-        [HttpGet]
-        [Route("GetMajors")]
-        public async Task<JsonResult> GetMajors()
+        [HttpGet("UserInfos/{id}")]
+        public async Task<IActionResult> GetUserInfoById(int id)
         {
-            string getMajorsQuery = @"SELECT M.Name, D.Name AS Department 
-                                      FROM Major M 
-                                      JOIN Department D ON M.DepartmentID = D.ID";
+            string getUserInfoByIdQuery = @"
+        SELECT 
+    UI.[AccountID],
+    UI.[Name] AS UserName,
+    UI.[Gender],
+    UI.[DateOfBirth],
+    UI.[PersonalAvatar],
+    UI.[OfficialAvatar],
+    UI.[PersonalPhone],
+    UI.[ContactPhone1],
+    UI.[ContactPhone2],
+    UI.[PermanentAddress],
+    UI.[TemporaryAddress],
+	UI.OfficialAvatar,
+    A.[MemberCode],
+    A.[Email],
+    R.[Name] AS RoleName,  
+    M.[Name] AS MajorName, 
+    D.[Name] AS DepartmentName 
+FROM 
+    [SIMS].[dbo].[UserInfo] UI
+LEFT JOIN 
+    [SIMS].[dbo].[StudentDetail] SD
+    ON UI.[AccountID] = SD.[AccountID]
+LEFT JOIN 
+    [SIMS].[dbo].[Major] M
+    ON SD.[MajorID] = M.[ID]
+LEFT JOIN 
+    [SIMS].[dbo].[Department] D
+    ON M.[DepartmentID] = D.[ID]
+JOIN 
+    [SIMS].[dbo].[UserRole] UR
+    ON UI.[AccountID] = UR.[AccountID]
+JOIN 
+    [SIMS].[dbo].[Role] R
+    ON UR.[RoleID] = R.[ID]
+JOIN 
+    [SIMS].[dbo].[Account] A
+    ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode and Email
+WHERE 
+    UI.[AccountID] = @id";
+            SqlParameter[] sqlParameters = new SqlParameter[]
+            {
+        new SqlParameter("@ID", id)
+            };
 
-            return await GetList(getMajorsQuery);
+            DataTable dataTable = await _dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
+
+            if (dataTable.Rows.Count == 0)
+            {
+                return NotFound();
+            }
+
+            DataRow row = dataTable.Rows[0];
+
+            // Convert Gender from string to enum
+            bool genderParsed = Enum.TryParse(row["Gender"].ToString(), out Gender genderEnum);
+
+            UserInfos userInfos = new UserInfos
+            {
+                AccountID = Convert.ToInt32(row["AccountID"]),
+                Name = Convert.ToString(row["UserName"]),
+                Gender = genderParsed ? genderEnum : Gender.Other,
+                DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
+                PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
+                OfficialAvatar = Convert.ToString(row["OfficialAvatar"]),
+                PersonalPhone = Convert.ToString(row["PersonalPhone"]),
+                ContactPhone1 = Convert.ToString(row["ContactPhone1"]),
+                ContactPhone2 = Convert.ToString(row["ContactPhone2"]),
+                PermanentAddress = Convert.ToString(row["PermanentAddress"]),
+                TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
+                Email = Convert.ToString(row["Email"]),
+                RoleName = Convert.ToString(row["RoleName"]),
+                MajorName = Convert.ToString(row["MajorName"]),
+                DepartmentName = Convert.ToString(row["DepartmentName"]),
+                MemberCode = Convert.ToString(row["MemberCode"]) // Include MemberCode
+            };
+            return Ok(userInfos);
+        }
+        [HttpPut("UpdateUserInfos/{id}")]
+        public async Task<IActionResult> UpdateUserInfos(int id, [FromBody] UserUpdateRequest request)
+        {
+            Console.WriteLine($"Received data: {JsonConvert.SerializeObject(request)}");
+
+            if (id <= 0)
+            {
+                return BadRequest("Invalid ID.");
+            }
+
+            try
+            {
+                var success = await _dbInteraction.UpdateUserInfosAsync(
+                    id,
+                    request.MemberCode,
+                    request.Email,
+                    request.Name,
+                    request.Role,
+                    request.ImagePath
+                );
+
+                if (success)
+                {
+                    return NoContent(); // 204 No Content
+                }
+                else
+                {
+                    return NotFound(); // 404 Not Found
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}"); // 500 Internal Server Error
+            }
+        }
+
+        public class UserUpdateRequest
+        {
+            public string MemberCode { get; set; }
+            public string Email { get; set; }
+            public string Name { get; set; }
+            public string Role { get; set; }
+            public string ImagePath { get; set; }
         }
     }
 }

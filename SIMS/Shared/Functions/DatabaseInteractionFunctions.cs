@@ -1,6 +1,13 @@
-﻿using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
+﻿using System;
+using System.Net.Http;
+using System.Text.Json;
+using System;
+using System.Net.Http;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SIMS.Shared.Models;
 using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace SIMS.Shared.Functions
 {
@@ -38,7 +45,36 @@ namespace SIMS.Shared.Functions
             return data;
         }
 
-        public async Task<bool> DeleteData(string methodURL, Guid id)
+        public async Task<T> LoadSingleData<T>(string methodURL)
+        {
+            T data = default(T);
+
+            try
+            {
+                _logger.LogInformation($"Loading data from {API_URL + methodURL}");
+                HttpResponseMessage response = await _httpClient.GetAsync(API_URL + methodURL);
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Raw response content: {content}");
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                data = JsonSerializer.Deserialize<T>(content, options);
+                _logger.LogInformation("Data loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error loading data: {ex.Message}");
+            }
+
+            return data;
+        }
+
+        public async Task<bool> DeleteData(string methodURL, int id)
         {
             try
             {

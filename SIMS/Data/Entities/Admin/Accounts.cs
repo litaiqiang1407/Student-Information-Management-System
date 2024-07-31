@@ -6,8 +6,7 @@ namespace SIMS.Data.Entities.Admin
     public class Accounts
     {
         [Key]
-        public Guid ID { get; set; }
-
+        public int ID { get; set; }
         public string MemberCode { get; set; }
         public string Email { get; set; }
         public string Name { get; set; }
@@ -17,7 +16,7 @@ namespace SIMS.Data.Entities.Admin
 
         public Accounts()
         {
-            ID = Guid.NewGuid();
+            //ID = int.NewGuid();
             //CreatedAt = DateTime.Now;
             //UpdatedAt = DateTime.Now;
         }

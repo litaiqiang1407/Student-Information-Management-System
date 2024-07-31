@@ -46,7 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <UpToDateCheckInput Remove="Pages\Home\Home.razor" />
+    <Folder Include="wwwroot\Uploads\" />
   </ItemGroup>
 
 </Project>

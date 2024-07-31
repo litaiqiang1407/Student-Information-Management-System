@@ -1,0 +1,124 @@
+﻿@page "/admin/accountdetail-management/{ID:int}"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Shared.Models
+@using System.Text.Json
+@using SIMS.Data.Entities
+@using SIMS.Shared.Components
+@inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<PageTitle>Account Detail</PageTitle>
+
+<div class="container mt-5">
+    <div class="body larger-card d-flex flex-column justify-content-center">
+        <div class="row">
+            <!-- Phần bên trái: Avatar và Thông tin cơ bản -->
+            <div class="col-md-2 text-center d-flex flex-column align-items-center justify-content-center">
+                <img src="@userPersonalAvatar" alt="User Avatar" class="img-fluid rounded-circle avatar mb-3" />
+            </div>
+            <div class="col-md-4 text-left reduced-margin-left d-flex flex-column justify-content-center align-items-start">
+                <h1 class="font-weight-bold">@userName</h1>
+                <p class="font-weight-bold">@memberCode</p>
+                @if (!string.IsNullOrEmpty(roleName))
+                {
+                    <div class="mb-2">
+                        <button class="btn btn-primary role-btn rounded-pill">@roleName</button>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(departmentName))
+                {
+                    <div class="mb-2">
+                        <button class="btn btn-danger department-btn rounded-pill">@departmentName</button>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(majorName))
+                {
+                    <div>
+                        <button class="btn btn-success major-btn rounded-pill">@majorName</button>
+                    </div>
+                }
+            </div>
+
+            <!-- Phần bên phải: Thông tin chi tiết -->
+            <div class="col-md-6 right-section d-flex align-items-center p-0">
+                <div class="w-100 p-0">
+                    <div class="row p-0">
+                        <div class="col-md-6 first-col-border">
+                            <div class="row">
+                                <div class="col-md-12 info-item d-flex justify-content-left">
+                                    <i class="bi bi-cake2-fill"></i> <span>@dateOfBirth</span>
+                                </div>
+                            </div>
+                            <div class="row second-row-border">
+                                <div class="col-md-12 info-item d-flex justify-content-left">
+                                    <i class="bi bi-gender-ambiguous mr-1 blue-icon"></i> <span>@gender</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-12 info-item d-flex justify-content-left">
+                                    <i class="bi bi-telephone mr-2 blue-icon"></i> <span>@phoneNumber</span>
+                                </div>
+                            </div>
+                            <div class="row second-row-border">
+                                <div class="col-md-12 info-item d-flex justify-content-left">
+                                    <i class="bi bi-geo-alt mr-1 blue-icon"></i> <span>@address</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+
+    private string HeaderTitle = "Account Detail";
+
+    private string userName = "User not found";
+    private string dateOfBirth = string.Empty;
+    private string gender = string.Empty;
+    private string phoneNumber = "Not Available";
+    private string address = "Not Available";
+    private string userPersonalAvatar = "https://via.placeholder.com/150?text=No+Image";
+    private string roleName = string.Empty;
+    private string majorName = string.Empty;
+    private string departmentName = string.Empty;
+    private string memberCode = "Membercode not found";
+
+    private UserInfos userInfo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        HeaderTitleService.Title = HeaderTitle;
+
+        try
+        {
+            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/UserInfos/{ID}");
+
+            if (userInfo != null)
+            {
+                userName = userInfo.Name ?? userName;
+                dateOfBirth = userInfo.DateOfBirth.ToString("MM/dd/yyyy") ?? dateOfBirth;
+                gender = userInfo.Gender.ToString() ?? gender;
+                phoneNumber = userInfo.PersonalPhone ?? phoneNumber;
+                address = userInfo.PermanentAddress ?? address;
+                userPersonalAvatar = userInfo.OfficialAvatar ?? userPersonalAvatar;
+                roleName = userInfo.RoleName ?? roleName;
+                majorName = userInfo.MajorName ?? majorName;
+                departmentName = userInfo.DepartmentName ?? departmentName;
+                memberCode = userInfo.MemberCode ?? memberCode;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+            userName = "Error loading user";
+        }
+    }
+}

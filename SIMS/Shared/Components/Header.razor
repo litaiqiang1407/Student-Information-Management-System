@@ -2,11 +2,10 @@
 @inject DisplayComponent DisplayComponent
 @inject NavigationManager Navigation
 
-
 <header class="header">
     <div class="header-top">
         <a class="action-link">
-                    <i class="bi bi-bell action-icon"></i>
+            <i class="bi bi-bell action-icon"></i>
         </a>
         <a class="action-link">
             <img class="avatar" src="@HeaderTitleService.OfficialAvatar" alt="Avatar" />
@@ -21,13 +20,12 @@
         <div>
             @if (DisplayAddButton())
             {
-                <a class="add-button" href="add">
+                <a class="add-button" href="/addedit/add">
                     <i class="bi bi-plus-lg add-icon"></i>
-                <span class="add-content">Add</span>
-            </a>
+                    <span class="add-content">Add</span>
+                </a>
             }
         </div>
-        
     </div>
 </header>
 
