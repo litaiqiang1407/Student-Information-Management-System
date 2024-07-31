@@ -7,6 +7,7 @@
 @using Newtonsoft.Json
 @using System.Text
 @using System.Net;
+@using System.Reflection;
 
 <div class="bordered-container">
     <div class="container">
@@ -19,29 +20,33 @@
             <p>Upload Photo</p>
         </div>
         <div class="form-group">
-            <div class="input-container">
-                <label for="member-code">Member Code</label>
-                <input type="text" id="member-code" placeholder="Enter member code..." class="input-field" @bind="MemberCode" />
-            </div>
-            <div class="input-container">
-                <label for="email">Email</label>
-                <input type="email" id="email" placeholder="Enter email..." class="input-field" @bind="Email" />
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="input-container">
-                <label for="name">Name</label>
-                <input type="text" id="name" placeholder="Enter name..." class="input-field" @bind="Name" />
-            </div>
-            <div class="input-container">
-                <label for="role">Role</label>
-                <select id="role" class="input-field" @bind="Role">
-                    <option value="" disabled selected>Choose a role...</option>
-                    <option value="Student">Student</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Lecture">Lecture</option>
-                </select>
-            </div>
+            @foreach (var prop in userInfoProperties)
+            {
+                <div class="input-container">
+                    <label for="@prop.Name">@prop.Name</label>
+                    @if (prop.PropertyType == typeof(string))
+                    {
+                        <input type="text" id="@prop.Name" placeholder="Enter @prop.Name..." class="input-field" @bind="@BindProperty(prop)" />
+                    }
+                    else if (prop.PropertyType == typeof(DateTime))
+                    {
+                        <input type="date" id="@prop.Name" class="input-field" @bind="@BindProperty(prop)" />
+                    }
+                    else if (prop.PropertyType == typeof(int))
+                    {
+                        <input type="number" id="@prop.Name" class="input-field" @bind="@BindProperty(prop)" />
+                    }
+                    else if (prop.PropertyType.IsEnum)
+                    {
+                        <select id="@prop.Name" class="input-field" @bind="@BindProperty(prop)">
+                            @foreach (var value in Enum.GetValues(prop.PropertyType))
+                            {
+                                <option value="@value">@value</option>
+                            }
+                        </select>
+                    }
+                </div>
+            }
         </div>
         <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
 
@@ -64,7 +69,7 @@
     private string ButtonText => Mode == "add" ? "ADD" : "UPDATE";
     private string photoUrl;
     private string filePath;
-    
+
     private string MemberCode { get; set; }
     private string Email { get; set; }
     private string Name { get; set; }
@@ -74,10 +79,12 @@
     private bool NotificationSuccess { get; set; }
     private IBrowserFile selectedFile;
 
-    private UserInfos userInfo;
+    private UserInfos userInfo = new UserInfos();
+    private List<PropertyInfo> userInfoProperties;
 
     protected override async Task OnParametersSetAsync()
     {
+        userInfoProperties = typeof(UserInfos).GetProperties().ToList();
         if (Mode == "edit" && !string.IsNullOrEmpty(Id))
         {
             // Load data for editing using Id
@@ -94,11 +101,6 @@
 
             if (userInfo != null)
             {
-                // Assign the retrieved data to the form fields
-                MemberCode = userInfo.MemberCode;
-                Email = userInfo.Email;
-                Name = userInfo.Name;
-                Role = userInfo.RoleName; // Assuming RoleName is the role name; adjust if needed
                 photoUrl = userInfo.OfficialAvatar; // Update the photo URL if necessary
             }
             else
@@ -114,6 +116,11 @@
             NotificationMessage = $"Error occurred: {ex.Message}";
             NotificationSuccess = false;
         }
+    }
+
+    private object BindProperty(PropertyInfo prop)
+    {
+        return prop.GetValue(userInfo);
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
@@ -234,4 +241,3 @@
         public string Message { get; set; }
     }
 }
-
