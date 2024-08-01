@@ -22,7 +22,7 @@
 .sidebar .sidebar-nav .nav-item {
   padding: 8px 12px;
   border-radius: 4px;
-  font-weight: 500;
+  font-weight: bold;
 }
 .sidebar .sidebar-nav .nav-item .nav-link {
   color: var(--primary-color);

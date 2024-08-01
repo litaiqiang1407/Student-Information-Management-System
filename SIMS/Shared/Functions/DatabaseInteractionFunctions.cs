@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Text.Json;
-using System;
-using System.Net.Http;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using SIMS.Shared.Models;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 

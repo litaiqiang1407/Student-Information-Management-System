@@ -6,7 +6,7 @@ namespace SIMS.Data.Entities
 {
     public class Users : IdentityUser<Guid>
     {
-        public string Email { get; set; }
+        public new string Email { get; set; }
         public string Password { get; set; }
     }
 }

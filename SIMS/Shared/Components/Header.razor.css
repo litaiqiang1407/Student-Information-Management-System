@@ -43,6 +43,7 @@
 .header .header-bottom .header-title {
   margin: 0;
   color: var(--primary-color);
+  font-weight: bold;
 }
 .header .header-bottom .add-button {
   background-color: var(--add-button-color);

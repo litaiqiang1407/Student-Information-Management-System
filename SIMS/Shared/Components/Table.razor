@@ -74,10 +74,11 @@
         }
     }
 
-    private async Task NavigateToDetails(TItem item)
+    private Task NavigateToDetails(TItem item)
     {
         var itemId = GetItemId(item);
         Navigation.NavigateTo($"/admin/accountdetail-management/{itemId}");
+        return Task.CompletedTask; 
     }
 
     private object GetItemId(TItem item)

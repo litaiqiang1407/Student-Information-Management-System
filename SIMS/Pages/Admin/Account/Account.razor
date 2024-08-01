@@ -11,7 +11,7 @@
 
 <PageTitle>Account</PageTitle>
 
-@* @if (accounts != null)
+@if (accounts != null)
 {
     <Filter Filters="@filters" Items="@accounts" FilteredItemsChanged="@FilteredItemsChangedCallback" />
     @if (filtered != null && filtered.Any())
@@ -26,7 +26,7 @@
 else
 {
     <Loading />
-} *@
+}
 
 @code {
     private string HeaderTitle = "Account";
