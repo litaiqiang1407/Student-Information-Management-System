@@ -6,7 +6,7 @@
 @inject HttpClient Http
 @using Newtonsoft.Json
 @using System.Text
-@using System.Net;
+@using System.Net
 
 <div class="bordered-container">
     <div class="container">
@@ -83,6 +83,22 @@
             // Load data for editing using Id
             await LoadItemAsync(Id);
         }
+        else if (Mode == "add")
+        {
+            // Initialize the form for adding a new user
+            ClearForm();
+        }
+    }
+
+    private void ClearForm()
+    {
+        // Clear or reset form fields for adding a new user
+        MemberCode = string.Empty;
+        Email = string.Empty;
+        Name = string.Empty;
+        Role = string.Empty;
+        photoUrl = null;
+        selectedFile = null;
     }
 
     private async Task LoadItemAsync(string id)
@@ -161,32 +177,35 @@
 
     private async Task HandleSubmit()
     {
-        if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(Role))
+        // Check for missing required fields
+        if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(Role) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(MemberCode))
         {
             NotificationMessage = "Please fill out all required fields.";
             NotificationSuccess = false;
             return;
         }
 
+        // Default image path if no file is selected
         if (selectedFile != null)
         {
             await SaveFileAsync(selectedFile);
         }
         else
         {
-            filePath = "https://cdn-icons-png.freepik.com/256/7666/7666584.png";
+            filePath = "https://cdn-icons-png.freepik.com/256/7666/7666584.png"; // Ensure this is a valid fallback image
         }
 
-        var updateRequest = new
-        {
-            MemberCode,
-            Email,
-            Name,
-            Role,
-            ImagePath = filePath
-        };
+        var formData = new MultipartFormDataContent
+    {
+        { new StringContent(MemberCode), "memberCode" },
+        { new StringContent(Email), "email" },
+        { new StringContent(Name), "name" },
+        { new StringContent(Role), "role" },
+        { new StringContent(filePath), "imagePath" }
+    };
 
-        var jsonContent = new StringContent(JsonConvert.SerializeObject(updateRequest), Encoding.UTF8, "application/json");
+        // Log the form data for debugging
+        Console.WriteLine($"MemberCode: {MemberCode}, Email: {Email}, Name: {Name}, Role: {Role}, ImagePath: {filePath}");
 
         HttpResponseMessage result;
 
@@ -195,17 +214,17 @@
             if (Mode == "edit" && !string.IsNullOrEmpty(Id))
             {
                 var updateEndpoint = $"https://localhost:7006/api/Admin/UpdateUserInfos/{Id}";
-                result = await Http.PutAsync(updateEndpoint, jsonContent);
+                result = await Http.PutAsync(updateEndpoint, formData);
             }
             else
             {
                 var addEndpoint = "https://localhost:7006/api/Admin/AddAccount";
-                result = await Http.PostAsync(addEndpoint, jsonContent);
+                result = await Http.PostAsync(addEndpoint, formData);
             }
 
             if (result.StatusCode == HttpStatusCode.NoContent)
             {
-                NotificationMessage = "Update successful!";
+                NotificationMessage = "Operation successful!";
                 NotificationSuccess = true;
             }
             else if (result.IsSuccessStatusCode)
@@ -226,7 +245,7 @@
             NotificationMessage = $"Exception occurred: {ex.Message}";
             NotificationSuccess = false;
         }
-    }
+    }   
 
     public class ApiResponse
     {
@@ -234,4 +253,3 @@
         public string Message { get; set; }
     }
 }
-

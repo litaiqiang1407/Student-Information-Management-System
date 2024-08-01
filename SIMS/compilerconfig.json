@@ -74,5 +74,9 @@
   {
     "outputFile": "Shared/Components/UploadPhoto.razor.css",
     "inputFile": "Shared/Components/UploadPhoto.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Form/Form.razor.css",
+    "inputFile": "Shared/Components/Form/Form.razor.scss"
   }
 ]
