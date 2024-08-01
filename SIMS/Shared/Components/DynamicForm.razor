@@ -1,6 +1,7 @@
 ﻿@layout SIMS.Shared.Layouts.MainLayout
-@using Microsoft.AspNetCore.Components.Forms
 @using System.Reflection
+@using Microsoft.AspNetCore.Components.Forms
+@using SIMS.Shared.Components
 
 <div class="bordered-container">
     <div class="container">
@@ -53,9 +54,7 @@
 
             @if (!string.IsNullOrEmpty(NotificationMessage))
             {
-                <div class="alert alert-@(NotificationSuccess ? "success" : "danger")" role="alert">
-                    @NotificationMessage
-                </div>
+                <ToastComponent Message="NotificationMessage" IsSuccess="NotificationSuccess" />
             }
         }
         else
@@ -106,10 +105,12 @@
     {
         await OnSubmit.InvokeAsync();
 
-        Console.WriteLine(Model);
-
+        // Set the toast message and success status
         NotificationMessage = "Form submitted successfully!";
         NotificationSuccess = true;
+
+        // Trigger a re-render to display the toast
+        StateHasChanged();
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)

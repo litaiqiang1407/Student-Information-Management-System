@@ -82,5 +82,9 @@
   {
     "outputFile": "Shared/Components/DynamicForm.razor.css",
     "inputFile": "Shared/Components/DynamicForm.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/ToastComponent.razor.css",
+    "inputFile": "Shared/Components/ToastComponent.razor.scss"
   }
 ]

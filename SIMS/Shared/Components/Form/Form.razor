@@ -44,15 +44,13 @@
             </div>
         </div>
         <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
-
-        @if (!string.IsNullOrEmpty(NotificationMessage))
-        {
-            <div class="alert alert-@(NotificationSuccess ? "success" : "danger")" role="alert">
-                @NotificationMessage
-            </div>
-        }
     </div>
 </div>
+
+@if (!string.IsNullOrEmpty(NotificationMessage))
+{
+    <ToastComponent Message="@NotificationMessage" IsSuccess="@NotificationSuccess" />
+}
 
 @code {
     [Parameter]
@@ -196,13 +194,13 @@
         }
 
         var formData = new MultipartFormDataContent
-    {
-        { new StringContent(MemberCode), "memberCode" },
-        { new StringContent(Email), "email" },
-        { new StringContent(Name), "name" },
-        { new StringContent(Role), "role" },
-        { new StringContent(filePath), "imagePath" }
-    };
+        {
+            { new StringContent(MemberCode), "memberCode" },
+            { new StringContent(Email), "email" },
+            { new StringContent(Name), "name" },
+            { new StringContent(Role), "role" },
+            { new StringContent(filePath), "imagePath" }
+        };
 
         // Log the form data for debugging
         Console.WriteLine($"MemberCode: {MemberCode}, Email: {Email}, Name: {Name}, Role: {Role}, ImagePath: {filePath}");
@@ -245,7 +243,7 @@
             NotificationMessage = $"Exception occurred: {ex.Message}";
             NotificationSuccess = false;
         }
-    }   
+    }
 
     public class ApiResponse
     {

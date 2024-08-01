@@ -1,0 +1,38 @@
+﻿.toast-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 1rem;
+    z-index: 1050; // Ensure the toast is above other content
+}
+
+.toast-auto-hide {
+    animation: fadeInOut 3s ease-out forwards;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    10% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    80% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+// Optional: Customize toast position and styling
+.toast {
+    border-radius: 0.375rem; // Adjust as needed
+}

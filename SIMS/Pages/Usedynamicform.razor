@@ -39,20 +39,17 @@
 
             if (userInfo != null)
             {
-                // Update form fields if needed
                 notificationMessage = "Data loaded successfully!";
                 notificationSuccess = true;
             }
             else
             {
-                // Notify the user if no data is found for the given Id
                 notificationMessage = "No data found for the given ID.";
                 notificationSuccess = false;
             }
         }
         catch (Exception ex)
         {
-            // Handle any errors that occur during the API call
             notificationMessage = $"Error occurred: {ex.Message}";
             notificationSuccess = false;
         }
@@ -60,15 +57,12 @@
 
     private async Task HandleSubmit()
     {
-        // Xử lý logic gửi biểu mẫu
         Console.WriteLine("Form submitted!");
         Console.WriteLine(userInfo);
 
-        // Giả lập thông báo thành công
         notificationMessage = "Form submitted successfully!";
         notificationSuccess = true;
 
-        // Thực hiện các hành động khác như gửi dữ liệu đến máy chủ
         await SubmitData(userInfo);
     }
 
@@ -80,13 +74,11 @@
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
-            // Xử lý thành công
             notificationMessage = "Data submitted successfully!";
             notificationSuccess = true;
         }
         else
         {
-            // Xử lý lỗi
             notificationMessage = "Error submitting data.";
             notificationSuccess = false;
         }
