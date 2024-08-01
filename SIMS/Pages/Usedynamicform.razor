@@ -1,0 +1,94 @@
+﻿@page "/usedynamicform/{id?}"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Data.Entities
+@using SIMS.Shared.Components
+@using System.Text.Json
+@using System.Text
+@using System.Net
+@using System.Net.Http
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<DynamicForm Model="userInfo"
+             ButtonText="Submit"
+             OnSubmit="HandleSubmit"
+             NotificationMessage="notificationMessage"
+             NotificationSuccess="notificationSuccess" />
+
+@code {
+    [Parameter]
+    public string? Id { get; set; } // Parameter for ID from URL
+
+    private UserInfos userInfo = new UserInfos();
+    private string notificationMessage = string.Empty;
+    private bool notificationSuccess = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string idToLoad = string.IsNullOrEmpty(Id) ? "5" : Id;
+
+        await LoadItemAsync(idToLoad);
+    }
+
+    private async Task LoadItemAsync(string id)
+    {
+        try
+        {
+            userInfo = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/UserInfos/{id}");
+
+            if (userInfo != null)
+            {
+                // Update form fields if needed
+                notificationMessage = "Data loaded successfully!";
+                notificationSuccess = true;
+            }
+            else
+            {
+                // Notify the user if no data is found for the given Id
+                notificationMessage = "No data found for the given ID.";
+                notificationSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors that occur during the API call
+            notificationMessage = $"Error occurred: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        // Xử lý logic gửi biểu mẫu
+        Console.WriteLine("Form submitted!");
+        Console.WriteLine(userInfo);
+
+        // Giả lập thông báo thành công
+        notificationMessage = "Form submitted successfully!";
+        notificationSuccess = true;
+
+        // Thực hiện các hành động khác như gửi dữ liệu đến máy chủ
+        await SubmitData(userInfo);
+    }
+
+    private async Task SubmitData(UserInfos userInfos)
+    {
+        var json = JsonSerializer.Serialize(userInfos);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PostAsync("api/endpoint", content);
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            // Xử lý thành công
+            notificationMessage = "Data submitted successfully!";
+            notificationSuccess = true;
+        }
+        else
+        {
+            // Xử lý lỗi
+            notificationMessage = "Error submitting data.";
+            notificationSuccess = false;
+        }
+    }
+}

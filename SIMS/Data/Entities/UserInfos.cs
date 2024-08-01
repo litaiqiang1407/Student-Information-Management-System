@@ -6,21 +6,21 @@ namespace SIMS.Data.Entities
     {
         public int ID { get; set; }
         public int AccountID { get; set; }
-        public string Name { get; set; }
-        public Gender Gender { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string PersonalAvatar { get; set; }
-        public string OfficialAvatar { get; set; }
-        public string PersonalPhone { get; set; }
-        public string ContactPhone1 { get; set; }
-        public string ContactPhone2 { get; set; }
-        public string PermanentAddress { get; set; }
-        public string TemporaryAddress { get; set; }
-        public string RoleName { get; set; }
-        public string MajorName { get; set; }
-        public string DepartmentName { get; set; }
-        public string MemberCode { get; set; } // Add this line
-        public string Email { get; set; }
-        public string ImagePath { get; set; }
+        public string? Name { get; set; } // Nullable property
+        public Gender? Gender { get; set; } // Nullable property
+        public DateTime DateOfBirth { get; set; } // Nullable property
+        public string? PersonalAvatar { get; set; } // Nullable property
+        public string? OfficialAvatar { get; set; } // Nullable property
+        public string? PersonalPhone { get; set; } // Nullable property
+        public string? ContactPhone1 { get; set; } // Nullable property
+        public string? ContactPhone2 { get; set; } // Nullable property
+        public string? PermanentAddress { get; set; } // Nullable property
+        public string? TemporaryAddress { get; set; } // Nullable property
+        public string? RoleName { get; set; } // Nullable property
+        public string? MajorName { get; set; } // Nullable property
+        public string? DepartmentName { get; set; } // Nullable property
+        public string? MemberCode { get; set; } // Nullable property
+        public string? Email { get; set; } // Nullable property
+        public string? ImagePath { get; set; } // Nullable property
     }
 }

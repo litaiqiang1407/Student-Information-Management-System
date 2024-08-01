@@ -1,0 +1,128 @@
+﻿@layout SIMS.Shared.Layouts.MainLayout
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Reflection
+
+<div class="bordered-container">
+    <div class="container">
+        @if (Model != null)
+        {
+            <div class="upload-photo">
+                <label class="photo-icon">
+                    <img id="photo-preview" src="@photoUrl" alt="Preview" style="@(string.IsNullOrEmpty(photoUrl) ? "display:none;" : "display:block;")" />
+                    <i class="bi bi-camera"></i>
+                    <InputFile id="photo-upload" accept="image/*" OnChange="HandleFileSelected" style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
+                </label>
+                <p>Upload Photo</p>
+            </div>
+
+            <div class="form-group">
+                @foreach (var property in properties)
+                {
+                    <div class="input-container">
+                        <label for="@property.Name">@property.Name</label>
+
+                        @if (property.PropertyType == typeof(int))
+                        {
+                            <input type="number" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@GetPropertyValue(property)?.ToString()" @onchange="(e => SetPropertyValue(property, int.Parse(e.Value.ToString())))" />
+                        }
+                        else if (property.PropertyType == typeof(DateTime))
+                        {
+                            var dateValue = GetPropertyValue(property) as DateTime?;
+                            var formattedDate = dateValue.HasValue ? dateValue.Value.ToString("yyyy-MM-dd") : string.Empty;
+                            <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@formattedDate" @onchange="(e => SetPropertyValue(property, DateTime.Parse(e.Value.ToString())))" />
+                        }
+                        else if (property.PropertyType == typeof(string))
+                        {
+                            <input type="text" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@GetPropertyValue(property)" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
+                        }
+                        else if (property.PropertyType.IsEnum)
+                        {
+                            <select id="@property.Name" class="input-field" value="@GetPropertyValue(property)?.ToString()" @onchange="(e => SetPropertyValue(property, Enum.Parse(property.PropertyType, e.Value.ToString())))">
+                                <option value="" disabled>Select @property.Name...</option>
+                                @foreach (var value in Enum.GetValues(property.PropertyType))
+                                {
+                                    <option value="@value">@value.ToString()</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                }
+
+                <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(NotificationMessage))
+            {
+                <div class="alert alert-@(NotificationSuccess ? "success" : "danger")" role="alert">
+                    @NotificationMessage
+                </div>
+            }
+        }
+        else
+        {
+            <p>Model is null.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public object? Model { get; set; }
+
+    [Parameter]
+    public string ButtonText { get; set; } = "Submit";
+
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [Parameter]
+    public string NotificationMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool NotificationSuccess { get; set; } = true;
+
+    private List<PropertyInfo> properties = new List<PropertyInfo>();
+    private string photoUrl = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (Model != null)
+        {
+            properties = Model.GetType().GetProperties().Where(p => p.CanWrite).ToList();
+        }
+    }
+
+    private object? GetPropertyValue(PropertyInfo property)
+    {
+        return property.GetValue(Model);
+    }
+
+    private void SetPropertyValue(PropertyInfo property, object value)
+    {
+        property.SetValue(Model, value);
+    }
+
+    private async Task HandleSubmit()
+    {
+        await OnSubmit.InvokeAsync();
+
+        Console.WriteLine(Model);
+
+        NotificationMessage = "Form submitted successfully!";
+        NotificationSuccess = true;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+
+            // Convert the file to a base64 string for preview
+            photoUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            StateHasChanged();
+        }
+    }
+}
