@@ -70,5 +70,9 @@
   {
     "outputFile": "Pages/Admin/Account/Form2.razor.css",
     "inputFile": "Pages/Admin/Account/Form2.razor.scss"
+  },
+  {
+    "outputFile": "Pages/Authentication/Register.razor.css",
+    "inputFile": "Pages/Authentication/Register.razor.scss"
   }
 ]

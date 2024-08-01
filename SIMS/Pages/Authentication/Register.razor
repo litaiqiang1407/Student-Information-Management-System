@@ -1,7 +1,40 @@
 ﻿@page "/register"
 
-<h3>Register</h3>
+    <div class="container-fluid d-flex justify-content-center align-items-center min-vh-100">
+        <div class="register-container row bg-white shadow rounded">
+            <div class="register-form col-md-6 p-4">
+                <h2 class="text-primary text-center">Register</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="fullName">Full name</label>
+                        <input type="text" class="form-control" id="fullName" placeholder="Enter your full name...">
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone number</label>
+                        <input type="tel" class="form-control" id="phoneNumber" placeholder="Enter your phone number...">
+                    </div>
+                    <div class="form-group">
+                        <label for="birthdate">Birthdate</label>
+                        <input type="date" class="form-control" id="birthdate">
+                    </div>
+                    <div class="form-group">
+                        <label for="major">Major</label>
+                        <select class="form-control" id="major">
+                            <option>Choose a major...</option>
+                            <option>Software Engineering</option>
+                            <option>Graphic Design</option>
+                            <option>Business Administration</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Register</button>
+                </form>
+            </div>
+            <div class="register-logo col-md-6 d-flex justify-content-center align-items-center bg-light">
+                <img src="/mainLogo.jpeg" alt="Kupokatri Logo" class="img-fluid">
+            </div>
+        </div>
+    </div>
 
 @code {
-
+   
 }

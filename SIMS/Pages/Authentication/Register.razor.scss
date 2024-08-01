@@ -1,0 +1,79 @@
+﻿
+$primary-color: #007bff;
+$light-background: #f8f9fa;
+$shadow-color: rgba(0, 0, 0, 0.1);
+
+body {
+    background-color: $light-background;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.register-container {
+    display: flex;
+    flex-direction: row;
+    max-width: 900px;
+    width: 100%;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 0 10px $shadow-color;
+    overflow: hidden;
+}
+.register-form {
+    padding: 2rem;
+    flex: 1;
+
+    h2 {
+        color: $primary-color;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+
+        label {
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    }
+    .btn-primary {
+        background-color: $primary-color;
+        border-color: $primary-color;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        padding: 0.5rem 1rem;
+        text-transform: uppercase;
+        margin-top: 1rem;
+
+        &:hover {
+            background-color: darken($primary-color, 10%);
+            border-color: darken($primary-color, 10%);
+        }
+    }
+}
+
+.register-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #e9f7fe;
+    padding: 2rem;
+    flex: 1;
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
