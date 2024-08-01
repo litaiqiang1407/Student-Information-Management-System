@@ -1,16 +1,23 @@
 ﻿@page "/addedit/{Mode}/{Id?}"
 @layout SIMS.Shared.Layouts.MainLayout
+@using Microsoft.AspNetCore.Components.Forms
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 @inject IWebHostEnvironment env
 @inject HttpClient Http
 @using Newtonsoft.Json
 @using System.Text
 @using System.Net;
-@using System.Net.Http.Headers;
 
 <div class="bordered-container">
     <div class="container">
-        <UploadPhoto PhotoUrl="@photoUrl" PhotoUrlChanged="OnPhotoUrlChanged" OnFileSelected="OnFileSelected" />
+        <div class="upload-photo">
+            <label class="photo-icon">
+                <img id="photo-preview" src="@photoUrl" alt="Preview" style="@(string.IsNullOrEmpty(photoUrl) ? "display:none;" : "display:block;")" />
+                <i class="bi bi-camera"></i>
+                <InputFile id="photo-upload" accept="image/*" OnChange="HandleFileSelected" style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
+            </label>
+            <p>Upload Photo</p>
+        </div>
         <div class="form-group">
             <div class="input-container">
                 <label for="member-code">Member Code</label>
@@ -109,14 +116,33 @@
         }
     }
 
-    private async Task OnPhotoUrlChanged(string newPhotoUrl)
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
-        photoUrl = newPhotoUrl;
+        var file = e.File;
+
+        if (!IsValidImageFile(file))
+        {
+            photoUrl = null;
+            selectedFile = null;
+            return;
+        }
+
+        selectedFile = file;
+        photoUrl = await ConvertToBase64Async(file);
+        StateHasChanged();
     }
 
-    private void OnFileSelected(IBrowserFile file)
+    private bool IsValidImageFile(IBrowserFile file)
     {
-        selectedFile = file;
+        return file != null && file.ContentType.StartsWith("image/") && file.Size <= 5 * 1024 * 1024; // File size limit of 5MB
+    }
+
+    private async Task<string> ConvertToBase64Async(IBrowserFile file)
+    {
+        using var stream = new MemoryStream();
+        await file.OpenReadStream().CopyToAsync(stream);
+        var buffer = stream.ToArray();
+        return $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
     }
 
     private async Task SaveFileAsync(IBrowserFile file)
@@ -132,46 +158,35 @@
 
         filePath = Path.Combine("Uploads", uniqueFileName);
     }
+
     private async Task HandleSubmit()
     {
-        // Check for missing required fields
-        if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(Role) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(MemberCode))
+        if (string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(Role))
         {
             NotificationMessage = "Please fill out all required fields.";
             NotificationSuccess = false;
             return;
         }
 
-        var formData = new MultipartFormDataContent();
-
-        // Add text fields
-        formData.Add(new StringContent(MemberCode), "MemberCode");
-        formData.Add(new StringContent(Email), "Email");
-        formData.Add(new StringContent(Name), "Name");
-        formData.Add(new StringContent(Role), "Role");
-
         if (selectedFile != null)
         {
-            try
-            {
-                var fileContent = new StreamContent(selectedFile.OpenReadStream(10 * 1024 * 1024)); // Adjust max file size if needed
-                fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType);
-
-                formData.Add(fileContent, "ImagePath", selectedFile.Name);
-            }
-            catch (Exception ex)
-            {
-                NotificationMessage = $"Error uploading file: {ex.Message}";
-                NotificationSuccess = false;
-                return;
-            }
+            await SaveFileAsync(selectedFile);
         }
         else
         {
-            formData.Add(new StringContent("https://cdn-icons-png.freepik.com/256/7666/7666584.png"), "ImagePath");
+            filePath = "https://cdn-icons-png.freepik.com/256/7666/7666584.png";
         }
 
-        Console.WriteLine($"MemberCode: {MemberCode}, Email: {Email}, Name: {Name}, Role: {Role}");
+        var updateRequest = new
+        {
+            MemberCode,
+            Email,
+            Name,
+            Role,
+            ImagePath = filePath
+        };
+
+        var jsonContent = new StringContent(JsonConvert.SerializeObject(updateRequest), Encoding.UTF8, "application/json");
 
         HttpResponseMessage result;
 
@@ -180,17 +195,17 @@
             if (Mode == "edit" && !string.IsNullOrEmpty(Id))
             {
                 var updateEndpoint = $"https://localhost:7006/api/Admin/UpdateUserInfos/{Id}";
-                result = await Http.PutAsync(updateEndpoint, formData);
+                result = await Http.PutAsync(updateEndpoint, jsonContent);
             }
             else
             {
                 var addEndpoint = "https://localhost:7006/api/Admin/AddAccount";
-                result = await Http.PostAsync(addEndpoint, formData);
+                result = await Http.PostAsync(addEndpoint, jsonContent);
             }
 
             if (result.StatusCode == HttpStatusCode.NoContent)
             {
-                NotificationMessage = "Operation successful!";
+                NotificationMessage = "Update successful!";
                 NotificationSuccess = true;
             }
             else if (result.IsSuccessStatusCode)
@@ -219,3 +234,4 @@
         public string Message { get; set; }
     }
 }
+
