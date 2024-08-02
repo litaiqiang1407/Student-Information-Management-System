@@ -1,0 +1,36 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+
+<div class="upload-photo">
+    <label class="photo-icon">
+        <img id="photo-preview" src="@PhotoUrl" alt="Preview" style="@(string.IsNullOrEmpty(PhotoUrl) ? "display:none;" : "display:block;")" />
+        <i class="bi bi-camera"></i>
+        <InputFile id="photo-upload" accept="image/*" OnChange="HandleFileSelected" style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
+    </label>
+    <p>Upload Photo</p>
+</div>
+
+@code {
+    [Parameter]
+    public string PhotoUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnFileSelected { get; set; }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            var photoUrl = await ConvertToBase64Async(file);
+            await OnFileSelected.InvokeAsync(photoUrl);
+        }
+    }
+
+    private async Task<string> ConvertToBase64Async(IBrowserFile file)
+    {
+        using var stream = new MemoryStream();
+        await file.OpenReadStream().CopyToAsync(stream);
+        var buffer = stream.ToArray();
+        return $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+    }
+}

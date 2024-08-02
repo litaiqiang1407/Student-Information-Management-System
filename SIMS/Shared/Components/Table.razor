@@ -53,31 +53,50 @@
     [Parameter]
     public EventCallback OnDataUpdated { get; set; }
 
+    [Parameter]
+    public string ItemType { get; set; } // Thêm thuộc tính này để chỉ định loại dữ liệu
+
     private void UpdateItem(TItem item)
     {
         var itemId = GetItemId(item);
-        Navigation.NavigateTo($"/addedit/edit/{itemId}");
+        var url = $"/form/update/{ItemType}/{itemId}";
+        Navigation.NavigateTo(url);
     }
 
     private async Task DeleteItem(TItem item)
     {
         var itemId = GetItemId(item);
-
-        if (itemId is int accountId)
+        var url = ItemType switch
         {
-            await DatabaseFunctions.DeleteData("api/Admin/DeleteAccount", accountId);
+            "account" => "api/Admin/DeleteAccount",
+            "course" => "api/Admin/DeleteCourse",
+            // Thêm các loại khác nếu cần
+            _ => throw new InvalidOperationException("Invalid ItemType")
+        };
+
+        if (itemId is int id)
+        {
+            await DatabaseFunctions.DeleteData(url, id);
             await OnDataUpdated.InvokeAsync();
         }
         else
         {
-            Console.WriteLine("Invalid account ID.");
+            Console.WriteLine("Invalid ID.");
         }
     }
 
     private async Task NavigateToDetails(TItem item)
     {
         var itemId = GetItemId(item);
-        Navigation.NavigateTo($"/admin/accountdetail-management/{itemId}");
+        var url = ItemType switch
+        {
+            "account" => $"/admin/accountdetail-management/{itemId}",
+            "course" => $"/admin/course-management/{itemId}",
+            // Thêm các loại khác nếu cần
+            _ => throw new InvalidOperationException("Invalid ItemType")
+        };
+
+        Navigation.NavigateTo(url);
     }
 
     private object GetItemId(TItem item)

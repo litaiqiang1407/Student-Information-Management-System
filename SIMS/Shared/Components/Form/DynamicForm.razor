@@ -1,5 +1,4 @@
-﻿@layout SIMS.Shared.Layouts.MainLayout
-@using System.Reflection
+﻿@using System.Reflection
 @using Microsoft.AspNetCore.Components.Forms
 @using SIMS.Shared.Components
 
@@ -7,14 +6,7 @@
     <div class="container">
         @if (Model != null)
         {
-            <div class="upload-photo">
-                <label class="photo-icon">
-                    <img id="photo-preview" src="@photoUrl" alt="Preview" style="@(string.IsNullOrEmpty(photoUrl) ? "display:none;" : "display:block;")" />
-                    <i class="bi bi-camera"></i>
-                    <InputFile id="photo-upload" accept="image/*" OnChange="HandleFileSelected" style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
-                </label>
-                <p>Upload Photo</p>
-            </div>
+            <ImageUpload PhotoUrl="@photoUrl" OnFileSelected="HandleFileSelected" />
 
             <div class="form-group">
                 @foreach (var property in properties)
@@ -113,17 +105,9 @@
         StateHasChanged();
     }
 
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    private void HandleFileSelected(string photoUrl)
     {
-        var file = e.File;
-        if (file != null)
-        {
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream().ReadAsync(buffer);
-
-            // Convert the file to a base64 string for preview
-            photoUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
-            StateHasChanged();
-        }
+        this.photoUrl = photoUrl;
+        StateHasChanged(); // Trigger a re-render to update the image preview
     }
 }

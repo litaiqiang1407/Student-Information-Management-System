@@ -14,11 +14,11 @@
     <Filter Filters="@filters" Items="@courses" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" ItemType="course" />
     }
     else
     {
-        <Table Data="@courses" Columns="@columns" />
+        <Table Data="@courses" Columns="@columns" ItemType="course" />
     }
 }
 else
@@ -63,13 +63,11 @@ else
             new TableColumn<Courses> { Header = "Start Date", Value = course => course.StartDate },
             new TableColumn<Courses> { Header = "End Date", Value = course => course.EndDate },
         };
-
-        filterColumns = columns.Where(c => c.IsFilter).ToList();
     }
 
     private async Task LoadFilters()
     {
-        foreach (var column in filterColumns)
+        foreach (var column in columns.Where(c => c.IsFilter))
         {
             var filterData = await DatabaseFunctions.LoadData<string>($"api/Admin/Get{column.Header.Replace(" ", "")}Filter");
             if (filterData != null)

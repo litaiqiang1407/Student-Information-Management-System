@@ -49,8 +49,14 @@
             </video>
         </div>
         <div class="text-center mt-3">
+            <button id="previousButton" class="btn btn-secondary" onclick="previousVideo()">
+                <i class="bi bi-arrow-left"></i>
+            </button>
             <button id="toggleButton" class="btn btn-primary" onclick="toggleMedia()">
                 <i class="bi bi-toggle-on"></i> Switch
+            </button>
+            <button id="nextButton" class="btn btn-secondary" onclick="nextVideo()">
+                <i class="bi bi-arrow-right"></i>
             </button>
         </div>
     </div>
@@ -200,6 +206,14 @@
 </footer>
 
 <script>
+    const videoList = [
+        'Videos/honeypie.mp4',
+        'Videos/demovideo.mp4',
+        // Thêm các video khác ở đây
+    ];
+
+    let currentVideoIndex = 0;
+
     function toggleMedia() {
         const bannerImage = document.getElementById('bannerImage');
         const videoContainer = document.getElementById('videoContainer');
@@ -214,9 +228,34 @@
         } else {
             bannerImage.style.display = 'none';
             videoContainer.style.display = 'block';
+            backgroundVideo.src = videoList[currentVideoIndex];
             backgroundVideo.muted = false;
             backgroundVideo.play();
             toggleButton.innerHTML = '<i class="bi bi-toggle-off"></i> Switch';
+        }
+    }
+
+    function nextVideo() {
+        const backgroundVideo = document.getElementById('backgroundVideo');
+
+        if (currentVideoIndex < videoList.length - 1) {
+            currentVideoIndex++;
+            backgroundVideo.src = videoList[currentVideoIndex];
+            backgroundVideo.play();
+        } else {
+            alert('No more videos.');
+        }
+    }
+
+    function previousVideo() {
+        const backgroundVideo = document.getElementById('backgroundVideo');
+
+        if (currentVideoIndex > 0) {
+            currentVideoIndex--;
+            backgroundVideo.src = videoList[currentVideoIndex];
+            backgroundVideo.play();
+        } else {
+            alert('No previous video.');
         }
     }
 </script>

@@ -86,5 +86,9 @@
   {
     "outputFile": "Shared/Components/ToastComponent.razor.css",
     "inputFile": "Shared/Components/ToastComponent.razor.scss"
+  },
+  {
+    "outputFile": "Shared/Components/Form/ImageUpload.razor.css",
+    "inputFile": "Shared/Components/Form/ImageUpload.razor.scss"
   }
 ]

@@ -1,6 +1,6 @@
 ﻿.bordered-container {
   width: calc(100% - 48px);
-  margin: 24px;
+  margin: 12px;
   border: var(--primary-2px-border);
   padding: 16px;
   border-radius: 8px;
@@ -14,7 +14,6 @@
   border-radius: 8px;
   padding: 20px;
   width: 100%;
-  max-width: 834px;
   text-align: center;
 }
 .bordered-container .container .upload-photo {
@@ -93,7 +92,7 @@
   margin-bottom: 35px;
 }
 .bordered-container .container .form-group .input-container {
-  flex: 1 1 calc(50% - 20px);
+  flex: 1 1 calc(33.333% - 20px);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -114,8 +113,11 @@
   box-sizing: border-box;
 }
 .bordered-container .container .custom-button {
-  width: 360px;
+  width: 412px;
   font-size: 1.6rem;
   font-weight: 600;
   border-radius: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }

@@ -1,0 +1,182 @@
+﻿@page "/form/{Action}/{Entity}/{Id?}"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Data.Entities
+@using SIMS.Shared.Components.Form
+@using System.Text.Json
+@using System.Text
+@using System.Net
+@using System.Net.Http
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<DynamicForm Model="currentModel"
+             ButtonText="Submit"
+             OnSubmit="HandleSubmit"
+             NotificationMessage="notificationMessage"
+             NotificationSuccess="notificationSuccess" />
+
+@code {
+    [Parameter]
+    public string Action { get; set; } // Action can be "add" or "update"
+    [Parameter]
+    public string Entity { get; set; } // Entity can be "account", "course", etc.
+    [Parameter]
+    public string? Id { get; set; } // Optional ID for update mode
+
+    private object currentModel = new object();
+    private string notificationMessage = string.Empty;
+    private bool notificationSuccess = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Action.ToLower() == "update" && !string.IsNullOrEmpty(Id))
+        {
+            await LoadItemAsync(Id);
+        }
+        else
+        {
+            // Set the model to a new instance for add mode
+            currentModel = CreateModel();
+        }
+    }
+
+    private async Task LoadItemAsync(string id)
+    {
+        try
+        {
+            if (Entity.ToLower() == "account")
+            {
+                currentModel = await DatabaseFunctions.LoadSingleData<UserInfos>($"api/Admin/UserInfos/{id}");
+            }
+            else if (Entity.ToLower() == "course")
+            {
+                currentModel = await DatabaseFunctions.LoadSingleData<Course>($"api/Admin/Courses/{id}");
+            }
+            // else if (Entity.ToLower() == "major")
+            // {
+            //     currentModel = await DatabaseFunctions.LoadSingleData<Major>($"api/Admin/Majors/{id}");
+            // }
+            // else if (Entity.ToLower() == "semester")
+            // {
+            //     currentModel = await DatabaseFunctions.LoadSingleData<Semester>($"api/Admin/Semesters/{id}");
+            // }
+
+            notificationMessage = "Data loaded successfully!";
+            notificationSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"Error occurred: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private object CreateModel()
+    {
+        if (Entity.ToLower() == "account")
+        {
+            return new UserInfos();
+        }
+        else if (Entity.ToLower() == "course")
+        {
+            return new Course();
+        }
+        // else if (Entity.ToLower() == "major")
+        // {
+        //     return new Major();
+        // }
+        // else if (Entity.ToLower() == "semester")
+        // {
+        //     return new Semester();
+        // }
+        else
+        {
+            throw new ArgumentException("Invalid Entity");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Action.ToLower() == "add")
+        {
+            await AddData(currentModel);
+        }
+        else if (Action.ToLower() == "update" && !string.IsNullOrEmpty(Id))
+        {
+            await UpdateData(currentModel);
+        }
+    }
+
+    private async Task AddData(object model)
+    {
+        var json = JsonSerializer.Serialize(model);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = null;
+
+        if (model is UserInfos)
+        {
+            response = await Http.PostAsync("api/Admin/UserInfos", content);
+        }
+        else if (model is Course)
+        {
+            response = await Http.PostAsync("api/Admin/Courses", content);
+        }
+        // else if (model is Major)
+        // {
+        //     response = await Http.PostAsync("api/Admin/Majors", content);
+        // }
+        // else if (model is Semester)
+        // {
+        //     response = await Http.PostAsync("api/Admin/Semesters", content);
+        // }
+
+        if (response?.StatusCode == HttpStatusCode.Created)
+        {
+            notificationMessage = "Data added successfully!";
+            notificationSuccess = true;
+        }
+        else
+        {
+            notificationMessage = "Error adding data.";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task UpdateData(object model)
+    {
+        var json = JsonSerializer.Serialize(model);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = null;
+
+        if (model is UserInfos)
+        {
+            response = await Http.PutAsync($"api/Admin/UserInfos/{Id}", content);
+        }
+        else if (model is Course)
+        {
+            response = await Http.PutAsync($"api/Admin/Courses/{Id}", content);
+        }
+        // else if (model is Major)
+        // {
+        //     response = await Http.PutAsync($"api/Admin/Majors/{Id}", content);
+        // }
+        // else if (model is Semester)
+        // {
+        //     response = await Http.PutAsync($"api/Admin/Semesters/{Id}", content);
+        // }
+
+        if (response?.StatusCode == HttpStatusCode.OK)
+        {
+            notificationMessage = "Data updated successfully!";
+            notificationSuccess = true;
+        }
+        else
+        {
+            notificationMessage = "Error updating data.";
+            notificationSuccess = false;
+        }
+    }
+}
