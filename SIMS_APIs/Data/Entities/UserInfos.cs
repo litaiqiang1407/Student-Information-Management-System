@@ -9,7 +9,6 @@ namespace SIMS.Data.Entities
         public Gender Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string PersonalAvatar { get; set; }
-        public string OfficialAvatar { get; set; }
         public string PersonalPhone { get; set; }
         public string ContactPhone1 { get; set; }
         public string ContactPhone2 { get; set; }

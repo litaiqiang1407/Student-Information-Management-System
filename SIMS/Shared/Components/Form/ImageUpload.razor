@@ -1,4 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
+@inject IWebHostEnvironment env
 
 <div class="upload-photo">
     <label class="photo-icon">
@@ -16,21 +17,57 @@
     [Parameter]
     public EventCallback<string> OnFileSelected { get; set; }
 
+    private IBrowserFile? _file; // Store the file temporarily
+
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        if (file != null)
+
+        if (IsValidImageFile(file))
         {
-            var photoUrl = await ConvertToBase64Async(file);
-            await OnFileSelected.InvokeAsync(photoUrl);
+            _file = file; // Store the file for later use
+
+            // Save the file and get the URL path
+            var savedFilePath = await SaveFileAsync();
+            PhotoUrl = savedFilePath ?? string.Empty; // Update PhotoUrl to the saved file path
+
+            await OnFileSelected.InvokeAsync(PhotoUrl); // Notify the parent component
         }
+        else
+        {
+            PhotoUrl = string.Empty; // Reset PhotoUrl if the file is invalid
+            _file = null; // Clear the file
+        }
+
+        StateHasChanged();
     }
 
-    private async Task<string> ConvertToBase64Async(IBrowserFile file)
+    private bool IsValidImageFile(IBrowserFile file)
     {
-        using var stream = new MemoryStream();
-        await file.OpenReadStream().CopyToAsync(stream);
-        var buffer = stream.ToArray();
-        return $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+        return file != null && file.ContentType.StartsWith("image/") && file.Size <= 5 * 1024 * 1024; // File size limit of 5MB
+    }
+
+    public async Task<string?> SaveFileAsync()
+    {
+        if (_file != null)
+        {
+            var uploadsFolder = Path.Combine(env.WebRootPath, "Uploads");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{_file.Name}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await _file.OpenReadStream().CopyToAsync(stream);
+            }
+
+            _file = null; // Clear the file temporarily
+
+            // Return the path to the uploaded file with backslashes
+            return $@"Uploads\{uniqueFileName}";
+        }
+
+        return null;
     }
 }

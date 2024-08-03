@@ -118,7 +118,7 @@ namespace SIMS_APIs.Controllers
                     request.ImagePath // Optional
                 );
 
-                // Trả về kết quả thành công
+                // Trả về kết quả thành công với AccountID
                 return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
@@ -311,7 +311,7 @@ WHERE
                 Gender = genderParsed ? genderEnum : Gender.Other,
                 DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
                 PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
-                OfficialAvatar = Convert.ToString(row["OfficialAvatar"]),
+                ImagePath = Convert.ToString(row["OfficialAvatar"]),
                 PersonalPhone = Convert.ToString(row["PersonalPhone"]),
                 ContactPhone1 = Convert.ToString(row["ContactPhone1"]),
                 ContactPhone2 = Convert.ToString(row["ContactPhone2"]),

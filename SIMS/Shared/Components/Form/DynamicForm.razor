@@ -1,60 +1,72 @@
 ﻿@using System.Reflection
 @using Microsoft.AspNetCore.Components.Forms
-@using SIMS.Shared.Components
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment env
 
 <div class="bordered-container">
     <div class="container">
         @if (Model != null)
         {
-            <ImageUpload PhotoUrl="@photoUrl" OnFileSelected="HandleFileSelected" />
+            <ImageUpload @ref="imageUpload" PhotoUrl="@photoUrl" OnFileSelected="HandleFileSelected" />
 
             <div class="form-group">
                 @foreach (var property in properties)
                 {
-                    @if (property.Name.Equals("AccountID", StringComparison.OrdinalIgnoreCase))
+                    if (property.Name.Equals("AccountID", StringComparison.OrdinalIgnoreCase))
                     {
-                        continue; // Skip the ID property
+                        continue;
                     }
 
                     <div class="input-container">
                         <label for="@property.Name">@property.Name</label>
 
-                        @if (property.PropertyType == typeof(int))
+                        @switch (Type.GetTypeCode(property.PropertyType))
                         {
-                            <input type="number" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@GetPropertyValue(property)?.ToString()" @onchange="(e => SetPropertyValue(property, int.Parse(e.Value.ToString())))" />
-                        }
-                        else if (property.PropertyType == typeof(DateTime))
-                        {
-                            var dateValue = GetPropertyValue(property) as DateTime?;
-                            var formattedDate = dateValue.HasValue ? dateValue.Value.ToString("yyyy-MM-dd") : string.Empty;
-                            var minDate = new DateTime(1753, 1, 1).ToString("yyyy-MM-dd");
-                            var maxDate = new DateTime(9999, 12, 31).ToString("yyyy-MM-dd");
-                            <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
-                                   value="@formattedDate" min="@minDate" max="@maxDate"
-                                   @onchange="(e => SetPropertyValue(property, DateTime.Parse(e.Value.ToString())))" />
-                        }
-                        else if (property.PropertyType == typeof(string))
-                        {
-                            <input type="text" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@GetPropertyValue(property)" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
-                        }
-                        else if (property.PropertyType.IsEnum ||
-                        (property.PropertyType.IsGenericType &&
-                        property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
-                        property.PropertyType.GetGenericArguments()[0].IsEnum))
-                        {
-                            var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
-                            var value = GetPropertyValue(property)?.ToString() ?? "Other"; // Thiết lập mặc định là "Other"
+                            case TypeCode.Int32:
+                                <input type="number" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                       value="@GetPropertyValue(property)?.ToString()"
+                                       @onchange="(e => SetPropertyValue(property, int.Parse(e.Value.ToString())))" />
+                                break;
 
-                            <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
-                                <option value="" disabled>Select @property.Name...</option>
-                                @foreach (var enumValue in Enum.GetValues(enumType))
+                            case TypeCode.DateTime:
+                                var dateValue = GetPropertyValue(property) as DateTime?;
+                                var formattedDate = dateValue.HasValue && dateValue.Value > DateTime.MinValue
+                                ? dateValue.Value.ToString("yyyy-MM-dd")
+                                : DateTime.Now.ToString("yyyy-MM-dd");
+                                var minDate = new DateTime(1900, 1, 1).ToString("yyyy-MM-dd");
+                                var maxDate = new DateTime(9999, 12, 31).ToString("yyyy-MM-dd");
+                                <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                       value="@formattedDate" min="@minDate" max="@maxDate"
+                                       @onchange="(e => SetPropertyValue(property, DateTime.Parse(e.Value.ToString())))" />
+                                break;
+
+                            case TypeCode.String:
+                                <input type="text" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                       value="@GetPropertyValue(property)"
+                                       @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
+                                break;
+
+                            default:
+                                if (property.PropertyType.IsEnum || (property.PropertyType.IsGenericType &&
+                                property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+                                property.PropertyType.GetGenericArguments()[0].IsEnum))
                                 {
-                                    <option value="@enumValue.ToString()" selected="@(enumValue.ToString() == value)">@enumValue.ToString()</option>
+                                    var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
+                                    var value = GetPropertyValue(property)?.ToString() ?? "Other"; // Default to "Other"
+
+                                    <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
+                                        <option value="" disabled>Select @property.Name...</option>
+                                        @foreach (var enumValue in Enum.GetValues(enumType))
+                                        {
+                                            <option value="@enumValue.ToString()" selected="@(enumValue.ToString() == value)">@enumValue.ToString()</option>
+                                        }
+                                    </select>
                                 }
-                            </select>
+                                break;
                         }
                     </div>
                 }
+
                 <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
             </div>
 
@@ -88,6 +100,7 @@
 
     private List<PropertyInfo> properties = new List<PropertyInfo>();
     private string photoUrl = string.Empty;
+    private ImageUpload? imageUpload; // Reference to ImageUpload component
 
     protected override void OnParametersSet()
     {
@@ -102,7 +115,7 @@
         return property.GetValue(Model);
     }
 
-    void SetPropertyValue(PropertyInfo property, object value)
+    private void SetPropertyValue(PropertyInfo property, object value)
     {
         if (property.PropertyType.IsEnum ||
             (property.PropertyType.IsGenericType &&
@@ -110,12 +123,7 @@
              property.PropertyType.GetGenericArguments()[0].IsEnum))
         {
             var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
-            object? enumValue = null;
-
-            if (value != null)
-            {
-                enumValue = Enum.Parse(enumType, value.ToString());
-            }
+            object? enumValue = value != null ? Enum.Parse(enumType, value.ToString()) : null;
 
             property.SetValue(Model, enumValue);
         }
@@ -127,15 +135,51 @@
 
     private async Task HandleSubmit()
     {
+        // Save the photo to the file system and get the photo URL
+        var savedPhotoUrl = await imageUpload?.SaveFileAsync();
+        if (savedPhotoUrl != null)
+        {
+            // Update the OfficialAvatar field in the Model with the photo URL
+            var officialAvatarProperty = properties.FirstOrDefault(p => p.Name.Equals("OfficialAvatar", StringComparison.OrdinalIgnoreCase));
+            if (officialAvatarProperty != null)
+            {
+                SetPropertyValue(officialAvatarProperty, savedPhotoUrl);
+            }
+        }
+
+        // Perform form submission and get the response status code
+        var responseStatusCode = await SubmitFormAsync();
+
+        if (responseStatusCode == 204 || responseStatusCode == 200)
+        {
+            NotificationMessage = "Form submitted successfully!";
+            NotificationSuccess = true;
+        }
+        else
+        {
+            NotificationMessage = "Form submission failed.";
+            NotificationSuccess = false;
+        }
+
         await OnSubmit.InvokeAsync();
-        NotificationMessage = "Form submitted successfully!";
-        NotificationSuccess = true;
         StateHasChanged();
     }
 
-    private void HandleFileSelected(string photoUrl)
+    private async Task<int> SubmitFormAsync()
     {
-        this.photoUrl = photoUrl;
-        StateHasChanged(); // Trigger a re-render to update the image preview
+        await Task.Delay(1000);
+        return 200;
+    }
+
+    private async Task HandleFileSelected(string fileUrl)
+    {
+        photoUrl = fileUrl;
+        var imagePathProperty = properties.FirstOrDefault(p => p.Name.Equals("ImagePath", StringComparison.OrdinalIgnoreCase));
+        if (imagePathProperty != null)
+        {
+            SetPropertyValue(imagePathProperty, fileUrl);
+        }
+
+        StateHasChanged();
     }
 }

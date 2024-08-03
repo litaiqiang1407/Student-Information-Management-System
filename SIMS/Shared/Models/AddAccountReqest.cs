@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SIMS.Data.Entities;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SIMS.Shared.Models

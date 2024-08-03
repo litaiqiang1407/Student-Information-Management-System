@@ -10,7 +10,6 @@ namespace SIMS.Data.Entities
         public Gender? Gender { get; set; } // Nullable property
         public DateTime DateOfBirth { get; set; } // Nullable property
         public string? PersonalAvatar { get; set; } // Nullable property
-        public string? OfficialAvatar { get; set; } // Nullable property
         public string? PersonalPhone { get; set; } // Nullable property
         public string? ContactPhone1 { get; set; } // Nullable property
         public string? ContactPhone2 { get; set; } // Nullable property

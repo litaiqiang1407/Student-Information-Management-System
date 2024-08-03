@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SIMS.Data.Entities.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SIMS_APIs.Models
@@ -31,7 +32,7 @@ namespace SIMS_APIs.Models
 
         public string? Password { get; set; }
 
-        public DateTime? DateOfBirth { get; set; }
+        public DateTime DateOfBirth { get; set; }
 
         public string? PersonalPhone { get; set; }
 

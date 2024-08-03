@@ -1,0 +1,43 @@
+﻿@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@code {
+    [Parameter]
+    public object Model { get; set; }
+
+    private List<PropertyInfo> properties = new List<PropertyInfo>();
+
+    protected override void OnParametersSet()
+    {
+        if (Model != null)
+        {
+            properties = Model.GetType().GetProperties().Where(p => p.CanWrite).ToList();
+        }
+    }
+
+    public bool ValidateForm()
+    {
+        foreach (var property in properties)
+        {
+            var requiredAttribute = property.GetCustomAttribute<RequiredAttribute>();
+            if (requiredAttribute != null)
+            {
+                var value = GetPropertyValue(property);
+                if (property.PropertyType == typeof(int) && (value == null || (int)value == 0))
+                {
+                    return false;
+                }
+                if (value == null || string.IsNullOrEmpty(value.ToString()))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private object GetPropertyValue(PropertyInfo property)
+    {
+        return property.GetValue(Model);
+    }
+}

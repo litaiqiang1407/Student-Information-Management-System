@@ -105,7 +105,7 @@ namespace SIMS_APIs.Functions
                             cmd.Parameters.AddWithValue("@Role", role);
                             cmd.Parameters.AddWithValue("@MajorID", (object)major ?? DBNull.Value);
                             cmd.Parameters.AddWithValue("@Grade", (object)grade ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@ImagePath", (object)imagePath ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@OfficialAvatar", (object)imagePath ?? DBNull.Value);
 
                             await cmd.ExecuteNonQueryAsync();
                         }
@@ -214,7 +214,7 @@ namespace SIMS_APIs.Functions
             {
                 await myCon.OpenAsync();
 
-                using (SqlCommand cmd = new SqlCommand("SELECT OfficialAvatar FROM [dbo].[UserInfo] WHERE AccountID = @AccountID", myCon))
+                using (SqlCommand cmd = new SqlCommand("SELECT [OfficialAvatar] FROM [SIMS].[dbo].[UserInfo] WHERE [AccountID] = @AccountID", myCon))
                 {
                     cmd.Parameters.AddWithValue("@AccountID", accountId);
 
@@ -222,14 +222,16 @@ namespace SIMS_APIs.Functions
                     {
                         if (await reader.ReadAsync())
                         {
-                            imagePath = reader["OfficialAvatar"].ToString();
+                            // Loại bỏ khoảng trắng ở đầu và cuối của đường dẫn
+                            imagePath = reader["OfficialAvatar"].ToString().Trim();
                         }
                     }
                 }
             }
-
-            return Path.Combine(basePath, imagePath);
+            string fullPath = Path.Combine(basePath, imagePath);
+            return fullPath;
         }
+
 
         private async Task<OperationResult> DeleteImage(string imagePath)
         {
@@ -251,7 +253,7 @@ namespace SIMS_APIs.Functions
                 else
                 {
                     message = "Image file does not exist.";
-                    isDeleted = true; // Allow proceeding even if the image does not exist
+                    isDeleted = true; 
                 }
             }
             catch (Exception ex)
@@ -390,7 +392,7 @@ namespace SIMS_APIs.Functions
                             Gender = reader.IsDBNull(reader.GetOrdinal("Gender")) ? Gender.Unknown : (Gender)Enum.Parse(typeof(Gender), reader.GetString(reader.GetOrdinal("Gender"))),
                             DateOfBirth = reader.IsDBNull(reader.GetOrdinal("DateOfBirth")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("DateOfBirth")),
                             PersonalAvatar = reader.IsDBNull(reader.GetOrdinal("PersonalAvatar")) ? string.Empty : reader.GetString(reader.GetOrdinal("PersonalAvatar")),
-                            OfficialAvatar = reader.IsDBNull(reader.GetOrdinal("OfficialAvatar")) ? string.Empty : reader.GetString(reader.GetOrdinal("OfficialAvatar")),
+                            ImagePath = reader.IsDBNull(reader.GetOrdinal("OfficialAvatar")) ? string.Empty : reader.GetString(reader.GetOrdinal("OfficialAvatar")),
                             PersonalPhone = reader.IsDBNull(reader.GetOrdinal("PersonalPhone")) ? string.Empty : reader.GetString(reader.GetOrdinal("PersonalPhone")),
                             ContactPhone1 = reader.IsDBNull(reader.GetOrdinal("ContactPhone1")) ? string.Empty : reader.GetString(reader.GetOrdinal("ContactPhone1")),
                             ContactPhone2 = reader.IsDBNull(reader.GetOrdinal("ContactPhone2")) ? string.Empty : reader.GetString(reader.GetOrdinal("ContactPhone2")),

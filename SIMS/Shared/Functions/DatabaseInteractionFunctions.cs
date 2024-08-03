@@ -124,6 +124,56 @@ namespace SIMS.Shared.Functions
                 return new LoginResponse { Successful = false, Error = ex.Message };
             }
         }
+        public async Task<bool> AddData(string methodURL, HttpContent content)
+        {
+            try
+            {
+                _logger.LogInformation($"Adding data to {API_URL + methodURL}");
+                var response = await _httpClient.PostAsync(API_URL + methodURL, content);
 
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Data added successfully");
+                    return true;
+                }
+                else
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Add failed with status code {response.StatusCode}: {responseContent}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error adding data: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateData(string methodURL, HttpContent content)
+        {
+            try
+            {
+                _logger.LogInformation($"Updating data at {API_URL + methodURL}");
+                var response = await _httpClient.PutAsync(API_URL + methodURL, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Data updated successfully");
+                    return true;
+                }
+                else
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Update failed with status code {response.StatusCode}: {responseContent}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating data: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

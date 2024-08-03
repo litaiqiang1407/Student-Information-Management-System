@@ -33,17 +33,13 @@
     {
         try
         {
-            // Tạo mô hình mới cho cả hai hành động
-            currentModel = ModelFactory.CreateModel(Entity); // Tạo một thể hiện mới của mô hình
-
-            // Xác định hành động và thiết lập các thuộc tính liên quan
+            currentModel = ModelFactory.CreateModel(Entity); 
             if (Action.Equals("add", StringComparison.OrdinalIgnoreCase))
             {
                 buttonText = "Add";
             }
             else if (Action.Equals("update", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(Id))
             {
-                // Tải dữ liệu từ server và cập nhật currentModel nếu là hành động update
                 await LoadItemAsync(Id);
                 buttonText = "Update";
             }
@@ -95,7 +91,6 @@
             {
                 throw new Exception("Deserialization failed: Model could not be created.");
             }
-
             var modelType = currentModel.GetType();
             var deserializedModel = JsonSerializer.Deserialize(json, modelType);
 
@@ -103,7 +98,6 @@
             {
                 throw new Exception("Deserialization failed: Model could not be created.");
             }
-
             return deserializedModel;
         }
         catch (Exception ex)
@@ -116,23 +110,17 @@
     {
         try
         {
-            // Tạo JsonSerializerOptions với JsonStringEnumConverter
             var options = new JsonSerializerOptions
                 {
-                    Converters = { new JsonStringEnumConverter() }, // Enum sẽ được chuyển thành chuỗi
-                    WriteIndented = true // Tùy chọn để định dạng JSON cho dễ đọc
+                    Converters = { new JsonStringEnumConverter() },
+                    WriteIndented = true
                 };
 
-            // Serialize the current model to JSON với các tùy chọn
             var json = JsonSerializer.Serialize(currentModel, options);
-
-            // Print the JSON to the console for debugging
             Console.WriteLine($"Serialized JSON: {json}");
 
-            // Proceed with sending the data
-            HttpResponseMessage response = Action.Equals("add", StringComparison.OrdinalIgnoreCase)
-                ? await SendDataAsync(HttpMethod.Post)
-                : await SendDataAsync(HttpMethod.Put);
+            // Gọi SendDataAsync và xử lý phản hồi
+            var response = await SendDataAsync(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? HttpMethod.Post : HttpMethod.Put);
 
             notificationMessage = response.IsSuccessStatusCode
                 ? $"{Entity} {(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? "added" : "updated")} successfully!"
@@ -154,28 +142,36 @@
             var options = new JsonSerializerOptions
                 {
                     Converters = { new JsonStringEnumConverter() },
-                    WriteIndented = true 
+                    WriteIndented = true
                 };
             var json = JsonSerializer.Serialize(currentModel, options);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            string endpoint = "https://localhost:7006/api/Admin/AddAccount";
+            string endpoint = ApiEndpointHelper.AddApiEndpoint(Entity);
 
             // Create the HttpRequestMessage
             var request = new HttpRequestMessage(method, endpoint) { Content = content };
 
             try
             {
-                // Send the request and get the response
-                var response = await Http.SendAsync(request);
+                HttpResponseMessage response;
 
-                // Log the response status code
-                Console.WriteLine($"Response Status Code: {response.StatusCode}");
+                if (method == HttpMethod.Post)
+                {
+                    bool result = await DatabaseFunctions.AddData(endpoint, content);
+                    response = new HttpResponseMessage(result ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
+                }
+                else
+                {
+                    bool result = await DatabaseFunctions.UpdateData(endpoint, content);
+                    response = new HttpResponseMessage(result ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
+                }
 
-                // Read and log the response content
-                var responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Response Content: {responseContent}");
+                if (!response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Response Content: {responseContent}");
+                }
 
-                // Return the response
                 return response;
             }
             catch (Exception ex)
