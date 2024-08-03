@@ -4,7 +4,6 @@ namespace SIMS.Data.Entities
 {
     public class UserInfos
     {
-        public int ID { get; set; }
         public int AccountID { get; set; }
         public string Name { get; set; }
         public Gender Gender { get; set; }
@@ -16,8 +15,8 @@ namespace SIMS.Data.Entities
         public string ContactPhone2 { get; set; }
         public string PermanentAddress { get; set; }
         public string TemporaryAddress { get; set; }
-        public string RoleName { get; set; }
-        public string MajorName { get; set; }
+        public string Role { get; set; }
+        public string Major { get; set; }
         public string DepartmentName { get; set; }
         public string MemberCode { get; set; }
         public string Email {  get; set; }

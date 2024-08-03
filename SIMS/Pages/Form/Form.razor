@@ -1,0 +1,190 @@
+﻿@page "/form/{Action}/{Entity}/{Id?}"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Data.Entities
+@using SIMS.Shared.Components.Form
+@using SIMS.Shared.Services
+@using SIMS.Shared.Helpers
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Text
+@using System.Net
+@using System.Net.Http
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<DynamicForm Model="currentModel"
+             ButtonText="@buttonText"
+             OnSubmit="HandleSubmit"
+             NotificationMessage="@notificationMessage"
+             NotificationSuccess="@notificationSuccess" />
+
+@code {
+    [Parameter] public string Action { get; set; }
+    [Parameter] public string Entity { get; set; }
+    [Parameter] public string? Id { get; set; }
+
+    private object currentModel;
+    private string notificationMessage = string.Empty;
+    private bool notificationSuccess = true;
+    private string buttonText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Tạo mô hình mới cho cả hai hành động
+            currentModel = ModelFactory.CreateModel(Entity); // Tạo một thể hiện mới của mô hình
+
+            // Xác định hành động và thiết lập các thuộc tính liên quan
+            if (Action.Equals("add", StringComparison.OrdinalIgnoreCase))
+            {
+                buttonText = "Add";
+            }
+            else if (Action.Equals("update", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(Id))
+            {
+                // Tải dữ liệu từ server và cập nhật currentModel nếu là hành động update
+                await LoadItemAsync(Id);
+                buttonText = "Update";
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"Initialization error: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task LoadItemAsync(string id)
+    {
+        try
+        {
+            var loadedModel = await LoadEntityDataAsync(id);
+            var currentModelType = currentModel.GetType();
+            foreach (var property in loadedModel.GetType().GetProperties())
+            {
+                var value = property.GetValue(loadedModel);
+                var currentProperty = currentModelType.GetProperty(property.Name);
+                if (currentProperty?.CanWrite == true)
+                {
+                    currentProperty.SetValue(currentModel, value);
+                }
+            }
+
+            notificationMessage = "Data loaded successfully!";
+            notificationSuccess = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"LoadItemAsync error: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task<object> LoadEntityDataAsync(string id)
+    {
+        var endpoint = ApiEndpointHelper.GetApiEndpoint(Entity, id);
+
+        try
+        {
+            var loadedJsonElement = await DatabaseFunctions.LoadSingleData<JsonElement>(endpoint);
+            var json = loadedJsonElement.GetRawText();
+
+            if (loadedJsonElement.ValueKind == JsonValueKind.Undefined)
+            {
+                throw new Exception("Deserialization failed: Model could not be created.");
+            }
+
+            var modelType = currentModel.GetType();
+            var deserializedModel = JsonSerializer.Deserialize(json, modelType);
+
+            if (deserializedModel == null)
+            {
+                throw new Exception("Deserialization failed: Model could not be created.");
+            }
+
+            return deserializedModel;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"LoadEntityDataAsync error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // Tạo JsonSerializerOptions với JsonStringEnumConverter
+            var options = new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() }, // Enum sẽ được chuyển thành chuỗi
+                    WriteIndented = true // Tùy chọn để định dạng JSON cho dễ đọc
+                };
+
+            // Serialize the current model to JSON với các tùy chọn
+            var json = JsonSerializer.Serialize(currentModel, options);
+
+            // Print the JSON to the console for debugging
+            Console.WriteLine($"Serialized JSON: {json}");
+
+            // Proceed with sending the data
+            HttpResponseMessage response = Action.Equals("add", StringComparison.OrdinalIgnoreCase)
+                ? await SendDataAsync(HttpMethod.Post)
+                : await SendDataAsync(HttpMethod.Put);
+
+            notificationMessage = response.IsSuccessStatusCode
+                ? $"{Entity} {(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? "added" : "updated")} successfully!"
+                : $"Error {(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? "adding" : "updating")} {Entity}.";
+            notificationSuccess = response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"Error submitting data: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendDataAsync(HttpMethod method)
+    {
+        if (currentModel != null)
+        {
+            // Tạo JsonSerializerOptions với JsonStringEnumConverter
+            var options = new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    WriteIndented = true 
+                };
+            var json = JsonSerializer.Serialize(currentModel, options);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            string endpoint = "https://localhost:7006/api/Admin/AddAccount";
+
+            // Create the HttpRequestMessage
+            var request = new HttpRequestMessage(method, endpoint) { Content = content };
+
+            try
+            {
+                // Send the request and get the response
+                var response = await Http.SendAsync(request);
+
+                // Log the response status code
+                Console.WriteLine($"Response Status Code: {response.StatusCode}");
+
+                // Read and log the response content
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Response Content: {responseContent}");
+
+                // Return the response
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
+            }
+        }
+
+        throw new InvalidOperationException("Model cannot be null.");
+    }
+}

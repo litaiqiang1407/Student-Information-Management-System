@@ -11,6 +11,11 @@
             <div class="form-group">
                 @foreach (var property in properties)
                 {
+                    @if (property.Name.Equals("AccountID", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue; // Skip the ID property
+                    }
+
                     <div class="input-container">
                         <label for="@property.Name">@property.Name</label>
 
@@ -22,31 +27,40 @@
                         {
                             var dateValue = GetPropertyValue(property) as DateTime?;
                             var formattedDate = dateValue.HasValue ? dateValue.Value.ToString("yyyy-MM-dd") : string.Empty;
-                            <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@formattedDate" @onchange="(e => SetPropertyValue(property, DateTime.Parse(e.Value.ToString())))" />
+                            var minDate = new DateTime(1753, 1, 1).ToString("yyyy-MM-dd");
+                            var maxDate = new DateTime(9999, 12, 31).ToString("yyyy-MM-dd");
+                            <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                   value="@formattedDate" min="@minDate" max="@maxDate"
+                                   @onchange="(e => SetPropertyValue(property, DateTime.Parse(e.Value.ToString())))" />
                         }
                         else if (property.PropertyType == typeof(string))
                         {
                             <input type="text" id="@property.Name" placeholder="Enter @property.Name..." class="input-field" value="@GetPropertyValue(property)" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
                         }
-                        else if (property.PropertyType.IsEnum)
+                        else if (property.PropertyType.IsEnum ||
+                        (property.PropertyType.IsGenericType &&
+                        property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+                        property.PropertyType.GetGenericArguments()[0].IsEnum))
                         {
-                            <select id="@property.Name" class="input-field" value="@GetPropertyValue(property)?.ToString()" @onchange="(e => SetPropertyValue(property, Enum.Parse(property.PropertyType, e.Value.ToString())))">
+                            var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
+                            var value = GetPropertyValue(property)?.ToString() ?? "Other"; // Thiết lập mặc định là "Other"
+
+                            <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
                                 <option value="" disabled>Select @property.Name...</option>
-                                @foreach (var value in Enum.GetValues(property.PropertyType))
+                                @foreach (var enumValue in Enum.GetValues(enumType))
                                 {
-                                    <option value="@value">@value.ToString()</option>
+                                    <option value="@enumValue.ToString()" selected="@(enumValue.ToString() == value)">@enumValue.ToString()</option>
                                 }
                             </select>
                         }
                     </div>
                 }
-
                 <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
             </div>
 
             @if (!string.IsNullOrEmpty(NotificationMessage))
             {
-                <ToastComponent Message="NotificationMessage" IsSuccess="NotificationSuccess" />
+                <ToastComponent Message="@NotificationMessage" IsSuccess="@NotificationSuccess" />
             }
         }
         else
@@ -88,20 +102,34 @@
         return property.GetValue(Model);
     }
 
-    private void SetPropertyValue(PropertyInfo property, object value)
+    void SetPropertyValue(PropertyInfo property, object value)
     {
-        property.SetValue(Model, value);
+        if (property.PropertyType.IsEnum ||
+            (property.PropertyType.IsGenericType &&
+             property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+             property.PropertyType.GetGenericArguments()[0].IsEnum))
+        {
+            var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
+            object? enumValue = null;
+
+            if (value != null)
+            {
+                enumValue = Enum.Parse(enumType, value.ToString());
+            }
+
+            property.SetValue(Model, enumValue);
+        }
+        else
+        {
+            property.SetValue(Model, Convert.ChangeType(value, property.PropertyType));
+        }
     }
 
     private async Task HandleSubmit()
     {
         await OnSubmit.InvokeAsync();
-
-        // Set the toast message and success status
         NotificationMessage = "Form submitted successfully!";
         NotificationSuccess = true;
-
-        // Trigger a re-render to display the toast
         StateHasChanged();
     }
 

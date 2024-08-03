@@ -9,6 +9,7 @@ using System.Data;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
+using SIMS_APIs.Models;
 
 namespace SIMS_APIs.Controllers
 {
@@ -86,9 +87,45 @@ namespace SIMS_APIs.Controllers
 
         [HttpPost]
         [Route("AddAccount")]
-        public async Task<JsonResult> AddAccount([FromForm] string memberCode, [FromForm] string email, [FromForm] string name, [FromForm] string role, [FromForm] string imagePath)
+        public async Task<IActionResult> AddAccount([FromBody] AddAccountRequest request)
         {
-            return await _dbInteraction.AddAccountWithTransaction(memberCode, email, name, role, imagePath);
+            // Kiểm tra tính hợp lệ của mô hình
+            if (!ModelState.IsValid)
+            {
+                // Thu thập các lỗi xác thực
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return BadRequest(new { success = false, message = "Invalid input data.", errors });
+            }
+
+            try
+            {
+                // Thực hiện thêm tài khoản với giao dịch
+                var result = await _dbInteraction.AddAccountWithTransaction(
+                    request.MemberCode,
+                    request.Email,
+                    request.Password, // Optional
+                    request.Name,
+                    request.Gender,
+                    request.Role,
+                    request.DateOfBirth,
+                    request.PersonalPhone,
+                    request.ContactPhone1,
+                    request.ContactPhone2,
+                    request.PermanentAddress,
+                    request.TemporaryAddress,
+                    request.Major,
+                    request.Grade,
+                    request.ImagePath // Optional
+                );
+
+                // Trả về kết quả thành công
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi và trả về thông báo lỗi
+                return StatusCode(500, new { success = false, message = "An error occurred while adding the account.", details = ex.Message });
+            }
         }
 
         [HttpDelete]
@@ -281,8 +318,8 @@ WHERE
                 PermanentAddress = Convert.ToString(row["PermanentAddress"]),
                 TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
                 Email = Convert.ToString(row["Email"]),
-                RoleName = Convert.ToString(row["RoleName"]),
-                MajorName = Convert.ToString(row["MajorName"]),
+                Role = Convert.ToString(row["RoleName"]),
+                Major = Convert.ToString(row["MajorName"]),
                 DepartmentName = Convert.ToString(row["DepartmentName"]),
                 MemberCode = Convert.ToString(row["MemberCode"]) // Include MemberCode
             };

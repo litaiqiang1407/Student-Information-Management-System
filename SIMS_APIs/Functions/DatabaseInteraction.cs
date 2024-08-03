@@ -59,8 +59,23 @@ namespace SIMS_APIs.Functions
                 }
             }
         }
-        
-        public async Task<JsonResult> AddAccountWithTransaction(string memberCode, string email, string name, string role, string imagePath)
+
+        public async Task<JsonResult> AddAccountWithTransaction(
+        string memberCode,
+        string email,
+        string password,
+        string name,
+        string gender,
+        string role,
+        DateTime? dateOfBirth,
+        string personalPhone,
+        string contactPhone1,
+        string contactPhone2,
+        string permanentAddress,
+        string temporaryAddress,
+        int? major,
+        string grade,
+        string imagePath)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
@@ -76,10 +91,21 @@ namespace SIMS_APIs.Functions
                             cmd.CommandType = CommandType.StoredProcedure;
                             cmd.Parameters.AddWithValue("@MemberCode", memberCode);
                             cmd.Parameters.AddWithValue("@Email", email);
+
+                            // Password with default value if null
+                            cmd.Parameters.AddWithValue("@Password", (object)password ?? DBNull.Value);
                             cmd.Parameters.AddWithValue("@Name", name);
+                            cmd.Parameters.AddWithValue("@Gender", gender);
+                            cmd.Parameters.AddWithValue("@DateOfBirth", (object)dateOfBirth ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@PersonalPhone", (object)personalPhone ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ContactPhone1", (object)contactPhone1 ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ContactPhone2", (object)contactPhone2 ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@PermanentAddress", (object)permanentAddress ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@TemporaryAddress", (object)temporaryAddress ?? DBNull.Value);
                             cmd.Parameters.AddWithValue("@Role", role);
-                            cmd.Parameters.AddWithValue("@ImagePath", imagePath);
-                            // Default parameters do not need to be added
+                            cmd.Parameters.AddWithValue("@MajorID", (object)major ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Grade", (object)grade ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ImagePath", (object)imagePath ?? DBNull.Value);
 
                             await cmd.ExecuteNonQueryAsync();
                         }
@@ -358,10 +384,9 @@ namespace SIMS_APIs.Functions
                     {
                         return new UserInfos
                         {
-                            ID = reader.IsDBNull(reader.GetOrdinal("ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("ID")),
                             AccountID = reader.IsDBNull(reader.GetOrdinal("AccountID")) ? 0 : reader.GetInt32(reader.GetOrdinal("AccountID")),
                             Name = reader.IsDBNull(reader.GetOrdinal("Name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Name")),
-                            RoleName = reader.IsDBNull(reader.GetOrdinal("Role")) ? string.Empty : reader.GetString(reader.GetOrdinal("Role")),
+                            Role = reader.IsDBNull(reader.GetOrdinal("Role")) ? string.Empty : reader.GetString(reader.GetOrdinal("Role")),
                             Gender = reader.IsDBNull(reader.GetOrdinal("Gender")) ? Gender.Unknown : (Gender)Enum.Parse(typeof(Gender), reader.GetString(reader.GetOrdinal("Gender"))),
                             DateOfBirth = reader.IsDBNull(reader.GetOrdinal("DateOfBirth")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("DateOfBirth")),
                             PersonalAvatar = reader.IsDBNull(reader.GetOrdinal("PersonalAvatar")) ? string.Empty : reader.GetString(reader.GetOrdinal("PersonalAvatar")),
