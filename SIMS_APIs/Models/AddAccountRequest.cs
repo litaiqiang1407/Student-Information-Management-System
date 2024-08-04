@@ -25,14 +25,11 @@ namespace SIMS_APIs.Models
         [Required]
         public int Major { get; set; }
 
-        // Optional Fields
-        public string? Grade { get; set; }
-
         public string? ImagePath { get; set; }
 
         public string? Password { get; set; }
 
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; } // Changed to nullable
 
         public string? PersonalPhone { get; set; }
 

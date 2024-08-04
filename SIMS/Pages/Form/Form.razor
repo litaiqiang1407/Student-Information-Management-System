@@ -33,7 +33,7 @@
     {
         try
         {
-            currentModel = ModelFactory.CreateModel(Entity); 
+            currentModel = ModelFactory.CreateModel(Entity);
             if (Action.Equals("add", StringComparison.OrdinalIgnoreCase))
             {
                 buttonText = "Add";
@@ -119,8 +119,9 @@
             var json = JsonSerializer.Serialize(currentModel, options);
             Console.WriteLine($"Serialized JSON: {json}");
 
-            // Gọi SendDataAsync và xử lý phản hồi
-            var response = await SendDataAsync(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? HttpMethod.Post : HttpMethod.Put);
+            var response = await SendDataAsync(
+                Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? HttpMethod.Post : HttpMethod.Put
+            );
 
             notificationMessage = response.IsSuccessStatusCode
                 ? $"{Entity} {(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? "added" : "updated")} successfully!"
@@ -138,7 +139,6 @@
     {
         if (currentModel != null)
         {
-            // Tạo JsonSerializerOptions với JsonStringEnumConverter
             var options = new JsonSerializerOptions
                 {
                     Converters = { new JsonStringEnumConverter() },
@@ -146,22 +146,21 @@
                 };
             var json = JsonSerializer.Serialize(currentModel, options);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            string endpoint = ApiEndpointHelper.AddApiEndpoint(Entity);
-
-            // Create the HttpRequestMessage
-            var request = new HttpRequestMessage(method, endpoint) { Content = content };
-
             try
             {
                 HttpResponseMessage response;
 
                 if (method == HttpMethod.Post)
                 {
+                    string endpoint = ApiEndpointHelper.AddApiEndpoint(Entity);
+                    var request = new HttpRequestMessage(method, endpoint) { Content = content };
                     bool result = await DatabaseFunctions.AddData(endpoint, content);
                     response = new HttpResponseMessage(result ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
                 }
                 else
                 {
+                    string endpoint = ApiEndpointHelper.UpdateApiEndpoint(Entity, Id);
+                    var request = new HttpRequestMessage(method, endpoint) { Content = content };
                     bool result = await DatabaseFunctions.UpdateData(endpoint, content);
                     response = new HttpResponseMessage(result ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
                 }

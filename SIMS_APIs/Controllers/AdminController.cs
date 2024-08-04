@@ -114,7 +114,6 @@ namespace SIMS_APIs.Controllers
                     request.PermanentAddress,
                     request.TemporaryAddress,
                     request.Major,
-                    request.Grade,
                     request.ImagePath // Optional
                 );
 
@@ -326,7 +325,7 @@ WHERE
             return Ok(userInfos);
         }
         [HttpPut("UpdateUserInfos/{id}")]
-        public async Task<IActionResult> UpdateUserInfos(int id, [FromForm] UserUpdateRequest request)
+        public async Task<IActionResult> UpdateUserInfos(int id, [FromBody] UpdateAccountRequest request)
         {
             Console.WriteLine($"Received data: {JsonConvert.SerializeObject(request)}");
 
@@ -337,37 +336,22 @@ WHERE
 
             try
             {
-                var success = await _dbInteraction.UpdateUserInfosAsync(
-                    id,
-                    request.MemberCode,
-                    request.Email,
-                    request.Name,
-                    request.Role,
-                    request.ImagePath
-                );
+                var result = await _dbInteraction.UpdateUserInfosAsync(id, request);
 
-                if (success)
+                if (result)
                 {
-                    return NoContent(); // 204 No Content
+                    return Ok(new { success = true, message = "Account updated successfully." });
                 }
                 else
                 {
-                    return NotFound(); // 404 Not Found
+                    return StatusCode(500, new { success = false, message = "Failed to update the account." });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}"); // 500 Internal Server Error
+                Console.WriteLine($"UpdateUserInfos Exception: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "An error occurred while updating the account.", details = ex.Message });
             }
-        }
-
-        public class UserUpdateRequest
-        {
-            public string MemberCode { get; set; }
-            public string Email { get; set; }
-            public string Name { get; set; }
-            public string Role { get; set; }
-            public string ImagePath { get; set; }
         }
     }
 }

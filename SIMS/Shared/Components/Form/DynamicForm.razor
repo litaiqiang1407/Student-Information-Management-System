@@ -12,11 +12,12 @@
             <div class="form-group">
                 @foreach (var property in properties)
                 {
-                    if (property.Name.Equals("AccountID", StringComparison.OrdinalIgnoreCase))
+                    if (property.Name.Equals("AccountID", StringComparison.OrdinalIgnoreCase) ||
+                    property.Name.Equals("DepartmentName", StringComparison.OrdinalIgnoreCase))
                     {
+                        // Skip the properties we don't want to process
                         continue;
                     }
-
                     <div class="input-container">
                         <label for="@property.Name">@property.Name</label>
 
@@ -81,7 +82,6 @@
         }
     </div>
 </div>
-
 @code {
     [Parameter]
     public object? Model { get; set; }
@@ -109,12 +109,10 @@
             properties = Model.GetType().GetProperties().Where(p => p.CanWrite).ToList();
         }
     }
-
     private object? GetPropertyValue(PropertyInfo property)
     {
         return property.GetValue(Model);
     }
-
     private void SetPropertyValue(PropertyInfo property, object value)
     {
         if (property.PropertyType.IsEnum ||
@@ -132,22 +130,17 @@
             property.SetValue(Model, Convert.ChangeType(value, property.PropertyType));
         }
     }
-
     private async Task HandleSubmit()
     {
-        // Save the photo to the file system and get the photo URL
         var savedPhotoUrl = await imageUpload?.SaveFileAsync();
         if (savedPhotoUrl != null)
         {
-            // Update the OfficialAvatar field in the Model with the photo URL
             var officialAvatarProperty = properties.FirstOrDefault(p => p.Name.Equals("OfficialAvatar", StringComparison.OrdinalIgnoreCase));
             if (officialAvatarProperty != null)
             {
                 SetPropertyValue(officialAvatarProperty, savedPhotoUrl);
             }
         }
-
-        // Perform form submission and get the response status code
         var responseStatusCode = await SubmitFormAsync();
 
         if (responseStatusCode == 204 || responseStatusCode == 200)
@@ -160,17 +153,14 @@
             NotificationMessage = "Form submission failed.";
             NotificationSuccess = false;
         }
-
         await OnSubmit.InvokeAsync();
         StateHasChanged();
     }
-
     private async Task<int> SubmitFormAsync()
     {
-        await Task.Delay(1000);
+        await Task.Delay(200);
         return 200;
     }
-
     private async Task HandleFileSelected(string fileUrl)
     {
         photoUrl = fileUrl;

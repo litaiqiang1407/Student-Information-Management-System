@@ -15,5 +15,10 @@ namespace SIMS.Shared.Helpers
             "account" => $"api/Admin/AddAccount",
             _ => throw new ArgumentException("Invalid Entity")
         };
+        public static string UpdateApiEndpoint(string entity,string id) => entity.ToLower() switch
+        {
+            "account" => $"api/Admin/UpdateUserInfos/{id}",
+            _ => throw new ArgumentException("Invalid Entity")
+        };
     }
 }

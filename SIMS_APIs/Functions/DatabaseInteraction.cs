@@ -4,6 +4,7 @@ using System.Data;
 using SIMS.Data.Entities;
 using SIMS.Data.Entities.Enums;
 using static SIMS_APIs.Functions.DatabaseInteraction;
+using SIMS_APIs.Models;
 
 namespace SIMS_APIs.Functions
 {
@@ -74,7 +75,6 @@ namespace SIMS_APIs.Functions
         string permanentAddress,
         string temporaryAddress,
         int? major,
-        string grade,
         string imagePath)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
@@ -104,7 +104,6 @@ namespace SIMS_APIs.Functions
                             cmd.Parameters.AddWithValue("@TemporaryAddress", (object)temporaryAddress ?? DBNull.Value);
                             cmd.Parameters.AddWithValue("@Role", role);
                             cmd.Parameters.AddWithValue("@MajorID", (object)major ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@Grade", (object)grade ?? DBNull.Value);
                             cmd.Parameters.AddWithValue("@OfficialAvatar", (object)imagePath ?? DBNull.Value);
 
                             await cmd.ExecuteNonQueryAsync();
@@ -232,6 +231,29 @@ namespace SIMS_APIs.Functions
             return fullPath;
         }
 
+        public async Task<int?> GetMajorIDByNameAsync(string majorName)
+        {
+            const string query = "SELECT [ID] FROM [SIMS].[dbo].[Major] WHERE [Name] = @MajorName";
+
+            try
+            {
+                using (var connection = new SqlConnection(SIMSConnection))
+                {
+                    await connection.OpenAsync();
+                    using (var command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@MajorName", majorName);
+                        var result = await command.ExecuteScalarAsync();
+                        return result != null ? Convert.ToInt32(result) : (int?)null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
+            }
+        }
 
         private async Task<OperationResult> DeleteImage(string imagePath)
         {
@@ -405,8 +427,17 @@ namespace SIMS_APIs.Functions
 
             return null;
         }
-        public async Task<bool> UpdateUserInfosAsync(int accountId, string memberCode, string email, string name, string role, string imagePath)
+        public async Task<bool> UpdateUserInfosAsync(int id, UpdateAccountRequest request)
         {
+            // In thông tin của request
+            Console.WriteLine($"UpdateAccountRequest Data: {request.ToString()}");
+
+            int? majorID = null;
+            if (!string.IsNullOrEmpty(request.Major))
+            {
+                majorID = await GetMajorIDByNameAsync(request.Major);
+            }
+
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
                 await myCon.OpenAsync();
@@ -415,31 +446,40 @@ namespace SIMS_APIs.Functions
                 {
                     command.CommandType = CommandType.StoredProcedure;
 
-                    // Thêm các tham số vào câu lệnh
-                    command.Parameters.AddWithValue("@AccountID", accountId);
-                    command.Parameters.AddWithValue("@MemberCode", (object)memberCode ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@Email", (object)email ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@Name", (object)name ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@Role", (object)role ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@ImagePath", (object)imagePath ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@AccountID", id);
+                    command.Parameters.AddWithValue("@MemberCode", (object)request.MemberCode ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Email", (object)request.Email ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Password", (object)request.Password ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Name", (object)request.Name ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Gender", (object)request.Gender ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@DateOfBirth", request.DateOfBirth.HasValue ? (object)request.DateOfBirth.Value : DBNull.Value);
+                    command.Parameters.AddWithValue("@PersonalPhone", (object)request.PersonalPhone ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@ContactPhone1", (object)request.ContactPhone1 ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@ContactPhone2", (object)request.ContactPhone2 ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@PermanentAddress", (object)request.PermanentAddress ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@TemporaryAddress", (object)request.TemporaryAddress ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@MajorID", (object)majorID ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@ImagePath", (object)request.ImagePath ?? DBNull.Value);
 
                     try
                     {
-                        await command.ExecuteNonQueryAsync();
-                        return true; 
+                        int affectedRows = await command.ExecuteNonQueryAsync();
+                        return affectedRows > 0;
                     }
                     catch (SqlException ex)
                     {
                         Console.WriteLine($"SQL Error: {ex.Message}");
-                        return false; 
+                        return false;
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Error: {ex.Message}");
-                        return false; 
+                        return false;
                     }
                 }
             }
         }
     }
 }
+
+
