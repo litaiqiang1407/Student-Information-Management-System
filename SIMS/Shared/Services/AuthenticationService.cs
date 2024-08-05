@@ -32,9 +32,9 @@ namespace SIMS.Shared.Services
 
             var identity = new ClaimsIdentity(new[]
             {
-        new Claim(ClaimTypes.Name, loginModel.Email),
-        new Claim(ClaimTypes.Role, role)
-    }, CookieAuthenticationDefaults.AuthenticationScheme);
+                new Claim(ClaimTypes.Name, loginModel.Email),
+                new Claim(ClaimTypes.Role, role)
+            }, CookieAuthenticationDefaults.AuthenticationScheme);
 
             var principal = new ClaimsPrincipal(identity);
 

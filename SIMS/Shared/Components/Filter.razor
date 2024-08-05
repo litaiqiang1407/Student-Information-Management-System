@@ -168,8 +168,6 @@
             }).ToList();
 
             filteredItems = searchResults;
-
-            Logger.LogInformation($"Search Results: {JsonSerializer.Serialize(searchResults)}");
         }
 
         if (filteredItems.Count > 0)

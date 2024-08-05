@@ -297,6 +297,25 @@ namespace SIMS_APIs.Functions
             return dt;
         }
 
+        public async Task<JsonResult> GetDataByFilter(string query, string col)
+        {
+            try
+            {
+                DataTable dt = await GetData(query);
+                List<string> filter = new List<string>();
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    filter.Add(row[col].ToString());
+                }
+                return new JsonResult(filter);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
         public async Task<int> ExecuteQuery(string query, SqlParameter[] sqlParameters = null)
         {
             int rowsAffected;

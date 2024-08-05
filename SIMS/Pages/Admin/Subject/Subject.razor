@@ -7,7 +7,7 @@
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
-<PageTitle>Subjects Management</PageTitle>
+<PageTitle>Subjects</PageTitle>
 
 @if (subjects != null)
 {
@@ -27,7 +27,7 @@ else
 }
 
 @code {
-    private string HeaderTitle = "Subjects Management";
+    private string HeaderTitle = "Subjects";
     private IEnumerable<Subjects> subjects;
     private List<TableColumn<Subjects>> columns;
     private List<TableColumn<Subjects>> filterColumns;

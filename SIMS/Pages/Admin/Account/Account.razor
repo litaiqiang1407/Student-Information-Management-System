@@ -72,6 +72,7 @@ else
             var filterData = await DatabaseFunctions.LoadData<string>($"api/Admin/Get{column.Header.Replace(" ", "")}Filter");
             if (filterData != null)
             {
+                Console.WriteLine(JsonSerializer.Serialize(filterData));
                 filters.Add(new Filters<Accounts>
                     {
                         Header = column.Header,

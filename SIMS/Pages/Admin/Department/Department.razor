@@ -7,7 +7,7 @@
 @inject SIMS.Shared.Services.HeaderTitleService HeaderTitleService
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
 
-<PageTitle>Departmentss Management</PageTitle>
+<PageTitle>Departmentss</PageTitle>
 
 @if (departments != null)
 {
@@ -27,7 +27,7 @@ else
 }
 
 @code {
-    private string HeaderTitle = "Departments Management";
+    private string HeaderTitle = "Departments";
     private IEnumerable<Departments> departments;
     private List<TableColumn<Departments>> columns;
     private List<TableColumn<Departments>> filterColumns;

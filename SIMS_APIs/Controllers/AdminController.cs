@@ -68,7 +68,7 @@ namespace SIMS_APIs.Controllers
                                        CONVERT(VARCHAR(10), A.UpdatedAt, 103) AS UpdatedAt, 
                                        UI.Name AS Name, 
                                        R.Name AS Role 
-                                       FROM Account A 
+                                       FROM Account A
                                        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID 
                                        LEFT JOIN UserRole UR ON A.ID = UR.AccountID 
                                        LEFT JOIN Role R ON UR.RoleID = R.ID";
@@ -81,7 +81,7 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetRoleFilter()
         {
             string getRoleAccountQuery = "SELECT R.Name AS Role FROM Role R";
-            return await GetList(getRoleAccountQuery);
+            return await _dbInteraction.GetDataByFilter(getRoleAccountQuery, "Role");
         }
 
         [HttpPost]
@@ -166,7 +166,7 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetDepartmentFilter()
         {
             string getDepartmentsQuery = "SELECT D.Name AS Department FROM Department D";
-            return await GetList(getDepartmentsQuery);
+            return await _dbInteraction.GetDataByFilter(getDepartmentsQuery, "Department");
         }
 
         [HttpGet]
@@ -174,7 +174,7 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetSemesterFilter()
         {
             string getSemestersQuery = "SELECT SEM.Name AS Semester FROM Semester SEM";
-            return await GetList(getSemestersQuery);
+            return await _dbInteraction.GetDataByFilter(getSemestersQuery, "Semester");
         }
 
         [HttpGet]
@@ -188,7 +188,7 @@ namespace SIMS_APIs.Controllers
                                         INNER JOIN UserRole UR ON A.ID = UR.AccountID 
                                         INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'";
 
-            return await GetList(getLecturersQuery);
+            return await _dbInteraction.GetDataByFilter(getLecturersQuery, "Lecturer");
         }
 
         [HttpGet]
@@ -205,6 +205,27 @@ namespace SIMS_APIs.Controllers
             string getDepartmentsQuery = "SELECT Name FROM Department";
             return await GetList(getDepartmentsQuery);
         }
+
+        [HttpGet]
+        [Route("GetSemesters")]
+        public async Task<JsonResult> GetSemesters()
+        {
+            string getSemestersQuery = @"SELECT Name,
+                                         CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
+                                         CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
+                                         FROM Semester";
+            return await GetList(getSemestersQuery);
+        }
+
+        [HttpGet]
+        [Route("GetMajors")]
+        public async Task<JsonResult> GetMajor()
+        {
+            string getMajorQuery = @"SELECT M.Name AS Name, D.Name AS Department FROM Major M
+                                     INNER JOIN Department D ON M.DepartmentID = D.ID";
+            return await GetList(getMajorQuery);
+        }
+
 
         [HttpGet("UserInfos/{id}")]
         public async Task<IActionResult> GetUserInfoById(int id)
