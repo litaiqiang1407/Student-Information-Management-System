@@ -460,6 +460,7 @@ namespace SIMS_APIs.Functions
                     command.Parameters.AddWithValue("@TemporaryAddress", (object)request.TemporaryAddress ?? DBNull.Value);
                     command.Parameters.AddWithValue("@MajorID", (object)majorID ?? DBNull.Value);
                     command.Parameters.AddWithValue("@ImagePath", (object)request.ImagePath ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@Role", (object)request.Role ?? DBNull.Value);
 
                     try
                     {

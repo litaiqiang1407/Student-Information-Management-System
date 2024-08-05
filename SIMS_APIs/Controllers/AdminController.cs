@@ -246,46 +246,46 @@ namespace SIMS_APIs.Controllers
         public async Task<IActionResult> GetUserInfoById(int id)
         {
             string getUserInfoByIdQuery = @"
-        SELECT 
-    UI.[AccountID],
-    UI.[Name] AS UserName,
-    UI.[Gender],
-    UI.[DateOfBirth],
-    UI.[PersonalAvatar],
-    UI.[OfficialAvatar],
-    UI.[PersonalPhone],
-    UI.[ContactPhone1],
-    UI.[ContactPhone2],
-    UI.[PermanentAddress],
-    UI.[TemporaryAddress],
-	UI.OfficialAvatar,
-    A.[MemberCode],
-    A.[Email],
-    R.[Name] AS RoleName,  
-    M.[Name] AS MajorName, 
-    D.[Name] AS DepartmentName 
-FROM 
-    [SIMS].[dbo].[UserInfo] UI
-LEFT JOIN 
-    [SIMS].[dbo].[StudentDetail] SD
-    ON UI.[AccountID] = SD.[AccountID]
-LEFT JOIN 
-    [SIMS].[dbo].[Major] M
-    ON SD.[MajorID] = M.[ID]
-LEFT JOIN 
-    [SIMS].[dbo].[Department] D
-    ON M.[DepartmentID] = D.[ID]
-JOIN 
-    [SIMS].[dbo].[UserRole] UR
-    ON UI.[AccountID] = UR.[AccountID]
-JOIN 
-    [SIMS].[dbo].[Role] R
-    ON UR.[RoleID] = R.[ID]
-JOIN 
-    [SIMS].[dbo].[Account] A
-    ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode and Email
-WHERE 
-    UI.[AccountID] = @id";
+                SELECT 
+            UI.[AccountID],
+            UI.[Name] AS UserName,
+            UI.[Gender],
+            UI.[DateOfBirth],
+            UI.[PersonalAvatar],
+            UI.[OfficialAvatar],
+            UI.[PersonalPhone],
+            UI.[ContactPhone1],
+            UI.[ContactPhone2],
+            UI.[PermanentAddress],
+            UI.[TemporaryAddress],
+	        UI.OfficialAvatar,
+            A.[MemberCode],
+            A.[Email],
+            R.[Name] AS RoleName,  
+            M.[Name] AS MajorName, 
+            D.[Name] AS DepartmentName 
+        FROM 
+            [SIMS].[dbo].[UserInfo] UI
+        LEFT JOIN 
+            [SIMS].[dbo].[StudentDetail] SD
+            ON UI.[AccountID] = SD.[AccountID]
+        LEFT JOIN 
+            [SIMS].[dbo].[Major] M
+            ON SD.[MajorID] = M.[ID]
+        LEFT JOIN 
+            [SIMS].[dbo].[Department] D
+            ON M.[DepartmentID] = D.[ID]
+        JOIN 
+            [SIMS].[dbo].[UserRole] UR
+            ON UI.[AccountID] = UR.[AccountID]
+        JOIN 
+            [SIMS].[dbo].[Role] R
+            ON UR.[RoleID] = R.[ID]
+        JOIN 
+            [SIMS].[dbo].[Account] A
+            ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode and Email
+        WHERE 
+            UI.[AccountID] = @id";
             SqlParameter[] sqlParameters = new SqlParameter[]
             {
         new SqlParameter("@ID", id)
@@ -352,6 +352,37 @@ WHERE
                 Console.WriteLine($"UpdateUserInfos Exception: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred while updating the account.", details = ex.Message });
             }
+        }
+        [HttpGet]
+        [Route("GetMajors")]
+        public async Task<JsonResult> GetMajors()
+        {
+            string getMajorsQuery = @"
+            SELECT
+            M.ID,
+            M.Name AS Name,
+            D.Name AS Department
+            FROM
+            Major M
+            INNER JOIN
+            Department D ON M.DepartmentID = D.ID
+            ORDER BY
+            M.ID";
+
+            return await GetList(getMajorsQuery);
+        }
+        [HttpGet]
+        [Route("GetRoles")]
+        public async Task<JsonResult> GetRoles()
+        {
+            string getRolesQuery = @"
+        SELECT
+        R.Name AS Name
+        FROM
+        Role R
+        ORDER BY
+        R.ID";
+            return await GetList(getRolesQuery);
         }
     }
 }

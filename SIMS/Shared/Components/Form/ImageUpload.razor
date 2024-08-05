@@ -17,7 +17,7 @@
     [Parameter]
     public EventCallback<string> OnFileSelected { get; set; }
 
-    private IBrowserFile? _file; // Store the file temporarily
+    private IBrowserFile? _file;
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
@@ -25,18 +25,14 @@
 
         if (IsValidImageFile(file))
         {
-            _file = file; // Store the file for later use
-
-            // Save the file and get the URL path
-            var savedFilePath = await SaveFileAsync();
-            PhotoUrl = savedFilePath ?? string.Empty; // Update PhotoUrl to the saved file path
-
-            await OnFileSelected.InvokeAsync(PhotoUrl); // Notify the parent component
+            _file = file;
+            PhotoUrl = await ConvertToBase64Async(file);
+            await OnFileSelected.InvokeAsync(PhotoUrl);
         }
         else
         {
-            PhotoUrl = string.Empty; // Reset PhotoUrl if the file is invalid
-            _file = null; // Clear the file
+            PhotoUrl = string.Empty;
+            _file = null;
         }
 
         StateHasChanged();
@@ -44,7 +40,17 @@
 
     private bool IsValidImageFile(IBrowserFile file)
     {
-        return file != null && file.ContentType.StartsWith("image/") && file.Size <= 5 * 1024 * 1024; // File size limit of 5MB
+        return file != null && file.ContentType.StartsWith("image/") && file.Size <= 5 * 1024 * 1024; // 5MB
+    }
+
+    private async Task<string> ConvertToBase64Async(IBrowserFile file)
+    {
+        using (var stream = new MemoryStream())
+        {
+            await file.OpenReadStream().CopyToAsync(stream);
+            var base64 = Convert.ToBase64String(stream.ToArray());
+            return $"data:{file.ContentType};base64,{base64}";
+        }
     }
 
     public async Task<string?> SaveFileAsync()
@@ -62,9 +68,8 @@
                 await _file.OpenReadStream().CopyToAsync(stream);
             }
 
-            _file = null; // Clear the file temporarily
+            _file = null;
 
-            // Return the path to the uploaded file with backslashes
             return $@"Uploads\{uniqueFileName}";
         }
 
