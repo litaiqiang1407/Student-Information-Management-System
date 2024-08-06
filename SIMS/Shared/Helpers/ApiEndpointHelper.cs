@@ -15,6 +15,8 @@ namespace SIMS.Shared.Helpers
             "major" => $"api/Admin/GetMajors",
             "role" => $"api/Admin/GetRoles",
             "subject" => $"api/Admin/GetSubjets",
+            "semester" => $"api/Admin/GetSemesters",
+            "lecturer" => $"api/Admin/GetLecturers",
             _ => throw new ArgumentException("Invalid Entity")
         };
         public static string AddApiEndpoint(string entity) => entity.ToLower() switch

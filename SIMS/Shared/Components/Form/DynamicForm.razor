@@ -40,7 +40,11 @@
                         }
                         else
                         {
-                            @switch (Type.GetTypeCode(property.PropertyType))
+                            var propertyType = property.PropertyType;
+                            var isNullable = propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>);
+                            var underlyingType = isNullable ? Nullable.GetUnderlyingType(propertyType) : propertyType;
+
+                            @switch (Type.GetTypeCode(underlyingType))
                             {
                                 case TypeCode.Int32:
                                     <input type="number" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
@@ -52,7 +56,7 @@
                                     var dateValue = GetPropertyValue(property) as DateTime?;
                                     var formattedDate = dateValue.HasValue && dateValue.Value > DateTime.MinValue
                                     ? dateValue.Value.ToString("yyyy-MM-dd")
-                                    : DateTime.Now.ToString("yyyy-MM-dd");
+                                    : "";
                                     var minDate = new DateTime(1900, 1, 1).ToString("yyyy-MM-dd");
                                     var maxDate = new DateTime(9999, 12, 31).ToString("yyyy-MM-dd");
                                     <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
@@ -86,6 +90,7 @@
                         }
                     </div>
                 }
+
                 <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
             </div>
 
@@ -127,7 +132,9 @@
 {
     { "Major", (typeof(Majors), "Major", "Select Major...") },
     { "Role", (typeof(Roles), "Role", "Select Role...") },
-    { "Subject", (typeof(Roles), "Subject", "Select Subject...") }
+    { "Subject", (typeof(Subjects), "Subject", "Select Subject...") },
+    { "Semester", (typeof(Semesters), "Semester", "Select Semester...") },
+    { "Lecturer", (typeof(Lecturers), "Lecturer", "Select Lecturer...") }
 };
 
     private readonly Dictionary<string, (IEnumerable<object> List, string Placeholder)> propertyOptions = new Dictionary<string, (IEnumerable<object>, string)>();

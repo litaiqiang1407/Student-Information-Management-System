@@ -1,4 +1,5 @@
-﻿namespace SIMS.Data.Entities.Admin
+﻿using SIMS.Data.Entities.Enums;
+namespace SIMS.Data.Entities.Admin
 {
     public class Courses
     {

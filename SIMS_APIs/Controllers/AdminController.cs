@@ -263,7 +263,7 @@ namespace SIMS_APIs.Controllers
             ON UR.[RoleID] = R.[ID]
         JOIN 
             [SIMS].[dbo].[Account] A
-            ON UI.[AccountID] = A.[ID] -- Joined with Account table to get MemberCode and Email
+            ON UI.[AccountID] = A.[ID]
         WHERE 
             UI.[AccountID] = @id";
             SqlParameter[] sqlParameters = new SqlParameter[]
@@ -279,13 +279,11 @@ namespace SIMS_APIs.Controllers
             }
 
             DataRow row = dataTable.Rows[0];
-            bool genderParsed = Enum.TryParse(row["Gender"].ToString(), out Gender genderEnum);
-
-            UserInfos userInfos = new UserInfos
+            var userInfos = new UserInfos
             {
                 AccountID = Convert.ToInt32(row["AccountID"]),
                 Name = Convert.ToString(row["UserName"]),
-                Gender = genderParsed ? genderEnum : Gender.Other,
+                Gender = Enum.TryParse<Gender>(Convert.ToString(row["Gender"]), true, out var gender) ? gender : Gender.Unknown, 
                 DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
                 PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
                 ImagePath = Convert.ToString(row["OfficialAvatar"]),
@@ -373,6 +371,30 @@ namespace SIMS_APIs.Controllers
             [Name]
             FROM [SIMS].[dbo].[Subject]";
             return await GetList(getSubjetsQuery);
+        }
+        [HttpGet]
+        [Route("GetSemesters")]
+        public async Task<JsonResult> GetSemesters()
+        {
+            string getSemestersQuery = @"
+             SELECT
+             [ID],
+             [Name],
+             [StartDate],
+             [EndDate]
+             FROM [SIMS].[dbo].[Semester]";
+            return await GetList(getSemestersQuery);
+        }
+        [HttpGet]
+        [Route("GetLecturers")]
+        public async Task<JsonResult> GetLectures()
+        {
+            string getLecturersQuery = @"
+            SELECT ui.Name
+            FROM [SIMS].[dbo].[UserInfo] ui
+            JOIN [SIMS].[dbo].[UserRole] ur ON ui.AccountID = ur.AccountID
+            WHERE ur.RoleID = 2";
+            return await GetList(getLecturersQuery);
         }
     }
 }
