@@ -40,11 +40,7 @@
                         }
                         else
                         {
-                            var propertyType = property.PropertyType;
-                            var isNullable = propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>);
-                            var underlyingType = isNullable ? Nullable.GetUnderlyingType(propertyType) : propertyType;
-
-                            @switch (Type.GetTypeCode(underlyingType))
+                            @switch (Type.GetTypeCode(property.PropertyType))
                             {
                                 case TypeCode.Int32:
                                     <input type="number" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
@@ -56,7 +52,7 @@
                                     var dateValue = GetPropertyValue(property) as DateTime?;
                                     var formattedDate = dateValue.HasValue && dateValue.Value > DateTime.MinValue
                                     ? dateValue.Value.ToString("yyyy-MM-dd")
-                                    : "";
+                                    : DateTime.Now.ToString("yyyy-MM-dd");
                                     var minDate = new DateTime(1900, 1, 1).ToString("yyyy-MM-dd");
                                     var maxDate = new DateTime(9999, 12, 31).ToString("yyyy-MM-dd");
                                     <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
@@ -67,7 +63,7 @@
                                 case TypeCode.String:
                                     <input type="text" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
                                            value="@GetPropertyValue(property)"
-                                           @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
+                                    @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
                                     break;
                                 default:
                                     if (property.PropertyType.IsEnum || (property.PropertyType.IsGenericType &&
@@ -76,7 +72,6 @@
                                     {
                                         var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
                                         var value = GetPropertyValue(property)?.ToString() ?? "Other";
-
                                         <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
                                             <option value="" disabled>Select @property.Name...</option>
                                             @foreach (var enumValue in Enum.GetValues(enumType))
@@ -90,7 +85,6 @@
                         }
                     </div>
                 }
-
                 <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
             </div>
 

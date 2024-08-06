@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using SIMS_APIs.Functions;
 using SIMS.Data.Entities.Enums;
 using SIMS.Data.Entities;
+using SIMS.Data.Entities.Admin;
 using System;
 using System.Data;
 using System.Threading.Tasks;
@@ -156,25 +157,47 @@ namespace SIMS_APIs.Controllers
         [Route("GetCourses")]
         public async Task<JsonResult> GetCourses()
         {
-            string getCoursesQuery = @"SELECT
-                                       C.ID AS CourseID,
-                                       S.Name AS Subject,
-                                       D.Name AS Department,
-                                       SEM.Name AS Semester,
-                                       UI.Name AS Lecturer,
-                                       C.ClassName AS Class,
-                                       C.StartDate,
-                                       C.EndDate
-                                       FROM Course C
-                                       INNER JOIN Subject S ON C.SubjectID = S.ID
-                                       INNER JOIN Department D ON C.DepartmentID = D.ID
-                                       INNER JOIN Semester SEM ON C.SemesterID = SEM.ID
-                                       INNER JOIN Account A ON C.AccountID = A.ID
-                                       INNER JOIN UserRole UR ON A.ID = UR.AccountID
-                                       INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
-                                       LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
+            string getCoursesQuery = @"
+        SELECT
+            C.ID AS CourseID,
+            S.Name AS Subject,
+            D.Name AS Department,
+            SEM.Name AS Semester,
+            UI.Name AS Lecturer,
+            C.ClassName AS Class,
+            C.StartDate,
+            C.EndDate
+        FROM Course C
+        INNER JOIN Subject S ON C.SubjectID = S.ID
+        INNER JOIN Department D ON C.DepartmentID = D.ID
+        INNER JOIN Semester SEM ON C.SemesterID = SEM.ID
+        INNER JOIN Account A ON C.AccountID = A.ID
+        INNER JOIN UserRole UR ON A.ID = UR.AccountID
+        INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
+        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
 
-            return await GetList(getCoursesQuery);
+            DataTable dataTable = await _dbInteraction.GetData(getCoursesQuery, new SqlParameter[0]);
+
+            List<Courses> coursesList = new List<Courses>();
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                var course = new Courses
+                {
+                    ID = Convert.ToInt32(row["CourseID"]),
+                    Subject = Convert.ToString(row["Subject"]),
+                    Department = Convert.ToString(row["Department"]),
+                    Semester = Convert.ToString(row["Semester"]),
+                    Lecturer = Convert.ToString(row["Lecturer"]),
+                    Class = Enum.TryParse<Class>(Convert.ToString(row["Class"]), true, out var classEnum) ? classEnum : (Class?)null,
+                    StartDate = row.IsNull("StartDate") ? (DateTime?)null : Convert.ToDateTime(row["StartDate"]),
+                    EndDate = row.IsNull("EndDate") ? (DateTime?)null : Convert.ToDateTime(row["EndDate"])
+                };
+
+                coursesList.Add(course);
+            }
+
+            return new JsonResult(coursesList);
         }
 
         [HttpGet]
