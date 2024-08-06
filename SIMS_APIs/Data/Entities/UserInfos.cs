@@ -8,8 +8,6 @@ namespace SIMS.Data.Entities
     {
         public int AccountID { get; set; }
         public string Name { get; set; }
-
-        [JsonConverter(typeof(StringEnumConverter))]
         public Gender Gender { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string PersonalAvatar { get; set; }
