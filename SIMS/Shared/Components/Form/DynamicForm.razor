@@ -2,6 +2,8 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Hosting
 @using SIMS.Data.Entities.Admin
+@using SIMS.Shared.Helpers
+@using Blazored.Typeahead
 @inject IWebHostEnvironment env
 @inject HttpClient Http
 @inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
@@ -10,39 +12,29 @@
     <div class="container">
         @if (Model != null)
         {
-            <ImageUpload @ref="imageUpload" PhotoUrl="@photoUrl" OnFileSelected="HandleFileSelected" />
-
+            if (properties.Any(p => p.Name.Equals("Email", StringComparison.OrdinalIgnoreCase)))
+            {
+                <ImageUpload @ref="imageUpload" PhotoUrl="@photoUrl" OnFileSelected="HandleFileSelected" />
+            }
             <div class="form-group">
                 @foreach (var property in properties)
                 {
-                    if (property.Name.Equals("AccountID", StringComparison.OrdinalIgnoreCase) ||
-                    property.Name.Equals("DepartmentName", StringComparison.OrdinalIgnoreCase))
+                    if (property.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
+                    property.Name.Equals("Department", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
-
                     <div class="input-container">
                         <label for="@property.Name">@property.Name</label>
-                        @if (property.Name.Equals("Major", StringComparison.OrdinalIgnoreCase) && !hasMajorDropdown)
-                        {
-                            hasMajorDropdown = true;
-                            <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
-                                <option value="" disabled selected>@(GetPropertyValue(property) == null ? "Select Major..." : "")</option>
-                                @foreach (var major in majorList)
-                                {
-                                    var currentValue = GetPropertyValue(property)?.ToString();
-                                    <option value="@major.Name" selected="@(major.Name == currentValue)">@major.Name</option>
-                                }
-                            </select>
-                        }
-                        @if (property.Name.Equals("Role", StringComparison.OrdinalIgnoreCase))
+                        @if (propertyOptions.TryGetValue(property.Name, out var options))
                         {
                             <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
-                                <option value="" disabled selected>@(GetPropertyValue(property) == null ? "Select Role..." : "")</option>
-                                @foreach (var role in rolesList)
+                                <option value="" disabled selected>@(GetPropertyValue(property) == null ? options.Placeholder : "")</option>
+                                @foreach (var item in options.List)
                                 {
+                                    var itemName = item.GetType().GetProperty("Name").GetValue(item).ToString();
                                     var currentValue = GetPropertyValue(property)?.ToString();
-                                    <option value="@role.Name" selected="@(role.Name == currentValue)">@role.Name</option>
+                                    <option value="@itemName" selected="@(itemName == currentValue)">@itemName</option>
                                 }
                             </select>
                         }
@@ -73,7 +65,6 @@
                                            value="@GetPropertyValue(property)"
                                            @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
                                     break;
-
                                 default:
                                     if (property.PropertyType.IsEnum || (property.PropertyType.IsGenericType &&
                                     property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
@@ -95,7 +86,6 @@
                         }
                     </div>
                 }
-
                 <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
             </div>
 
@@ -129,61 +119,62 @@
 
     private List<PropertyInfo> properties = new List<PropertyInfo>();
     private string photoUrl = string.Empty;
-    private ImageUpload? imageUpload; // Reference to ImageUpload component
+    private ImageUpload? imageUpload;
     private List<Majors> majorList = new List<Majors>();
     private List<Roles> rolesList = new List<Roles>();
     private bool hasMajorDropdown = false;
+    private readonly Dictionary<string, (Type Type, string Endpoint, string Placeholder)> propertyMappings = new Dictionary<string, (Type, string, string)>
+{
+    { "Major", (typeof(Majors), "Major", "Select Major...") },
+    { "Role", (typeof(Roles), "Role", "Select Role...") },
+    { "Subject", (typeof(Roles), "Subject", "Select Subject...") }
+};
 
-    protected override async Task OnParametersSetAsync()
+    private readonly Dictionary<string, (IEnumerable<object> List, string Placeholder)> propertyOptions = new Dictionary<string, (IEnumerable<object>, string)>();
+
+    protected override async Task OnInitializedAsync()
     {
         if (Model != null)
         {
             properties = Model.GetType().GetProperties().Where(p => p.CanWrite).ToList();
             var tasks = new List<Task>();
 
-            if (properties.Any(p => p.Name.Equals("Major", StringComparison.OrdinalIgnoreCase)))
+            foreach (var property in properties)
             {
-                tasks.Add(LoadMajorsAsync());
+                var propertyName = property.Name;
+                if (propertyMappings.TryGetValue(propertyName, out var mapping))
+                {
+                    tasks.Add(LoadDataAsync(mapping.Type, mapping.Endpoint, propertyName, mapping.Placeholder));
+                }
             }
 
-            if (properties.Any(p => p.Name.Equals("Role", StringComparison.OrdinalIgnoreCase)))
-            {
-                tasks.Add(LoadRolesAsync());
-            }
+            await Task.WhenAll(tasks);
 
             var imagePathProperty = properties.FirstOrDefault(p => p.Name.Equals("ImagePath", StringComparison.OrdinalIgnoreCase));
             if (imagePathProperty != null)
             {
-                var imagePath = GetPropertyValue(imagePathProperty) as string;
-                photoUrl = string.IsNullOrEmpty(imagePath) ? string.Empty : $"/Uploads/{Path.GetFileName(imagePath)}";
+                var imagePath = imagePathProperty.GetValue(Model) as string;
+                photoUrl = string.IsNullOrEmpty(imagePath) ? string.Empty : $"/{imagePath.Replace("\\", "/")}";
             }
-
-            await Task.WhenAll(tasks);
         }
     }
 
-    private async Task LoadMajorsAsync()
+    private async Task LoadDataAsync(Type type, string endpoint, string propertyName, string placeholder)
     {
         try
         {
-            majorList = (await DatabaseFunctions.LoadData<Majors>("api/Admin/GetMajors")).ToList();
+            string finalEndpoint = ApiEndpointHelper.GetApiEndpointWithoutid(endpoint);
+            var method = typeof(DatabaseInteractionFunctions).GetMethod("LoadData", new[] { typeof(string) });
+            var genericMethod = method?.MakeGenericMethod(type);
+            var task = (Task)genericMethod.Invoke(DatabaseFunctions, new object[] { finalEndpoint });
+            await task.ConfigureAwait(false);
+            var resultProperty = task.GetType().GetProperty("Result");
+            var data = resultProperty.GetValue(task) as IEnumerable<object>;
+            propertyOptions[propertyName] = (data.ToList(), placeholder);
         }
         catch (Exception ex)
         {
-            NotificationMessage = $"Error loading majors: {ex.Message}";
-            NotificationSuccess = false;
-        }
-    }
-
-    private async Task LoadRolesAsync()
-    {
-        try
-        {
-            rolesList = (await DatabaseFunctions.LoadData<Roles>("api/Admin/GetRoles")).ToList();
-        }
-        catch (Exception ex)
-        {
-            NotificationMessage = $"Error loading roles: {ex.Message}";
+            NotificationMessage = $"Error loading data: {ex.Message}";
             NotificationSuccess = false;
         }
     }
@@ -227,7 +218,7 @@
                 var imagePathProperty = properties.FirstOrDefault(p => p.Name.Equals("ImagePath", StringComparison.OrdinalIgnoreCase));
                 if (imagePathProperty != null)
                 {
-                    SetPropertyValue(imagePathProperty, savedPhotoUrl); // Update ImagePath with file URL
+                    SetPropertyValue(imagePathProperty, savedPhotoUrl);
                 }
             }
         }

@@ -5,6 +5,7 @@ using SIMS.Data.Entities;
 using SIMS.Data.Entities.Enums;
 using static SIMS_APIs.Functions.DatabaseInteraction;
 using SIMS_APIs.Models;
+using Microsoft.IdentityModel.Tokens;
 
 namespace SIMS_APIs.Functions
 {
@@ -61,21 +62,7 @@ namespace SIMS_APIs.Functions
             }
         }
 
-        public async Task<JsonResult> AddAccountWithTransaction(
-        string memberCode,
-        string email,
-        string password,
-        string name,
-        string gender,
-        string role,
-        DateTime? dateOfBirth,
-        string personalPhone,
-        string contactPhone1,
-        string contactPhone2,
-        string permanentAddress,
-        string temporaryAddress,
-        int? major,
-        string imagePath)
+        public async Task<JsonResult> AddAccountWithTransaction(AddAccountRequest request)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
@@ -84,27 +71,33 @@ namespace SIMS_APIs.Functions
                 {
                     try
                     {
+                        int? majorID = null;
+                        if (!string.IsNullOrEmpty(request.Major))
+                        {
+                            majorID = await GetMajorIDByNameAsync(request.Major);
+                        }
+
                         string storedProcedure = "InsertAccountAndRelatedData";
 
                         using (SqlCommand cmd = new SqlCommand(storedProcedure, myCon, transaction))
                         {
                             cmd.CommandType = CommandType.StoredProcedure;
-                            cmd.Parameters.AddWithValue("@MemberCode", memberCode);
-                            cmd.Parameters.AddWithValue("@Email", email);
+                            cmd.Parameters.AddWithValue("@MemberCode", request.MemberCode);
+                            cmd.Parameters.AddWithValue("@Email", request.Email);
 
                             // Password with default value if null
-                            cmd.Parameters.AddWithValue("@Password", (object)password ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@Name", name);
-                            cmd.Parameters.AddWithValue("@Gender", gender);
-                            cmd.Parameters.AddWithValue("@DateOfBirth", (object)dateOfBirth ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@PersonalPhone", (object)personalPhone ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@ContactPhone1", (object)contactPhone1 ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@ContactPhone2", (object)contactPhone2 ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@PermanentAddress", (object)permanentAddress ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@TemporaryAddress", (object)temporaryAddress ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@Role", role);
-                            cmd.Parameters.AddWithValue("@MajorID", (object)major ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@OfficialAvatar", (object)imagePath ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Password", (object)request.Password ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Name", request.Name);
+                            cmd.Parameters.AddWithValue("@Gender", request.Gender);
+                            cmd.Parameters.AddWithValue("@DateOfBirth", (object)request.DateOfBirth ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@PersonalPhone", (object)request.PersonalPhone ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ContactPhone1", (object)request.ContactPhone1 ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ContactPhone2", (object)request.ContactPhone2 ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@PermanentAddress", (object)request.PermanentAddress ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@TemporaryAddress", (object)request.TemporaryAddress ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Role", request.Role);
+                            cmd.Parameters.AddWithValue("@MajorID", (object)majorID ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@OfficialAvatar", (object)request.ImagePath ?? DBNull.Value);
 
                             await cmd.ExecuteNonQueryAsync();
                         }
@@ -124,7 +117,6 @@ namespace SIMS_APIs.Functions
                 }
             }
         }
-
         public async Task<JsonResult> DeleteAccountAndRelatedData(int accountId)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))

@@ -4,7 +4,7 @@ namespace SIMS.Data.Entities
 {
     public class UserInfos
     {
-        public int AccountID { get; set; }
+        public int ID { get; set; }
         public string? Name { get; set; } // Nullable property
         public string? Role { get; set; } // Nullable property
         public Gender? Gender { get; set; } // Nullable property
@@ -16,7 +16,7 @@ namespace SIMS.Data.Entities
         public string? PermanentAddress { get; set; } // Nullable property
         public string? TemporaryAddress { get; set; } // Nullable property
         public string? Major { get; set; } // Nullable property
-        public string? DepartmentName { get; set; } // Nullable property
+        public string? Department { get; set; } // Nullable property
         public string? MemberCode { get; set; } // Nullable property
         public string? Email { get; set; } // Nullable property
         public string? ImagePath { get; set; } // Nullable property

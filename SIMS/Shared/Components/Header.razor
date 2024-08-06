@@ -20,7 +20,7 @@
         <div>
             @if (DisplayAddButton())
             {
-                <a class="add-button" href="/form/add/account">
+                <a class="add-button" href="@GetAddUrl()">
                     <i class="bi bi-plus-lg add-icon"></i>
                     <span class="add-content">Add</span>
                 </a>
@@ -36,11 +36,29 @@
     private bool DisplayAddButton()
     {
         var uri = Navigation.ToBaseRelativePath(Navigation.Uri);
+        return uri.EndsWith("management", StringComparison.OrdinalIgnoreCase);
+    }
 
-        if (uri.EndsWith("management"))
+    private string GetAddUrl()
+    {
+        try
         {
-            return true;
+            var uri = Navigation.ToBaseRelativePath(Navigation.Uri);
+            var segments = uri.Split('/');
+            if (segments.Length > 1)
+            {
+                var lastSegment = segments[^1];
+                var entity = lastSegment.Replace("-management", "", StringComparison.OrdinalIgnoreCase);
+                var addUrl = $"/form/add/{entity}";
+                return addUrl;
+            }
+
+            return "#";
         }
-        return false;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetAddUrl: {ex.Message}");
+            return "#";
+        }
     }
 }

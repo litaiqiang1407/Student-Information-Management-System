@@ -14,7 +14,7 @@ namespace SIMS.Shared.Services
             return entity.ToLower() switch
             {
                 "account" => new UserInfos(),
-                //"course" => new Course(),
+                "course" => new Courses(),
                 // Uncomment and add additional cases as needed
                 // "major" => new Major(),
                 // "semester" => new Semester(),

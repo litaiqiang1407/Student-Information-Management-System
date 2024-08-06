@@ -89,40 +89,19 @@ namespace SIMS_APIs.Controllers
         [Route("AddAccount")]
         public async Task<IActionResult> AddAccount([FromBody] AddAccountRequest request)
         {
-            // Kiểm tra tính hợp lệ của mô hình
             if (!ModelState.IsValid)
             {
-                // Thu thập các lỗi xác thực
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
                 return BadRequest(new { success = false, message = "Invalid input data.", errors });
             }
 
             try
             {
-                // Thực hiện thêm tài khoản với giao dịch
-                var result = await _dbInteraction.AddAccountWithTransaction(
-                    request.MemberCode,
-                    request.Email,
-                    request.Password, // Optional
-                    request.Name,
-                    request.Gender,
-                    request.Role,
-                    request.DateOfBirth,
-                    request.PersonalPhone,
-                    request.ContactPhone1,
-                    request.ContactPhone2,
-                    request.PermanentAddress,
-                    request.TemporaryAddress,
-                    request.Major,
-                    request.ImagePath // Optional
-                );
-
-                // Trả về kết quả thành công với AccountID
+                var result = await _dbInteraction.AddAccountWithTransaction(request);
                 return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi và trả về thông báo lỗi
                 return StatusCode(500, new { success = false, message = "An error occurred while adding the account.", details = ex.Message });
             }
         }
@@ -178,6 +157,7 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetCourses()
         {
             string getCoursesQuery = @"SELECT
+                                       C.ID AS CourseID,
                                        S.Name AS Subject,
                                        D.Name AS Department,
                                        SEM.Name AS Semester,
@@ -299,8 +279,6 @@ namespace SIMS_APIs.Controllers
             }
 
             DataRow row = dataTable.Rows[0];
-
-            // Convert Gender from string to enum
             bool genderParsed = Enum.TryParse(row["Gender"].ToString(), out Gender genderEnum);
 
             UserInfos userInfos = new UserInfos
@@ -368,7 +346,7 @@ namespace SIMS_APIs.Controllers
             Department D ON M.DepartmentID = D.ID
             ORDER BY
             M.ID";
-
+  
             return await GetList(getMajorsQuery);
         }
         [HttpGet]
@@ -376,13 +354,25 @@ namespace SIMS_APIs.Controllers
         public async Task<JsonResult> GetRoles()
         {
             string getRolesQuery = @"
-        SELECT
-        R.Name AS Name
-        FROM
-        Role R
-        ORDER BY
-        R.ID";
+            SELECT
+            R.Name AS Name
+            FROM
+            Role R
+            ORDER BY
+            R.ID";
             return await GetList(getRolesQuery);
+        }
+        [HttpGet]
+        [Route("GetSubjets")]
+        public async Task<JsonResult> GetSubjets()
+        {
+            string getSubjetsQuery = @"
+            SELECT
+            [ID],
+            [SubjectCode],
+            [Name]
+            FROM [SIMS].[dbo].[Subject]";
+            return await GetList(getSubjetsQuery);
         }
     }
 }
