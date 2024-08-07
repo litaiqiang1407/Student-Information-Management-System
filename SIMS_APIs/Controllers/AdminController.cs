@@ -87,6 +87,39 @@ namespace SIMS_APIs.Controllers
             return await GetList(getRoleAccountQuery);
         }
 
+        [Route("DeleteMajor/{id}")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteMajor(int id)
+        {
+            try
+            {
+                // Xóa Major bằng cách gọi phương thức DeleteWithTransaction trong DatabaseInteraction
+                await _dbInteraction.DeleteMajorWithTransaction(id);
+
+                return Ok(new { Message = "Major deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error deleting major", Error = ex.Message });
+            }
+        }
+
+        [Route("AddMajor")]
+        [HttpPost]
+        public async Task<IActionResult> AddMajor([FromBody] AddMajorRequest newMajor)
+        {
+            try
+            {
+                await _dbInteraction.AddMajorWithTransaction(newMajor);
+
+                return Ok(new { Message = "Major added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error adding major", Error = ex.Message });
+            }
+        }
+
         [HttpPost]
         [Route("AddCourse")]
         public async Task<IActionResult> AddCourse([FromBody] AddCourseRequest request)
@@ -312,6 +345,95 @@ namespace SIMS_APIs.Controllers
             }
         }
 
+        [Route("GetDepartmentById/{id}")]
+        [HttpGet]
+        public async Task<IActionResult> GetDepartmentById(int id)
+        {
+            string getDepartmentByIdQuery = @"
+    SELECT 
+        d.ID AS DepartmentID,
+        d.Name AS DepartmentName
+    FROM [SIMS].[dbo].[Department] d
+    WHERE d.ID = @Id";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id)
+            };
+
+            DataTable dataTable = await _dbInteraction.GetData(getDepartmentByIdQuery, parameters);
+
+            if (dataTable.Rows.Count == 0)
+            {
+                return NotFound(new { Message = "Department not found" });
+            }
+
+            var row = dataTable.Rows[0];
+
+            var department = new
+            {
+                ID = Convert.ToInt32(row["DepartmentID"]),
+                Name = Convert.ToString(row["DepartmentName"])
+            };
+
+            return Ok(department);
+        }
+
+        [Route("UpdateMajorById/{id}")]
+        [HttpPut]
+        public async Task<IActionResult> UpdateMajorById(int id, [FromBody] AddMajorRequest updateRequest)
+        {
+            if (updateRequest == null)
+            {
+                return BadRequest(new { Message = "Invalid request data" });
+            }
+
+            try
+            {
+                // Call the method to update the major
+                await _dbInteraction.UpdateMajorWithTransaction(id, updateRequest);
+
+                return Ok(new { Message = "Major updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error updating major", Error = ex.Message });
+            }
+        }
+
+        [Route("GetMajorById/{id}")]
+        [HttpGet]
+        public async Task<IActionResult> GetMajorById(int id)
+        {
+            string getMajorByIdQuery = @"
+    SELECT 
+        m.ID AS MajorID,
+        m.Name AS MajorName
+    FROM [SIMS].[dbo].[Major] m
+    WHERE m.ID = @Id";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id)
+            };
+
+            DataTable dataTable = await _dbInteraction.GetData(getMajorByIdQuery, parameters);
+
+            if (dataTable.Rows.Count == 0)
+            {
+                return NotFound(new { Message = "Major not found" });
+            }
+
+            var row = dataTable.Rows[0];
+
+            var major = new
+            {
+                ID = Convert.ToInt32(row["MajorID"]),
+                Name = Convert.ToString(row["MajorName"])
+            };
+
+            return Ok(major);
+        }
 
         [Route("GetSemesterById/{id}")]
         [HttpGet]
@@ -350,7 +472,6 @@ namespace SIMS_APIs.Controllers
 
             return Ok(semester);
         }
-
 
         [Route("DeleteSemester/{id}")]
         [HttpDelete]
@@ -510,11 +631,27 @@ namespace SIMS_APIs.Controllers
             }
         }
 
+        [Route("UpdateDepartmentById/{id}")]
+        [HttpPut]
+        public async Task<IActionResult> UpdateDepartmentById(int id, [FromBody] UpdateDepartmentRequest updatedDepartment)
+        {
+            try
+            {
+                await _dbInteraction.UpdateDepartmentWithTransaction(id, updatedDepartment);
+
+                return Ok(new { Message = "Department updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error updating department", Error = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
         {
-            string getDepartmentsQuery = "SELECT Name FROM Department";
+            string getDepartmentsQuery = "SELECT ID, Name FROM Department";
             return await GetList(getDepartmentsQuery);
         }
 
@@ -623,6 +760,37 @@ namespace SIMS_APIs.Controllers
             {
                 Console.WriteLine($"UpdateUserInfos Exception: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "An error occurred while updating the account.", details = ex.Message });
+            }
+        }
+
+        [Route("DeleteDepartment/{id}")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteDepartment(int id)
+        {
+            try
+            {
+                await _dbInteraction.DeleteDepartmentWithTransaction(id);
+                return Ok(new { Message = "Department deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error deleting department", Error = ex.Message });
+            }
+        }
+
+        [Route("AddDepartment")]
+        [HttpPost]
+        public async Task<IActionResult> AddDepartment([FromBody] AddDepartmentRequest newDepartment)
+        {
+            try
+            {
+                await _dbInteraction.AddDepartmentWithTransaction(newDepartment);
+
+                return Ok(new { Message = "Department added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error adding department", Error = ex.Message });
             }
         }
         [HttpGet]

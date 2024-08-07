@@ -72,7 +72,8 @@
             "course" => "api/Admin/course",
             "subject" => "api/Admin/DeleteSubject",
             "semester" => "api/Admin/DeleteSemester",
-            // Thêm các loại khác nếu cần
+            "department" => "api/Admin/DeleteDepartment",
+            "major" => "api/Admin/DeleteMajor",
             _ => throw new InvalidOperationException("Invalid ItemType")
         };
 
@@ -99,8 +100,7 @@
         var url = ItemType switch
         {
             "account" => $"/admin/accountdetail-management/{itemId}",
-            "course" => $"/admin/course-management/{itemId}",
-            // Thêm các loại khác nếu cần
+            //"course" => $"/admin/course-management/{itemId}",
             _ => throw new InvalidOperationException("Invalid ItemType")
         };
 

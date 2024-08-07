@@ -14,11 +14,11 @@
     <Filter Filters="@filters" Items="@departments" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" OnDataUpdated="LoadData" ItemType="department" />
     }
     else
     {
-        <Table Data="@departments" Columns="@columns" />
+        <Table Data="@departments" Columns="@columns" OnDataUpdated="LoadData" ItemType="department" />
     }
 }
 else
@@ -27,7 +27,7 @@ else
 }
 
 @code {
-    private string HeaderTitle = "Departments Management";
+    private string HeaderTitle = "Departments";
     private IEnumerable<Departments> departments;
     private List<TableColumn<Departments>> columns;
     private List<TableColumn<Departments>> filterColumns;

@@ -17,6 +17,8 @@ namespace SIMS.Shared.Services
                 "course" => new Courses(),
                 "subject" => new Subjects(),
                 "semester" => new Semesters(),
+                "department" => new Departments(),
+                "major" => new Majors(),
                 _ => throw new ArgumentException("Invalid Entity")
             };
         }

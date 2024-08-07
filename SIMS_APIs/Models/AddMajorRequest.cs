@@ -1,8 +1,7 @@
-﻿namespace SIMS.Data.Entities.Admin
+﻿namespace SIMS_APIs.Models
 {
-    public class Majors
+    public class AddMajorRequest
     {
-        public int ID { get; set; }
         public string Name { get; set; }
         public string Department { get; set; }
     }

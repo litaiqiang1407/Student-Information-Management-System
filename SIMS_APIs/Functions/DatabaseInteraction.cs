@@ -171,6 +171,113 @@ namespace SIMS_APIs.Functions
             }
         }
 
+        public async Task AddMajorWithTransaction(AddMajorRequest newMajor)
+        {
+            string storedProcedureName = "AddMajor";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Name", newMajor.Name),
+        new SqlParameter("@DepartmentName", newMajor.Department)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
+        public async Task UpdateMajorWithTransaction(int id, AddMajorRequest updateRequest)
+        {
+            string storedProcedureName = "UpdateMajor";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id),
+        new SqlParameter("@Name", updateRequest.Name),
+        new SqlParameter("@DepartmentName", updateRequest.Department)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // Re-throw the exception to be handled by the caller
+                    }
+                }
+            }
+        }
+
+        public async Task DeleteMajorWithTransaction(int majorId)
+        {
+            string storedProcedureName = "DeleteMajor";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@MajorID", majorId)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // Re-throw the exception to be handled by the caller
+                    }
+                }
+            }
+        }
 
         public async Task AddSubjectWithTransaction(AddSubjectRequest request)
         {
@@ -206,6 +313,76 @@ namespace SIMS_APIs.Functions
                     {
                         transaction.Rollback();
                         throw; 
+                    }
+                }
+            }
+        }
+
+        public async Task DeleteDepartmentWithTransaction(int departmentId)
+        {
+            string storedProcedureName = "DeleteDepartment";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", departmentId)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
+        public async Task AddDepartmentWithTransaction(AddDepartmentRequest newDepartment)
+        {
+            string storedProcedureName = "AddDepartment";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Name", newDepartment.Name)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // Re-throw the exception to be handled by the caller
                     }
                 }
             }
@@ -667,6 +844,42 @@ namespace SIMS_APIs.Functions
 
                 int count = (int)await command.ExecuteScalarAsync();
                 return count > 0;
+            }
+        }
+
+        public async Task UpdateDepartmentWithTransaction(int id, UpdateDepartmentRequest updatedDepartment)
+        {
+            string storedProcedureName = "UpdateDepartment";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id),
+        new SqlParameter("@Name", updatedDepartment.Name)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
             }
         }
 
