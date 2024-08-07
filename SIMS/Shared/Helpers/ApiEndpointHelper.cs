@@ -8,6 +8,8 @@ namespace SIMS.Shared.Helpers
         {
             "account" => $"api/Admin/UserInfos/{id}",
             "course" => $"api/Admin/GetCourseById/{id}",
+            "subject" => $"api/Admin/GetSubjectById/{id}",
+            "semester" => $"api/Admin/GetSemesterById/{id}",
             _ => throw new ArgumentException("Invalid Entity")
         };
         public static string GetApiEndpointWithoutid(string type) => type.ToLower() switch
@@ -25,12 +27,15 @@ namespace SIMS.Shared.Helpers
             "course" => $"api/Admin/AddCourse",
             "account" => $"api/Admin/AddAccount",
             "subject" => $"api/Admin/AddSubject",
+            "semester" => $"api/Admin/AddSemester",
             _ => throw new ArgumentException("Invalid Entity")
         };
         public static string UpdateApiEndpoint(string entity,string id) => entity.ToLower() switch
         {
             "account" => $"api/Admin/UpdateUserInfos/{id}",
             "course" => $"api/Admin/UpdateCourseById/{id}",
+            "subject" => $"api/Admin/UpdateSubject/{id}",
+            "semester" => $"api/Admin/UpdateSemesterById/{id}",
             _ => throw new ArgumentException("Invalid Entity")
         };
     }

@@ -71,6 +71,7 @@
             "account" => "api/Admin/DeleteAccount",
             "course" => "api/Admin/course",
             "subject" => "api/Admin/DeleteSubject",
+            "semester" => "api/Admin/DeleteSemester",
             // Thêm các loại khác nếu cần
             _ => throw new InvalidOperationException("Invalid ItemType")
         };
@@ -92,7 +93,6 @@
             Console.WriteLine("Invalid ID.");
         }
     }
-
     private async Task NavigateToDetails(TItem item)
     {
         var itemId = GetItemId(item);

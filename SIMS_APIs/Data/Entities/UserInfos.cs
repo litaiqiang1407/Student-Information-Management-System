@@ -18,7 +18,7 @@ namespace SIMS.Data.Entities
         public string TemporaryAddress { get; set; }
         public string Role { get; set; }
         public string Major { get; set; }
-        public string DepartmentName { get; set; }
+        public string Department { get; set; }
         public string MemberCode { get; set; }
         public string Email {  get; set; }
         public string ImagePath { get; set; }

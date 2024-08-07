@@ -46,14 +46,12 @@ namespace SIMS_APIs.Functions
                             await cmd.ExecuteNonQueryAsync();
                         }
 
-                        // Commit transaction if no errors
                         transaction.Commit();
 
                         return new JsonResult(new { success = true, message = "Account updated successfully" });
                     }
                     catch (Exception ex)
                     {
-                        // Rollback transaction if there is an error
                         transaction.Rollback();
 
                         return new JsonResult(new { success = false, message = ex.Message });
@@ -98,17 +96,15 @@ namespace SIMS_APIs.Functions
             }
         }
 
-        public async Task AddSubjectWithTransaction(AddSubjectRequest request)
+        public async Task AddSemesterWithTransaction(AddSemesterRequest request)
         {
-            string storedProcedureName = "AddSubject";
+            string storedProcedureName = "AddSemester";
 
             SqlParameter[] parameters = new SqlParameter[]
             {
-        new SqlParameter("@SubjectCode", request.SubjectCode),
-        new SqlParameter("@Name", request.Name),
-        new SqlParameter("@Credits", request.Credits),
-        new SqlParameter("@Slots", request.Slots),
-        new SqlParameter("@Fee", request.Fee)
+            new SqlParameter("@Name", request.Name),
+            new SqlParameter("@StartDate", (object)request.StartDate ?? DBNull.Value),
+            new SqlParameter("@EndDate", (object)request.EndDate ?? DBNull.Value)
             };
 
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
@@ -137,6 +133,84 @@ namespace SIMS_APIs.Functions
             }
         }
 
+        public async Task UpdateSemesterWithTransaction(int id, UpdateSemesterRequest updateRequest)
+        {
+            string storedProcedureName = "UpdateSemester";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id),
+        new SqlParameter("@Name", updateRequest.Name),
+        new SqlParameter("@StartDate", (object)updateRequest.StartDate ?? DBNull.Value),
+        new SqlParameter("@EndDate", (object)updateRequest.EndDate ?? DBNull.Value)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // Re-throw the exception to be handled by the caller
+                    }
+                }
+            }
+        }
+
+
+        public async Task AddSubjectWithTransaction(AddSubjectRequest request)
+        {
+            string storedProcedureName = "AddSubject";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+            new SqlParameter("@SubjectCode", request.SubjectCode),
+            new SqlParameter("@Name", request.Name),
+            new SqlParameter("@Credits", request.Credits),
+            new SqlParameter("@Slots", request.Slots),
+            new SqlParameter("@Fee", request.Fee)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
         public async Task<JsonResult> AddAccountWithTransaction(AddAccountRequest request)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
@@ -160,7 +234,6 @@ namespace SIMS_APIs.Functions
                             cmd.Parameters.AddWithValue("@MemberCode", request.MemberCode);
                             cmd.Parameters.AddWithValue("@Email", request.Email);
 
-                            // Password with default value if null
                             cmd.Parameters.AddWithValue("@Password", (object)request.Password ?? DBNull.Value);
                             cmd.Parameters.AddWithValue("@Name", request.Name);
                             cmd.Parameters.AddWithValue("@Gender", request.Gender);
@@ -192,6 +265,42 @@ namespace SIMS_APIs.Functions
                 }
             }
         }
+
+        public async Task DeleteSemesterWithTransaction(int semesterId)
+        {
+            string storedProcedureName = "DeleteSemester";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@SemesterID", semesterId)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
+                }
+            }
+        }
+
         public async Task DeleteSubjectWithTransaction(int subjectId)
         {
             string storedProcedureName = "DeleteSubject";
@@ -222,6 +331,46 @@ namespace SIMS_APIs.Functions
                     {
                         transaction.Rollback();
                         Console.WriteLine($"Error deleting subject: {ex.Message}");
+                        throw; 
+                    }
+                }
+            }
+        }
+        public async Task UpdateSubjectWithTransaction(int id, UpdateSubjectRequest updateRequest)
+        {
+            string storedProcedureName = "UpdateSubject";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id),
+        new SqlParameter("@SubjectCode", updateRequest.SubjectCode),
+        new SqlParameter("@Name", updateRequest.Name),
+        new SqlParameter("@Credits", updateRequest.Credits),
+        new SqlParameter("@Slots", updateRequest.Slots),
+        new SqlParameter("@Fee", updateRequest.Fee)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error updating subject: {ex.Message}");
                         throw; // Re-throw the exception to be handled by the caller
                     }
                 }
