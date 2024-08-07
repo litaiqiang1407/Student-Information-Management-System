@@ -62,6 +62,81 @@ namespace SIMS_APIs.Functions
             }
         }
 
+        public async Task<JsonResult> AddCourseWithTransaction(AddCourseRequest request)
+        {
+            using (SqlConnection connection = new SqlConnection(SIMSConnection))
+            {
+                await connection.OpenAsync();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        string storedProcedure = "AddCourse";
+                        using (SqlCommand cmd = new SqlCommand(storedProcedure, connection, transaction))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@SubjectName", request.Subject ?? (object)DBNull.Value);
+                            cmd.Parameters.AddWithValue("@SemesterName", request.Semester ?? (object)DBNull.Value);
+                            cmd.Parameters.AddWithValue("@LecturerName", request.Lecturer ?? (object)DBNull.Value);
+                            cmd.Parameters.AddWithValue("@DepartmentName", request.Department ?? (object)DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ClassName", request.Class ?? (object)DBNull.Value);
+                            cmd.Parameters.AddWithValue("@StartDate", request.StartDate);
+                            cmd.Parameters.AddWithValue("@EndDate", request.EndDate);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        transaction.Commit();
+                        return new JsonResult(new { success = true, message = "Course added successfully" });
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        return new JsonResult(new { success = false, message = "An error occurred while adding the course.", details = ex.Message });
+                    }
+                }
+            }
+        }
+
+        public async Task AddSubjectWithTransaction(AddSubjectRequest request)
+        {
+            string storedProcedureName = "AddSubject";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@SubjectCode", request.SubjectCode),
+        new SqlParameter("@Name", request.Name),
+        new SqlParameter("@Credits", request.Credits),
+        new SqlParameter("@Slots", request.Slots),
+        new SqlParameter("@Fee", request.Fee)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // Re-throw the exception to be handled by the caller
+                    }
+                }
+            }
+        }
+
         public async Task<JsonResult> AddAccountWithTransaction(AddAccountRequest request)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
@@ -117,6 +192,72 @@ namespace SIMS_APIs.Functions
                 }
             }
         }
+        public async Task DeleteSubjectWithTransaction(int subjectId)
+        {
+            string storedProcedureName = "DeleteSubject";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@SubjectID", subjectId)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error deleting subject: {ex.Message}");
+                        throw; // Re-throw the exception to be handled by the caller
+                    }
+                }
+            }
+        }
+
+        public async Task<JsonResult> DeleteCourseAsync(int courseId)
+        {
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (SqlTransaction transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        // Xóa dữ liệu từ bảng Course
+                        using (SqlCommand cmd = new SqlCommand("DELETE FROM [SIMS].[dbo].[Course] WHERE [ID] = @CourseID", myCon, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@CourseID", courseId);
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        // Commit transaction nếu không có lỗi
+                        transaction.Commit();
+                        return new JsonResult(new { success = true, message = "Course deleted successfully" });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback transaction nếu có lỗi
+                        transaction.Rollback();
+                        return new JsonResult(new { success = false, message = ex.Message });
+                    }
+                }
+            }
+        }
+
         public async Task<JsonResult> DeleteAccountAndRelatedData(int accountId)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
@@ -468,6 +609,82 @@ namespace SIMS_APIs.Functions
                     {
                         Console.WriteLine($"Error: {ex.Message}");
                         return false;
+                    }
+                }
+            }
+        }
+
+        public async Task UpdateCourseWithTransaction(int id, UpdateCourseRequest updateRequest)
+        {
+            string storedProcedureName = "UpdateCourse";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+        new SqlParameter("@Id", id),
+        new SqlParameter("@SubjectName", updateRequest.Subject),
+        new SqlParameter("@SemesterName", updateRequest.Semester),
+        new SqlParameter("@LecturerName", updateRequest.Lecturer),
+        new SqlParameter("@DepartmentName", updateRequest.Department),
+        new SqlParameter("@ClassName", updateRequest.Class),
+        new SqlParameter("@StartDate", (object)updateRequest.StartDate ?? DBNull.Value),
+        new SqlParameter("@EndDate", (object)updateRequest.EndDate ?? DBNull.Value)
+            };
+
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (var transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (var command = new SqlCommand(storedProcedureName, myCon, transaction))
+                        {
+                            command.CommandType = CommandType.StoredProcedure;
+                            command.Parameters.AddRange(parameters);
+
+                            await command.ExecuteNonQueryAsync();
+
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw; // Re-throw the exception to be handled by the caller
+                    }
+                }
+            }
+        }
+
+        public async Task<JsonResult> AddData(string storedProcedure, SqlParameter[] parameters)
+        {
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (SqlTransaction transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlCommand cmd = new SqlCommand(storedProcedure, myCon, transaction))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            if (parameters != null)
+                            {
+                                cmd.Parameters.AddRange(parameters);
+                            }
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        // Commit transaction if no errors
+                        transaction.Commit();
+                        return new JsonResult(new { success = true, message = "Data added successfully" });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback transaction if there is an error
+                        transaction.Rollback();
+                        return new JsonResult(new { success = false, message = ex.Message });
                     }
                 }
             }

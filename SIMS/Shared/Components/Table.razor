@@ -69,15 +69,23 @@
         var url = ItemType switch
         {
             "account" => "api/Admin/DeleteAccount",
-            "course" => "api/Admin/DeleteCourse",
+            "course" => "api/Admin/course",
+            "subject" => "api/Admin/DeleteSubject",
             // Thêm các loại khác nếu cần
             _ => throw new InvalidOperationException("Invalid ItemType")
         };
 
         if (itemId is int id)
         {
-            await DatabaseFunctions.DeleteData(url, id);
-            await OnDataUpdated.InvokeAsync();
+            try
+            {
+                await DatabaseFunctions.DeleteData(url, id);
+                await OnDataUpdated.InvokeAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error during delete operation: " + ex.Message);
+            }
         }
         else
         {

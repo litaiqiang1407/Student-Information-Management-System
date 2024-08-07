@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using SIMS_APIs.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace SIMS_APIs.Controllers
 {
@@ -84,6 +85,51 @@ namespace SIMS_APIs.Controllers
         {
             string getRoleAccountQuery = "SELECT R.Name AS Role FROM Role R";
             return await GetList(getRoleAccountQuery);
+        }
+
+        [HttpPost]
+        [Route("AddCourse")]
+        public async Task<IActionResult> AddCourse([FromBody] AddCourseRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return BadRequest(new { success = false, message = "Invalid input data.", errors });
+            }
+
+            try
+            {
+                var result = await _dbInteraction.AddCourseWithTransaction(request);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while adding the course.", details = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        [Route("course/{courseId}")]
+        public async Task<IActionResult> DeleteCourse(int courseId)
+        {
+            var result = await _dbInteraction.DeleteCourseAsync(courseId);
+            return result;
+        }
+
+        [Route("DeleteSubject/{id}")]
+        [HttpDelete]
+        public async Task<IActionResult> DeleteSubject(int id)
+        {
+            try
+            {
+                await _dbInteraction.DeleteSubjectWithTransaction(id);
+
+                return Ok(new { Message = "Subject deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error deleting subject", Error = ex.Message });
+            }
         }
 
         [HttpPost]
@@ -167,14 +213,14 @@ namespace SIMS_APIs.Controllers
             C.ClassName AS Class,
             C.StartDate,
             C.EndDate
-        FROM Course C
-        INNER JOIN Subject S ON C.SubjectID = S.ID
-        INNER JOIN Department D ON C.DepartmentID = D.ID
-        INNER JOIN Semester SEM ON C.SemesterID = SEM.ID
-        INNER JOIN Account A ON C.AccountID = A.ID
-        INNER JOIN UserRole UR ON A.ID = UR.AccountID
-        INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
-        LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
+            FROM Course C
+            INNER JOIN Subject S ON C.SubjectID = S.ID
+            INNER JOIN Department D ON C.DepartmentID = D.ID
+            INNER JOIN Semester SEM ON C.SemesterID = SEM.ID
+            INNER JOIN Account A ON C.AccountID = A.ID
+            INNER JOIN UserRole UR ON A.ID = UR.AccountID
+            INNER JOIN Role R ON UR.RoleID = R.ID AND R.Name = 'Lecturer'
+            LEFT JOIN UserInfo UI ON A.ID = UI.AccountID";
 
             DataTable dataTable = await _dbInteraction.GetData(getCoursesQuery, new SqlParameter[0]);
 
@@ -200,6 +246,71 @@ namespace SIMS_APIs.Controllers
             return new JsonResult(coursesList);
         }
 
+        [Route("GetCourseById/{id}")]
+        [HttpGet]
+        public async Task<IActionResult> GetCourseById(int id)
+        {
+            string getCourseByIdQuery = @"
+            SELECT 
+                c.ID AS CourseID,
+                s.Name AS SubjectName,
+                sm.Name AS SemesterName,
+                u.Name AS LecturerName,
+                d.Name AS DepartmentName,
+                c.ClassName,
+                c.StartDate,
+                c.EndDate
+            FROM [SIMS].[dbo].[Course] c
+            INNER JOIN [SIMS].[dbo].[Subject] s ON c.SubjectID = s.ID
+            INNER JOIN [SIMS].[dbo].[Semester] sm ON c.SemesterID = sm.ID
+            INNER JOIN [SIMS].[dbo].[UserInfo] u ON c.AccountID = u.ID
+            INNER JOIN [SIMS].[dbo].[Department] d ON c.DepartmentID = d.ID
+            WHERE c.ID = @Id";
+
+            SqlParameter[] parameters = new SqlParameter[]
+            {
+                new SqlParameter("@Id", id)
+            };
+
+            DataTable dataTable = await _dbInteraction.GetData(getCourseByIdQuery, parameters);
+
+            if (dataTable.Rows.Count == 0)
+            {
+                return NotFound(new { Message = "Course not found" });
+            }
+
+            var row = dataTable.Rows[0];
+
+            var course = new Courses
+            {
+                ID = Convert.ToInt32(row["CourseID"]),
+                Subject = Convert.ToString(row["SubjectName"]),
+                Department = Convert.ToString(row["DepartmentName"]),
+                Semester = Convert.ToString(row["SemesterName"]),
+                Lecturer = Convert.ToString(row["LecturerName"]),
+                Class = Enum.TryParse<Class>(Convert.ToString(row["ClassName"]), true, out var classEnum) ? classEnum : (Class?)null,
+                StartDate = row.IsNull("StartDate") ? (DateTime?)null : Convert.ToDateTime(row["StartDate"]),
+                EndDate = row.IsNull("EndDate") ? (DateTime?)null : Convert.ToDateTime(row["EndDate"])
+            };
+
+            return Ok(course);
+        }
+        [Route("UpdateCourseById/{id}")]
+        [HttpPut]
+        public async Task<IActionResult> UpdateCourseById(int id, [FromBody] UpdateCourseRequest updateRequest)
+        {
+            try
+            {
+                await _dbInteraction.UpdateCourseWithTransaction(id, updateRequest);
+
+                return Ok(new { Message = "Course updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error updating course", Error = ex.Message });
+            }
+        }
+        
         [HttpGet]
         [Route("GetDepartmentFilter")]
         public async Task<JsonResult> GetDepartmentFilter()
@@ -234,9 +345,26 @@ namespace SIMS_APIs.Controllers
         [Route("GetSubjects")]
         public async Task<JsonResult> GetSubjects()
         {
-            string getSubjectsQuery = @"SELECT SubjectCode, Name, Credits, Slots, Fee FROM Subject";
+            string getSubjectsQuery = @"SELECT ID, SubjectCode, Name, Credits, Slots, Fee FROM Subject";
             return await GetList(getSubjectsQuery);
         }
+
+        [Route("AddSubject")]
+        [HttpPost]
+        public async Task<IActionResult> AddSubject([FromBody] AddSubjectRequest request)
+        {
+            try
+            {
+                await _dbInteraction.AddSubjectWithTransaction(request);
+
+                return Ok(new { Message = "Subject added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error adding subject", Error = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("GetDepartments")]
         public async Task<JsonResult> GetDepartments()
@@ -383,18 +511,18 @@ namespace SIMS_APIs.Controllers
             R.ID";
             return await GetList(getRolesQuery);
         }
-        [HttpGet]
-        [Route("GetSubjets")]
-        public async Task<JsonResult> GetSubjets()
-        {
-            string getSubjetsQuery = @"
-            SELECT
-            [ID],
-            [SubjectCode],
-            [Name]
-            FROM [SIMS].[dbo].[Subject]";
-            return await GetList(getSubjetsQuery);
-        }
+        //[HttpGet]
+        //[Route("GetSubjets")]
+        //public async Task<JsonResult> GetSubjets()
+        //{
+        //    string getSubjetsQuery = @"
+        //    SELECT
+        //    [ID],
+        //    [SubjectCode],
+        //    [Name]
+        //    FROM [SIMS].[dbo].[Subject]";
+        //    return await GetList(getSubjetsQuery);
+        //}
         [HttpGet]
         [Route("GetSemesters")]
         public async Task<JsonResult> GetSemesters()
@@ -408,16 +536,14 @@ namespace SIMS_APIs.Controllers
              FROM [SIMS].[dbo].[Semester]";
             return await GetList(getSemestersQuery);
         }
-        [HttpGet]
-        [Route("GetLecturers")]
-        public async Task<JsonResult> GetLectures()
-        {
-            string getLecturersQuery = @"
-            SELECT ui.Name
-            FROM [SIMS].[dbo].[UserInfo] ui
-            JOIN [SIMS].[dbo].[UserRole] ur ON ui.AccountID = ur.AccountID
-            WHERE ur.RoleID = 2";
-            return await GetList(getLecturersQuery);
-        }
+        //[HttpGet]
+        //[Route("GetDepartments")]
+        //public async Task<JsonResult> GetDepartments()
+        //{
+        //    string getDepartmentsQuery = @"
+        //    SELECT ID,Name
+        //    FROM [SIMS].[dbo].[Department]";
+        //    return await GetList(getDepartmentsQuery);
+        //}
     }
 }

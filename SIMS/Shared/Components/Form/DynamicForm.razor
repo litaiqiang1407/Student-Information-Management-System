@@ -19,8 +19,8 @@
             <div class="form-group">
                 @foreach (var property in properties)
                 {
-                    if (property.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
-                    property.Name.Equals("Department", StringComparison.OrdinalIgnoreCase))
+                    if (property.Name.Equals("ID", StringComparison.OrdinalIgnoreCase)
+                    @* property.Name.Equals("Department", StringComparison.OrdinalIgnoreCase) *@)
                     {
                         continue;
                     }
@@ -65,6 +65,14 @@
                                            value="@GetPropertyValue(property)"
                                     @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
                                     break;
+                                case TypeCode.Decimal:
+                                    var decimalValue = GetPropertyValue(property) as decimal?;
+                                    var formattedDecimal = decimalValue.HasValue ? decimalValue.Value.ToString("0.##") : "0.00";
+                                    <input type="number" step="0.01" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                           value="@formattedDecimal"
+                                           @onchange="(e => SetPropertyValue(property, decimal.Parse(e.Value.ToString())))" />
+                                    break;
+
                                 default:
                                     if (property.PropertyType.IsEnum || (property.PropertyType.IsGenericType &&
                                     property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
@@ -128,7 +136,8 @@
     { "Role", (typeof(Roles), "Role", "Select Role...") },
     { "Subject", (typeof(Subjects), "Subject", "Select Subject...") },
     { "Semester", (typeof(Semesters), "Semester", "Select Semester...") },
-    { "Lecturer", (typeof(Lecturers), "Lecturer", "Select Lecturer...") }
+    { "Lecturer", (typeof(Lecturers), "Lecturer", "Select Lecturer...") },
+    { "Department", (typeof(Departments), "Department", "Select Department...") }
 };
 
     private readonly Dictionary<string, (IEnumerable<object> List, string Placeholder)> propertyOptions = new Dictionary<string, (IEnumerable<object>, string)>();

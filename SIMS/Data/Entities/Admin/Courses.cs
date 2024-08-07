@@ -9,7 +9,7 @@ namespace SIMS.Data.Entities.Admin
         public string? Semester { get; set; }
         public string? Lecturer { get; set; }
         public Class? Class { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
     }
 }

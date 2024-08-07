@@ -29,7 +29,7 @@ namespace SIMS_APIs.Models
 
         public string? Password { get; set; }
 
-        public DateTime? DateOfBirth { get; set; } // Changed to nullable
+        public DateTime? DateOfBirth { get; set; } 
 
         public string? PersonalPhone { get; set; }
 

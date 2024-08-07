@@ -1,8 +1,10 @@
 //Chưa tạo Func Update
 //Chưa tạo Func Add
 Chưa thay đổi thục thể do dataenpoint AddAcc
-Chưa đưa role vào update.
-Chưa tìm ra lỗi lại sao trang lại tự reload liên tục sau khi update
+//Chưa đưa role vào update.
+Chưa tìm ra lỗi lại sao trang lại tự reload liên tục sau khi update - Low
 Chưa tôi ưu phần send data từ Form.
-Chưa đưa ảnh Official vào khung Upload khi Update.
-Chưa loại bỏ ô input Personal Avatar
+Chưa đưa ảnh Official vào khung Upload khi Update. - Low
+//Chưa loại bỏ ô input Personal Avatar
+Chưa Tối ưu phần AddCourse - Query. - Low
+Chưa Tối Ưu Func của AddCourse, - Medium.

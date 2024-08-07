@@ -1,8 +1,7 @@
-﻿namespace SIMS.Data.Entities.Admin
+﻿namespace SIMS_APIs.Models
 {
-    public class Subjects
+    public class AddSubjectRequest
     {
-        public int ID { get; set; }
         public string SubjectCode { get; set; }
         public string Name { get; set; }
         public int Credits { get; set; }
