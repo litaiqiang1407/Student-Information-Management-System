@@ -22,11 +22,7 @@ namespace SIMS.Shared.Models
         [Required]
         public string Role { get; set; }
 
-        [Required]
-        public int Major { get; set; }
-
-        [Required]
-        public int CourseID { get; set; }
+        public string? Major { get; set; }
 
         public string? ImagePath { get; set; }
 

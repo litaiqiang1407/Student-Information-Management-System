@@ -127,7 +127,7 @@ namespace SIMS_APIs.Functions
                     catch
                     {
                         transaction.Rollback();
-                        throw; // Re-throw the exception to be handled by the caller
+                        throw; 
                     }
                 }
             }
@@ -238,7 +238,7 @@ namespace SIMS_APIs.Functions
                     catch
                     {
                         transaction.Rollback();
-                        throw; // Re-throw the exception to be handled by the caller
+                        throw; 
                     }
                 }
             }
