@@ -16,7 +16,6 @@ namespace SIMS.Data.Entities.Admin
 
         public Accounts()
         {
-            //ID = int.NewGuid();
             //CreatedAt = DateTime.Now;
             //UpdatedAt = DateTime.Now;
         }

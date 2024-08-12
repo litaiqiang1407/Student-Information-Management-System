@@ -1,8 +1,19 @@
 ﻿@charset "UTF-8";
 .header {
   height: 80px;
+  position: relative;
+  overflow: hidden;
   background-color: var(--white);
   border-bottom: var(--primary-2px-color);
+}
+.header .header-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
 }
 .header .header-container {
   height: 100%;

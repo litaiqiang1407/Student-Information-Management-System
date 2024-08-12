@@ -1,0 +1,60 @@
+﻿.bordered-container {
+    width: calc(100% - 48px); // Adjusted for container width
+    margin: 12px; // Reduced margin to fit three columns
+    border: var(--primary-2px-border);
+    padding: 16px;
+    border-radius: 8px;
+    background-color: var(--white);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .container {
+        background-color: var(--white);
+        border-radius: 8px;
+        padding: 20px;
+        width: 100%;
+        text-align: center;
+
+        .form-group {
+            display: flex;
+            flex-wrap: wrap; // Cho phép các phần tử trong form group có thể wrap
+            gap: 20px; // Khoảng cách giữa các input-container
+            margin-bottom: 35px;
+
+            .input-container {
+                flex: 1 1 calc(33.333% - 20px); // Đảm bảo ba cột với không gian
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                label {
+                    margin-bottom: 5px;
+                    font-weight: 600;
+                    color: rgba(0, 0, 0, 0.6);
+                    text-align: left;
+                    width: 100%;
+                }
+
+                .input-field {
+                    width: 100%;
+                    height: 40px;
+                    padding: 10px;
+                    border: var(--primary-1px-border);
+                    border-radius: 4px;
+                    box-sizing: border-box;
+                }
+            }
+        }
+
+        .custom-button {
+            width: 412px;
+            font-size: 1.6rem;
+            font-weight: 600;
+            border-radius: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+    }
+}

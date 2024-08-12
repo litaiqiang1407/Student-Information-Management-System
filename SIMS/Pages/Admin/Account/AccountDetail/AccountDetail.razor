@@ -108,10 +108,10 @@
                 gender = userInfo.Gender.ToString() ?? gender;
                 phoneNumber = userInfo.PersonalPhone ?? phoneNumber;
                 address = userInfo.PermanentAddress ?? address;
-                userPersonalAvatar = userInfo.OfficialAvatar ?? userPersonalAvatar;
-                roleName = userInfo.RoleName ?? roleName;
-                majorName = userInfo.MajorName ?? majorName;
-                departmentName = userInfo.DepartmentName ?? departmentName;
+                userPersonalAvatar = userInfo.ImagePath ?? userPersonalAvatar;
+                roleName = userInfo.Role ?? roleName;
+                majorName = userInfo.Major ?? majorName;
+                departmentName = userInfo.Department ?? departmentName;
                 memberCode = userInfo.MemberCode ?? memberCode;
             }
         }

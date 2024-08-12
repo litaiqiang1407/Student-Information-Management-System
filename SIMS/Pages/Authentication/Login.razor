@@ -70,11 +70,13 @@
 
             if (response.Successful)
             {
-                var userAvatar = response.UserInfo.OfficialAvatar;
+                Console.WriteLine("Attempting to sign in");
+
+                var userAvatar = response.UserInfo.ImagePath;
 
                 HeaderTitleService.OfficialAvatar = userAvatar;
 
-                string role = response.UserInfo.RoleName.ToLower();
+                string role = response.UserInfo.Role.ToLower();
 
                 NavigationManager.NavigateTo(role switch
                 {

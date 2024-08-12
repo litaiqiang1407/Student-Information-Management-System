@@ -1,4 +1,4 @@
-﻿namespace SIMS.Data.Entities.Enums
+﻿namespace SIMS.Data.Entities
 {
     public enum Gender
     {

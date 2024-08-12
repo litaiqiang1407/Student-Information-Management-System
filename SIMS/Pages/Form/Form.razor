@@ -1,0 +1,185 @@
+﻿@page "/form/{Action}/{Entity}/{Id?}"
+@layout SIMS.Shared.Layouts.MainLayout
+@using SIMS.Data.Entities
+@using SIMS.Shared.Components.Form
+@using SIMS.Shared.Services
+@using SIMS.Shared.Helpers
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Text
+@using System.Net
+@using System.Net.Http
+@using System.Net.Http.Headers
+@inject HttpClient Http
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<DynamicForm Model="currentModel"
+             ButtonText="@buttonText"
+             OnSubmit="HandleSubmit"
+             NotificationMessage="@notificationMessage"
+             NotificationSuccess="@notificationSuccess" />
+
+@code {
+    [Parameter] public string Action { get; set; }
+    [Parameter] public string Entity { get; set; }
+    [Parameter] public string? Id { get; set; }
+
+    private object currentModel;
+    private string notificationMessage = string.Empty;
+    private bool notificationSuccess = true;
+    private string buttonText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentModel = ModelFactory.CreateModel(Entity);
+            if (Action.Equals("add", StringComparison.OrdinalIgnoreCase))
+            {
+                buttonText = "Add";
+            }
+            else if (Action.Equals("update", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(Id))
+            {
+                await LoadItemAsync(Id);
+                buttonText = "Update";
+            }
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"Initialization error: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task LoadItemAsync(string id)
+    {
+        try
+        {
+            var loadedModel = await LoadEntityDataAsync(id);
+            var currentModelType = currentModel.GetType();
+            foreach (var property in loadedModel.GetType().GetProperties())
+            {
+                var value = property.GetValue(loadedModel);
+                var currentProperty = currentModelType.GetProperty(property.Name);
+                if (currentProperty?.CanWrite == true)
+                {
+                    currentProperty.SetValue(currentModel, value);
+                }
+            }
+
+            notificationMessage = "Data loaded successfully!";
+            notificationSuccess = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"LoadItemAsync error: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task<object> LoadEntityDataAsync(string id)
+    {
+        var endpoint = ApiEndpointHelper.GetApiEndpoint(Entity, id);
+
+        try
+        {
+            var loadedJsonElement = await DatabaseFunctions.LoadSingleData<JsonElement>(endpoint);
+            var json = loadedJsonElement.GetRawText();
+
+            if (loadedJsonElement.ValueKind == JsonValueKind.Undefined)
+            {
+                throw new Exception("Deserialization failed: Model could not be created.");
+            }
+            var modelType = currentModel.GetType();
+            var deserializedModel = JsonSerializer.Deserialize(json, modelType);
+
+            if (deserializedModel == null)
+            {
+                throw new Exception("Deserialization failed: Model could not be created.");
+            }
+            return deserializedModel;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"LoadEntityDataAsync error: {ex.Message}");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var options = new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    WriteIndented = true
+                };
+
+            var json = JsonSerializer.Serialize(currentModel, options);
+            Console.WriteLine($"Serialized JSON: {json}");
+
+            var response = await SendDataAsync(
+                Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? HttpMethod.Post : HttpMethod.Put
+            );
+
+            notificationMessage = response.IsSuccessStatusCode
+                ? $"{Entity} {(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? "added" : "updated")} successfully!"
+                : $"Error {(Action.Equals("add", StringComparison.OrdinalIgnoreCase) ? "adding" : "updating")} {Entity}.";
+            notificationSuccess = response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            notificationMessage = $"Error submitting data: {ex.Message}";
+            notificationSuccess = false;
+        }
+    }
+
+    private async Task<HttpResponseMessage> SendDataAsync(HttpMethod method)
+    {
+        if (currentModel != null)
+        {
+            var options = new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    WriteIndented = true
+                };
+            var json = JsonSerializer.Serialize(currentModel, options);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            try
+            {
+                HttpResponseMessage response;
+
+                if (method == HttpMethod.Post)
+                {
+                    string endpoint = ApiEndpointHelper.AddApiEndpoint(Entity);
+                    var request = new HttpRequestMessage(method, endpoint) { Content = content };
+                    bool result = await DatabaseFunctions.AddData(endpoint, content);
+                    response = new HttpResponseMessage(result ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
+                }
+                else
+                {
+                    string endpoint = ApiEndpointHelper.UpdateApiEndpoint(Entity, Id);
+                    var request = new HttpRequestMessage(method, endpoint) { Content = content };
+                    bool result = await DatabaseFunctions.UpdateData(endpoint, content);
+                    response = new HttpResponseMessage(result ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Response Content: {responseContent}");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
+            }
+        }
+
+        throw new InvalidOperationException("Model cannot be null.");
+    }
+}

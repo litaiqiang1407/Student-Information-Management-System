@@ -14,11 +14,11 @@
     <Filter Filters="@filters" Items="@majors" FilteredItemsChanged="@filteredItemsChanged" />
     @if (filtered != null && filtered.Any())
     {
-        <Table Data="@filtered" Columns="@columns" />
+        <Table Data="@filtered" Columns="@columns" OnDataUpdated="LoadData" ItemType="major" />
     }
     else
     {
-        <Table Data="@majors" Columns="@columns" />
+        <Table Data="@majors" Columns="@columns" OnDataUpdated="LoadData" ItemType="major" />
     }
 }
 else

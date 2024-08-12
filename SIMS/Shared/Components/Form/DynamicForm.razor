@@ -1,0 +1,255 @@
+﻿@using System.Reflection
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Hosting
+@using SIMS.Data.Entities.Admin
+@using SIMS.Shared.Helpers
+@using Blazored.Typeahead
+@inject IWebHostEnvironment env
+@inject HttpClient Http
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions DatabaseFunctions
+
+<div class="bordered-container">
+    <div class="container">
+        @if (Model != null)
+        {
+            if (properties.Any(p => p.Name.Equals("Email", StringComparison.OrdinalIgnoreCase)))
+            {
+                <ImageUpload @ref="imageUpload" PhotoUrl="@photoUrl" OnFileSelected="HandleFileSelected" />
+            }
+            <div class="form-group">
+                @foreach (var property in properties)
+                {
+                    if (property.Name.Equals("ID", StringComparison.OrdinalIgnoreCase)
+                    @* property.Name.Equals("Department", StringComparison.OrdinalIgnoreCase) *@)
+                    {
+                        continue;
+                    }
+                    <div class="input-container">
+                        <label for="@property.Name">@property.Name</label>
+                        @if (propertyOptions.TryGetValue(property.Name, out var options))
+                        {
+                            <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
+                                <option value="" disabled selected>@(GetPropertyValue(property) == null ? options.Placeholder : "")</option>
+                                @foreach (var item in options.List)
+                                {
+                                    var itemName = item.GetType().GetProperty("Name").GetValue(item).ToString();
+                                    var currentValue = GetPropertyValue(property)?.ToString();
+                                    <option value="@itemName" selected="@(itemName == currentValue)">@itemName</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            @switch (Type.GetTypeCode(property.PropertyType))
+                            {
+                                case TypeCode.Int32:
+                                    <input type="number" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                           value="@GetPropertyValue(property)?.ToString()"
+                                           @onchange="(e => SetPropertyValue(property, int.Parse(e.Value.ToString())))" />
+                                    break;
+
+                                case TypeCode.DateTime:
+                                    var dateValue = GetPropertyValue(property) as DateTime?;
+                                    var formattedDate = dateValue.HasValue && dateValue.Value > DateTime.MinValue
+                                    ? dateValue.Value.ToString("yyyy-MM-dd")
+                                    : DateTime.Now.ToString("yyyy-MM-dd");
+                                    var minDate = new DateTime(1900, 1, 1).ToString("yyyy-MM-dd");
+                                    var maxDate = new DateTime(9999, 12, 31).ToString("yyyy-MM-dd");
+                                    <input type="date" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                           value="@formattedDate" min="@minDate" max="@maxDate"
+                                           @onchange="(e => SetPropertyValue(property, DateTime.Parse(e.Value.ToString())))" />
+                                    break;
+
+                                case TypeCode.String:
+                                    <input type="text" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                           value="@GetPropertyValue(property)"
+                                    @onchange="(e => SetPropertyValue(property, e.Value.ToString()))" />
+                                    break;
+                                case TypeCode.Decimal:
+                                    var decimalValue = GetPropertyValue(property) as decimal?;
+                                    var formattedDecimal = decimalValue.HasValue ? decimalValue.Value.ToString("0.##") : "0.00";
+                                    <input type="number" step="0.01" id="@property.Name" placeholder="Enter @property.Name..." class="input-field"
+                                           value="@formattedDecimal"
+                                           @onchange="(e => SetPropertyValue(property, decimal.Parse(e.Value.ToString())))" />
+                                    break;
+
+                                default:
+                                    if (property.PropertyType.IsEnum || (property.PropertyType.IsGenericType &&
+                                    property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+                                    property.PropertyType.GetGenericArguments()[0].IsEnum))
+                                    {
+                                        var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
+                                        var value = GetPropertyValue(property)?.ToString() ?? "Other";
+                                        <select id="@property.Name" class="input-field" @onchange="(e => SetPropertyValue(property, e.Value.ToString()))">
+                                            <option value="" disabled>Select @property.Name...</option>
+                                            @foreach (var enumValue in Enum.GetValues(enumType))
+                                            {
+                                                <option value="@enumValue.ToString()" selected="@(enumValue.ToString() == value)">@enumValue.ToString()</option>
+                                            }
+                                        </select>
+                                    }
+                                    break;
+                            }
+                        }
+                    </div>
+                }
+                <button class="btn btn-primary custom-button" @onclick="HandleSubmit">@ButtonText</button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(NotificationMessage))
+            {
+                <ToastComponent Message="@NotificationMessage" IsSuccess="@NotificationSuccess" />
+            }
+        }
+        else
+        {
+            <p>Model is null.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public object? Model { get; set; }
+
+    [Parameter]
+    public string ButtonText { get; set; } = "Submit";
+
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    [Parameter]
+    public string NotificationMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool NotificationSuccess { get; set; } = true;
+
+    private List<PropertyInfo> properties = new List<PropertyInfo>();
+    private string photoUrl = string.Empty;
+    private ImageUpload? imageUpload;
+    private List<Majors> majorList = new List<Majors>();
+    private List<Roles> rolesList = new List<Roles>();
+    private bool hasMajorDropdown = false;
+    private readonly Dictionary<string, (Type Type, string Endpoint, string Placeholder)> propertyMappings = new Dictionary<string, (Type, string, string)>
+{
+    { "Major", (typeof(Majors), "Major", "Select Major...") },
+    { "Role", (typeof(Roles), "Role", "Select Role...") },
+    { "Subject", (typeof(Subjects), "Subject", "Select Subject...") },
+    { "Semester", (typeof(Semesters), "Semester", "Select Semester...") },
+    { "Lecturer", (typeof(Lecturers), "Lecturer", "Select Lecturer...") },
+    { "Department", (typeof(Departments), "Department", "Select Department...") }
+};
+
+    private readonly Dictionary<string, (IEnumerable<object> List, string Placeholder)> propertyOptions = new Dictionary<string, (IEnumerable<object>, string)>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Model != null)
+        {
+            properties = Model.GetType().GetProperties().Where(p => p.CanWrite).ToList();
+            var tasks = new List<Task>();
+
+            foreach (var property in properties)
+            {
+                var propertyName = property.Name;
+                if (propertyMappings.TryGetValue(propertyName, out var mapping))
+                {
+                    tasks.Add(LoadDataAsync(mapping.Type, mapping.Endpoint, propertyName, mapping.Placeholder));
+                }
+            }
+
+            await Task.WhenAll(tasks);
+
+            var imagePathProperty = properties.FirstOrDefault(p => p.Name.Equals("ImagePath", StringComparison.OrdinalIgnoreCase));
+            if (imagePathProperty != null)
+            {
+                var imagePath = imagePathProperty.GetValue(Model) as string;
+                photoUrl = string.IsNullOrEmpty(imagePath) ? string.Empty : $"/{imagePath.Replace("\\", "/")}";
+            }
+        }
+    }
+
+    private async Task LoadDataAsync(Type type, string endpoint, string propertyName, string placeholder)
+    {
+        try
+        {
+            string finalEndpoint = ApiEndpointHelper.GetApiEndpointWithoutid(endpoint);
+            var method = typeof(DatabaseInteractionFunctions).GetMethod("LoadData", new[] { typeof(string) });
+            var genericMethod = method?.MakeGenericMethod(type);
+            var task = (Task)genericMethod.Invoke(DatabaseFunctions, new object[] { finalEndpoint });
+            await task.ConfigureAwait(false);
+            var resultProperty = task.GetType().GetProperty("Result");
+            var data = resultProperty.GetValue(task) as IEnumerable<object>;
+            propertyOptions[propertyName] = (data.ToList(), placeholder);
+        }
+        catch (Exception ex)
+        {
+            NotificationMessage = $"Error loading data: {ex.Message}";
+            NotificationSuccess = false;
+        }
+    }
+
+    private object? GetPropertyValue(PropertyInfo property)
+    {
+        return property.GetValue(Model);
+    }
+
+    private void SetPropertyValue(PropertyInfo property, object value)
+    {
+        if (property.PropertyType.IsEnum ||
+            (property.PropertyType.IsGenericType &&
+             property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+             property.PropertyType.GetGenericArguments()[0].IsEnum))
+        {
+            var enumType = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments()[0] : property.PropertyType;
+            object? enumValue = value != null ? Enum.Parse(enumType, value.ToString()) : null;
+
+            property.SetValue(Model, enumValue);
+        }
+        else
+        {
+            property.SetValue(Model, Convert.ChangeType(value, property.PropertyType));
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        string? savedPhotoUrl = imageUpload != null ? await imageUpload.SaveFileAsync() : null;
+
+        var responseStatusCode = await SubmitFormAsync();
+
+        if (responseStatusCode == 204 || responseStatusCode == 200)
+        {
+            NotificationMessage = "Form submitted successfully!";
+            NotificationSuccess = true;
+
+            if (savedPhotoUrl != null)
+            {
+                var imagePathProperty = properties.FirstOrDefault(p => p.Name.Equals("ImagePath", StringComparison.OrdinalIgnoreCase));
+                if (imagePathProperty != null)
+                {
+                    SetPropertyValue(imagePathProperty, savedPhotoUrl);
+                }
+            }
+        }
+        else
+        {
+            NotificationMessage = "Form submission failed.";
+            NotificationSuccess = false;
+        }
+        await OnSubmit.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task<int> SubmitFormAsync()
+    {
+        await Task.Delay(200);
+        return 200;
+    }
+
+    private async Task HandleFileSelected(string fileUrl)
+    {
+        photoUrl = fileUrl;
+        StateHasChanged();
+    }
+}
