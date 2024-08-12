@@ -93,7 +93,6 @@ namespace SIMS_APIs.Controllers
         {
             try
             {
-                // Xóa Major bằng cách gọi phương thức DeleteWithTransaction trong DatabaseInteraction
                 await _dbInteraction.DeleteMajorWithTransaction(id);
 
                 return Ok(new { Message = "Major deleted successfully" });
@@ -604,7 +603,6 @@ namespace SIMS_APIs.Controllers
         {
             try
             {
-                // Gọi phương thức cập nhật với giao dịch
                 await _dbInteraction.UpdateSubjectWithTransaction(id, updateRequest);
 
                 return Ok(new { Message = "Subject updated successfully" });
@@ -655,25 +653,25 @@ namespace SIMS_APIs.Controllers
             return await GetList(getDepartmentsQuery);
         }
 
-        [HttpGet]
-        [Route("GetSemesters")]
-        public async Task<JsonResult> GetSemesters()
-        {
-            string getSemestersQuery = @"SELECT Name,
-                                         CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
-                                         CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
-                                         FROM Semester";
-            return await GetList(getSemestersQuery);
-        }
+        //[HttpGet]
+        //[Route("GetSemesters")]
+        //public async Task<JsonResult> GetSemesters()
+        //{
+        //    string getSemestersQuery = @"SELECT Name,
+        //                                 CONVERT(VARCHAR(10), StartDate, 103) AS StartDate,
+        //                                 CONVERT(VARCHAR(10), EndDate, 103) AS EndDate
+        //                                 FROM Semester";
+        //    return await GetList(getSemestersQuery);
+        //}
 
-        [HttpGet]
-        [Route("GetMajors")]
-        public async Task<JsonResult> GetMajor()
-        {
-            string getMajorQuery = @"SELECT M.Name AS Name, D.Name AS Department FROM Major M
-                                     INNER JOIN Department D ON M.DepartmentID = D.ID";
-            return await GetList(getMajorQuery);
-        }
+        //[HttpGet]
+        //[Route("GetMajors")]
+        //public async Task<JsonResult> GetMajor()
+        //{
+        //    string getMajorQuery = @"SELECT M.Name AS Name, D.Name AS Department FROM Major M
+        //                             INNER JOIN Department D ON M.DepartmentID = D.ID";
+        //    return await GetList(getMajorQuery);
+        //}
 
 
         [HttpGet("UserInfos/{id}")]

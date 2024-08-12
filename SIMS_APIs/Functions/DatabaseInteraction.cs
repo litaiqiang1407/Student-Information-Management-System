@@ -727,7 +727,7 @@ namespace SIMS_APIs.Functions
                 }
                 else if (System.IO.File.Exists(imagePath))
                 {
-                    System.IO.File.Delete(imagePath);
+                    await Task.Run(() => System.IO.File.Delete(imagePath));
                     isDeleted = true;
                     message = "Image file deleted successfully.";
                 }
