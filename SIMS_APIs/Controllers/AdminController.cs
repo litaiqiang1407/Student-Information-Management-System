@@ -58,7 +58,25 @@ namespace SIMS_APIs.Controllers
             int rowsAffected = await _dbInteraction.ExecuteNonQuery(query, sqlParameters);
             return new JsonResult(new { success = rowsAffected > 0 });
         }
+        [HttpPost]
+        [Route("AddAccount")]
+        public virtual async Task<IActionResult> AddAccount([FromBody] AddAccountRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new AddAccountResponse { Success = false, Message = "Invalid input data." });
+            }
 
+            try
+            {
+                var result = await _dbInteraction.AddAccountWithTransaction(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new AddAccountResponse { Success = false, Message = "An error occurred while adding the account." });
+            }
+        }
         [HttpGet]
         [Route("GetAccount")]
         public async Task<JsonResult> GetAccount()
@@ -161,27 +179,6 @@ namespace SIMS_APIs.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { Message = "Error deleting subject", Error = ex.Message });
-            }
-        }
-
-        [HttpPost]
-        [Route("AddAccount")]
-        public async Task<IActionResult> AddAccount([FromBody] AddAccountRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                return BadRequest(new { success = false, message = "Invalid input data.", errors });
-            }
-
-            try
-            {
-                var result = await _dbInteraction.AddAccountWithTransaction(request);
-                return Ok(new { success = true, data = result });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "An error occurred while adding the account.", details = ex.Message });
             }
         }
 

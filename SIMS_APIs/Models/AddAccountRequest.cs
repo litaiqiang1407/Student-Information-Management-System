@@ -22,8 +22,7 @@ namespace SIMS_APIs.Models
         [Required]
         public string Role { get; set; }
 
-        [Required]
-        public string Major { get; set; }
+        public string? Major { get; set; }
 
         public string? ImagePath { get; set; }
 

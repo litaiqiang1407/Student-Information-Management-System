@@ -21,6 +21,58 @@ namespace SIMS_APIs.Functions
             _configuration = configuration;
             _env = env;
         }
+        public virtual async Task<AddAccountResponse> AddAccountWithTransaction(AddAccountRequest request)
+        {
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+                using (SqlTransaction transaction = myCon.BeginTransaction())
+                {
+                    try
+                    {
+                        int? majorID = null;
+                        if (!string.IsNullOrEmpty(request.Major))
+                        {
+                            majorID = await GetMajorIDByNameAsync(request.Major);
+                        }
+
+                        string storedProcedure = "InsertAccountAndRelatedData";
+
+                        using (SqlCommand cmd = new SqlCommand(storedProcedure, myCon, transaction))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@MemberCode", request.MemberCode);
+                            cmd.Parameters.AddWithValue("@Email", request.Email);
+                            cmd.Parameters.AddWithValue("@Password", (object)request.Password ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Name", request.Name);
+                            cmd.Parameters.AddWithValue("@Gender", request.Gender);
+                            cmd.Parameters.AddWithValue("@DateOfBirth", (object)request.DateOfBirth ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@PersonalPhone", (object)request.PersonalPhone ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ContactPhone1", (object)request.ContactPhone1 ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@ContactPhone2", (object)request.ContactPhone2 ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@PermanentAddress", (object)request.PermanentAddress ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@TemporaryAddress", (object)request.TemporaryAddress ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@Role", request.Role);
+                            cmd.Parameters.AddWithValue("@MajorID", (object)majorID ?? DBNull.Value);
+                            cmd.Parameters.AddWithValue("@OfficialAvatar", (object)request.ImagePath ?? DBNull.Value);
+
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        // Commit transaction if no errors
+                        transaction.Commit();
+
+                        return new AddAccountResponse { Success = true, Message = "Account added successfully" };
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback transaction if there is an error
+                        transaction.Rollback();
+                        return new AddAccountResponse { Success = false, Message = ex.Message };
+                    }
+                }
+            }
+        }
 
         public async Task<JsonResult> UpdateAccountWithTransaction(int accountId, string memberCode, string email, string name, string role, string imagePath)
         {
@@ -383,61 +435,6 @@ namespace SIMS_APIs.Functions
                     {
                         transaction.Rollback();
                         throw; // Re-throw the exception to be handled by the caller
-                    }
-                }
-            }
-        }
-
-        public async Task<JsonResult> AddAccountWithTransaction(AddAccountRequest request)
-        {
-            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
-            {
-                await myCon.OpenAsync();
-                using (SqlTransaction transaction = myCon.BeginTransaction())
-                {
-                    try
-                    {
-                        int? majorID = null;
-                        if (!string.IsNullOrEmpty(request.Major))
-                        {
-                            majorID = await GetMajorIDByNameAsync(request.Major);
-                        }
-
-                        string storedProcedure = "InsertAccountAndRelatedData";
-
-                        using (SqlCommand cmd = new SqlCommand(storedProcedure, myCon, transaction))
-                        {
-                            cmd.CommandType = CommandType.StoredProcedure;
-                            cmd.Parameters.AddWithValue("@MemberCode", request.MemberCode);
-                            cmd.Parameters.AddWithValue("@Email", request.Email);
-
-                            cmd.Parameters.AddWithValue("@Password", (object)request.Password ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@Name", request.Name);
-                            cmd.Parameters.AddWithValue("@Gender", request.Gender);
-                            cmd.Parameters.AddWithValue("@DateOfBirth", (object)request.DateOfBirth ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@PersonalPhone", (object)request.PersonalPhone ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@ContactPhone1", (object)request.ContactPhone1 ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@ContactPhone2", (object)request.ContactPhone2 ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@PermanentAddress", (object)request.PermanentAddress ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@TemporaryAddress", (object)request.TemporaryAddress ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@Role", request.Role);
-                            cmd.Parameters.AddWithValue("@MajorID", (object)majorID ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue("@OfficialAvatar", (object)request.ImagePath ?? DBNull.Value);
-
-                            await cmd.ExecuteNonQueryAsync();
-                        }
-
-                        // Commit transaction if no errors
-                        transaction.Commit();
-
-                        return new JsonResult(new { success = true, message = "Account added successfully" });
-                    }
-                    catch (Exception ex)
-                    {
-                        // Rollback transaction if there is an error
-                        transaction.Rollback();
-
-                        return new JsonResult(new { success = false, message = ex.Message });
                     }
                 }
             }
