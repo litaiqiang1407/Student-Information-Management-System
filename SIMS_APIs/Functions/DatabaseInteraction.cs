@@ -1038,6 +1038,34 @@ namespace SIMS_APIs.Functions
             }
         }
 
+        public async Task<JsonResult> AddDataWithSQLQuery(string sqlQuery, SqlParameter[] parameters)
+        {
+            using (SqlConnection myCon = new SqlConnection(SIMSConnection))
+            {
+                await myCon.OpenAsync();
+
+                try
+                {
+                    using (SqlCommand cmd = new SqlCommand(sqlQuery, myCon))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        if (parameters != null)
+                        {
+                            cmd.Parameters.AddRange(parameters);
+                        }
+
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    return new JsonResult(new { success = true, message = "Data added successfully" });
+                }
+                catch (Exception ex)
+                {
+                    return new JsonResult(new { success = false, message = ex.Message });
+                }
+            }
+        }
+
         public async Task<JsonResult> AddData(string storedProcedure, SqlParameter[] parameters)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))

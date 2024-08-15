@@ -192,16 +192,49 @@ namespace SIMS_APIs.Controllers
             }
             catch (Exception ex)
             {
-                result = new ObjectResult(new DeleteAccountResponse
-                {
-                    Success = false,
-                    Message = $"An error occurred: {ex.Message}"
-                })
-                {
-                    StatusCode = StatusCodes.Status500InternalServerError
-                };
+                return StatusCode(500, new { success = false, message = "An error occurred while adding the account.", details = ex.Message });
             }
-            return result;
+        }
+        [HttpPost]
+        [Route("AddRegistrationUser")]
+        public async Task<IActionResult> AddRegistrationUser([FromBody] RegistrationUsers request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return BadRequest(new { success = false, message = "Invalid input data.", errors });
+            }
+
+            try
+            {
+                // Prepare the SQL query and parameters
+                string sqlQuery = "INSERT INTO RegistrationUser (FullName, PhoneNumber, Birthdate, Major) " +
+                                  "VALUES (@FullName, @PhoneNumber, @Birthdate, @Major)";
+
+                SqlParameter[] parameters = new SqlParameter[]
+                {
+        new SqlParameter("@FullName", request.FullName),
+        new SqlParameter("@PhoneNumber", request.PhoneNumber),
+        new SqlParameter("@Birthdate", request.Birthdate),
+        new SqlParameter("@Major", request.Major)
+                };
+
+                // Call the AddData method to execute the query
+                var result = await _dbInteraction.AddDataWithSQLQuery(sqlQuery, parameters);
+
+                return Ok(result.Value);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while registering the user.", details = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        [Route("DeleteAccount/{id}")]
+        public async Task<JsonResult> DeleteAccount(int id)
+        {
+            return await _dbInteraction.DeleteAccountAndRelatedData(id);
         }
 
         [HttpGet]

@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 <PageTitle>KUPOKATRI</PageTitle>
-
+@using SIMS.Pages.Authentication
 <header class="header container">
     <div class="header-container row">
         <div class="col col-lg-2 header-logo">
@@ -30,16 +30,14 @@
     <a class="primary-button login-button" style="width: 50%; padding: 6px 24px;" href="login">
         Login
     </a>
+       <button class="primary-button register-button" @onclick="ShowRegisterModal">Register</button>
 
-    <a class="secondary-button register-button ms-4" style="width: 50%; padding: 6px 16px;" href="register">
-        Register
-    </a>
 </div>
     </div>
 </header>
 
 <body class="body conten">
-
+     <RegisterModal IsVisible="@isModalVisible" IsVisibleChanged="OnModalVisibilityChanged" />
     <div class="col-12 col-md-6 container-fluid custom-banner">
         <img id="bannerImage" src="/bannerHome.jpg" alt="Education Knowledge" class="img-fluid">
         <div id="videoContainer" class="video-background" style="display: none;">
@@ -259,3 +257,16 @@
         }
     }
 </script>
+@code {
+    private bool isModalVisible;
+
+    private void ShowRegisterModal()
+    {
+        isModalVisible = true;
+    }
+
+    private void OnModalVisibilityChanged(bool isVisible)
+    {
+        isModalVisible = isVisible;
+    }
+}
