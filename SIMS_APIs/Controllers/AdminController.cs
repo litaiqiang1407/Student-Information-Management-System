@@ -192,8 +192,16 @@ namespace SIMS_APIs.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "An error occurred while adding the account.", details = ex.Message });
+                result = new ObjectResult(new DeleteAccountResponse
+                {
+                    Success = false,
+                    Message = $"An error occurred: {ex.Message}"
+                })
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
             }
+            return result;
         }
         [HttpPost]
         [Route("AddRegistrationUser")]
@@ -202,34 +210,39 @@ namespace SIMS_APIs.Controllers
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                return BadRequest(new { success = false, message = "Invalid input data.", errors });
+                return BadRequest(new AddRegistrationUserResponse
+                {
+                    Success = false,
+                    Message = "Invalid input data.",
+                    Details = string.Join("; ", errors) // Join errors into a single string
+                });
             }
 
             try
             {
-                // Prepare the SQL query and parameters
-                string sqlQuery = "INSERT INTO RegistrationUser (FullName, PhoneNumber, Birthdate, Major) " +
-                                  "VALUES (@FullName, @PhoneNumber, @Birthdate, @Major)";
-
+                string sqlQuery = "INSERT INTO RegistrationUser (FullName, PhoneNumber, Birthdate, Major) VALUES (@FullName, @PhoneNumber, @Birthdate, @Major)";
                 SqlParameter[] parameters = new SqlParameter[]
                 {
-        new SqlParameter("@FullName", request.FullName),
-        new SqlParameter("@PhoneNumber", request.PhoneNumber),
-        new SqlParameter("@Birthdate", request.Birthdate),
-        new SqlParameter("@Major", request.Major)
+            new SqlParameter("@FullName", request.FullName),
+            new SqlParameter("@PhoneNumber", request.PhoneNumber),
+            new SqlParameter("@Birthdate", request.Birthdate),
+            new SqlParameter("@Major", request.Major)
                 };
 
-                // Call the AddData method to execute the query
                 var result = await _dbInteraction.AddDataWithSQLQuery(sqlQuery, parameters);
 
                 return Ok(result.Value);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "An error occurred while registering the user.", details = ex.Message });
+                return StatusCode(500, new AddRegistrationUserResponse
+                {
+                    Success = false,
+                    Message = "An error occurred while registering the user.",
+                    Details = ex.Message
+                });
             }
         }
-
         //[HttpDelete]
         //[Route("DeleteAccount/{id}")]
         //public async Task<JsonResult> DeleteAccount(int id)

@@ -1038,7 +1038,7 @@ namespace SIMS_APIs.Functions
             }
         }
 
-        public async Task<JsonResult> AddDataWithSQLQuery(string sqlQuery, SqlParameter[] parameters)
+        public virtual async Task<JsonResult> AddDataWithSQLQuery(string sqlQuery, SqlParameter[] parameters)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
