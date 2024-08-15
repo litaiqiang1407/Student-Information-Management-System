@@ -94,5 +94,9 @@
   {
     "outputFile": "Pages/Authentication/Register.razor.css",
     "inputFile": "Pages/Authentication/Register.razor.scss"
+  },
+  {
+    "outputFile": "Pages/Authentication/RegisterModal.razor.css",
+    "inputFile": "Pages/Authentication/RegisterModal.razor.scss"
   }
 ]

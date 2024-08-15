@@ -1,7 +1,13 @@
-﻿@page "/register"
-    <div class="container-fluid d-flex justify-content-center align-items-center min-vh-100">
-        <div class="register-container row bg-white shadow rounded">
-            <div class="register-form col-md-6 p-4">
+﻿@namespace SIMS.Pages.Authentication
+
+@if (IsVisible)
+{
+    <div class="register-modal">
+        <div class="register-container">
+            <button class="close-button" @onclick="CloseModal">
+                <span>&times;</span>
+            </button>
+            <div class="register-form">
                 <h2 class="text-primary text-center">Register</h2>
                 <form>
                     <div class="form-group">
@@ -28,12 +34,22 @@
                     <button type="submit" class="btn btn-primary btn-block">Register</button>
                 </form>
             </div>
-            <div class="register-logo col-md-6 d-flex justify-content-center align-items-center bg-light">
+            <div class="register-logo">
                 <img src="/mainLogo.jpeg" alt="Kupokatri Logo" class="img-fluid">
             </div>
         </div>
     </div>
-
+}
 @code {
-   
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsVisibleChanged { get; set; }
+
+    private void CloseModal()
+    {
+        IsVisible = false;
+        IsVisibleChanged.InvokeAsync(IsVisible);
+    }
 }

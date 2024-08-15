@@ -29,6 +29,6 @@ namespace SIMS.Data
         public DbSet<Courses> Courses { get; set; }
         public DbSet<Enrollments> Enrollments { get; set; }
         public DbSet<StudentDetails> StudentDetails { get; set; }
-
+        public DbSet<RegistrationUsers> RegistrationUsers { get; set; }
     }
 }

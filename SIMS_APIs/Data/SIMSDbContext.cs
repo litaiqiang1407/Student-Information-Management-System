@@ -2,6 +2,7 @@
 using SIMS.Data.Entities;
 using SIMS.Data.Entities.Admin;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using SIMS_APIs.Data.Entities;
 
 
 namespace SIMS.Data
@@ -13,7 +14,6 @@ namespace SIMS.Data
         {
 
         }
-
         public DbSet<Users> Users { get; set; }
         public DbSet<Roles> Roles { get; set; }
         public DbSet<UserInfos> UserInfos { get; set; }
@@ -28,6 +28,7 @@ namespace SIMS.Data
         public DbSet<Courses> Courses { get; set; }
         public DbSet<Enrollments> Enrollments { get; set; }
         public DbSet<StudentDetails> StudentDetails { get; set; }
+        public DbSet<RegistrationUsers> RegistrationUsers { get; set; }
 
     }
 }
