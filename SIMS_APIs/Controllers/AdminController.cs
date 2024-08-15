@@ -12,7 +12,6 @@ using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using SIMS_APIs.Models;
 using Microsoft.EntityFrameworkCore;
-using SIMS_APIs.Data.Entities;
 
 namespace SIMS_APIs.Controllers
 {
@@ -198,15 +197,15 @@ namespace SIMS_APIs.Controllers
             try
             {
                 // Prepare the SQL query and parameters
-                string sqlQuery = "INSERT INTO RegistrationUsers (FullName, PhoneNumber, Birthdate, Major) " +
+                string sqlQuery = "INSERT INTO RegistrationUser (FullName, PhoneNumber, Birthdate, Major) " +
                                   "VALUES (@FullName, @PhoneNumber, @Birthdate, @Major)";
 
                 SqlParameter[] parameters = new SqlParameter[]
                 {
-            new SqlParameter("@FullName", request.FullName),
-            new SqlParameter("@PhoneNumber", request.PhoneNumber),
-            new SqlParameter("@Birthdate", request.Birthdate),
-            new SqlParameter("@Major", request.Major)
+        new SqlParameter("@FullName", request.FullName),
+        new SqlParameter("@PhoneNumber", request.PhoneNumber),
+        new SqlParameter("@Birthdate", request.Birthdate),
+        new SqlParameter("@Major", request.Major)
                 };
 
                 // Call the AddData method to execute the query

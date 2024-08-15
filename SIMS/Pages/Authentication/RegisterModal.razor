@@ -1,4 +1,7 @@
-﻿@namespace SIMS.Pages.Authentication
+﻿@using SIMS.Data.Entities
+@using System.Text
+@using System.Text.Json
+@inject SIMS.Shared.Functions.DatabaseInteractionFunctions _dbInteraction
 
 @if (IsVisible)
 {
@@ -9,47 +12,83 @@
             </button>
             <div class="register-form">
                 <h2 class="text-primary text-center">Register</h2>
-                <form>
+                <EditForm Model="@registrationUser" OnValidSubmit="@HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
                     <div class="form-group">
                         <label for="fullName">Full name</label>
-                        <input type="text" class="form-control" id="fullName" placeholder="Enter your full name...">
+                        <InputText id="fullName" class="form-control" @bind-Value="registrationUser.FullName" placeholder="Enter your full name..." />
                     </div>
                     <div class="form-group">
                         <label for="phoneNumber">Phone number</label>
-                        <input type="tel" class="form-control" id="phoneNumber" placeholder="Enter your phone number...">
+                        <InputText id="phoneNumber" class="form-control" @bind-Value="registrationUser.PhoneNumber" placeholder="Enter your phone number..." />
                     </div>
                     <div class="form-group">
                         <label for="birthdate">Birthdate</label>
-                        <input type="date" class="form-control" id="birthdate">
+                        <InputDate id="birthdate" class="form-control" @bind-Value="registrationUser.Birthdate" 
+                            Min="2000-01-01" Max="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     </div>
                     <div class="form-group">
                         <label for="major">Major</label>
-                        <select class="form-control" id="major">
-                            <option>Choose a major...</option>
-                            <option>Software Engineering</option>
-                            <option>Graphic Design</option>
-                            <option>Business Administration</option>
-                        </select>
+                        <InputSelect id="major" class="form-control" @bind-Value="registrationUser.Major">
+                            <option value="">Choose a major...</option>
+                            <option value="Software Engineering">Software Engineering</option>
+                            <option value="Graphic Design">Graphic Design</option>
+                            <option value="Business Administration">Business Administration</option>
+                        </InputSelect>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">Register</button>
-                </form>
+                </EditForm>
             </div>
             <div class="register-logo">
                 <img src="/mainLogo.jpeg" alt="Kupokatri Logo" class="img-fluid">
             </div>
         </div>
     </div>
+
+    <!-- Include ToastComponent here -->
+    <ToastComponent Message="@toastMessage" IsSuccess="@isSuccess" />
 }
+
 @code {
+    private RegistrationUsers registrationUser = new RegistrationUsers
+    {
+        Birthdate = new DateTime(2000, 1, 1) // Default date
+    };
+
     [Parameter]
     public bool IsVisible { get; set; }
 
     [Parameter]
     public EventCallback<bool> IsVisibleChanged { get; set; }
 
+    private string toastMessage;
+    private bool isSuccess;
+
     private void CloseModal()
     {
         IsVisible = false;
         IsVisibleChanged.InvokeAsync(IsVisible);
+    }
+
+    private async Task HandleSubmit()
+    {
+        var jsonContent = new StringContent(JsonSerializer.Serialize(registrationUser), Encoding.UTF8, "application/json");
+        bool result = await _dbInteraction.AddData("api/Admin/AddRegistrationUser", jsonContent);
+
+        if (result)
+        {
+            toastMessage = "Registration successful!";
+            isSuccess = true;
+        }
+        else
+        {
+            toastMessage = "Registration failed. Please try again.";
+            isSuccess = false;
+        }
+
+        // Show the ToastComponent by triggering StateHasChanged
+        StateHasChanged(); // Ensure the UI updates
+        CloseModal();
     }
 }
