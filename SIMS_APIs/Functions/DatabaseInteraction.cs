@@ -74,7 +74,7 @@ namespace SIMS_APIs.Functions
             }
         }
 
-        public async Task<JsonResult> UpdateAccountWithTransaction(int accountId, string memberCode, string email, string name, string role, string imagePath)
+        public virtual async Task<JsonResult> UpdateAccountWithTransaction(int accountId, string memberCode, string email, string name, string role, string imagePath)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
@@ -580,8 +580,7 @@ namespace SIMS_APIs.Functions
                 }
             }
         }
-
-        public async Task<JsonResult> DeleteAccountAndRelatedData(int accountId)
+        public virtual async Task<IActionResult> DeleteAccountAndRelatedData(int accountId)
         {
             using (SqlConnection myCon = new SqlConnection(SIMSConnection))
             {
@@ -643,24 +642,29 @@ namespace SIMS_APIs.Functions
                         var deleteImageResult = await DeleteImage(imagePath);
                         if (!deleteImageResult.Success)
                         {
-                            // If image deletion fails, log the error or handle it as needed
-                            return new JsonResult(new { success = false, message = "Account deleted but image deletion failed: " + deleteImageResult.Message });
+                            // If image deletion fails, return an error response
+                            return new ObjectResult(new DeleteAccountResponse { Success = false, Message = "Account deleted but image deletion failed: " + deleteImageResult.Message })
+                            {
+                                StatusCode = StatusCodes.Status500InternalServerError
+                            };
                         }
 
-                        return new JsonResult(new { success = true, message = "Transaction committed successfully" });
+                        return new OkObjectResult(new DeleteAccountResponse { Success = true, Message = "Transaction committed successfully" });
                     }
                     catch (Exception ex)
                     {
-                        // Rollback transaction if there is an error
+                        // Rollback transaction and return detailed error response
                         transaction.Rollback();
-
-                        return new JsonResult(new { success = false, message = ex.Message });
+                        return new ObjectResult(new DeleteAccountResponse { Success = false, Message = $"An error occurred: {ex.Message}" })
+                        {
+                            StatusCode = StatusCodes.Status500InternalServerError
+                        };
                     }
                 }
             }
         }
 
-        private async Task<string> GetOfficialAvatarPathByAccountId(int accountId)
+        public virtual async Task<string> GetOfficialAvatarPathByAccountId(int accountId)
         {
             string basePath = @"C:\WorkSpace\SIMS_ASM2\SIMS\wwwroot\";
             string imagePath = string.Empty;
@@ -711,7 +715,7 @@ namespace SIMS_APIs.Functions
             }
         }
 
-        private async Task<OperationResult> DeleteImage(string imagePath)
+        public virtual async Task<OperationResult> DeleteImage(string imagePath)
         {
             bool isDeleted = false;
             string message = string.Empty;
@@ -778,7 +782,7 @@ namespace SIMS_APIs.Functions
             return await ExecuteNonQuery(query, sqlParameters);
         }
 
-        public async Task<DataTable> GetData(string query, SqlParameter[] sqlParameters = null)
+        public virtual async Task<DataTable> GetData(string query, SqlParameter[] sqlParameters = null)
         {
             DataTable dt = new DataTable();
             SqlDataReader myReader;
@@ -938,7 +942,7 @@ namespace SIMS_APIs.Functions
 
             return null;
         }
-        public async Task<bool> UpdateUserInfosAsync(int id, UpdateAccountRequest request)
+        public virtual async Task<bool> UpdateUserInfosAsync(int id, UpdateAccountRequest request)
         {
             // In thông tin của request
             Console.WriteLine($"UpdateAccountRequest Data: {request.ToString()}");

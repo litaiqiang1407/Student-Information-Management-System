@@ -181,12 +181,27 @@ namespace SIMS_APIs.Controllers
                 return BadRequest(new { Message = "Error deleting subject", Error = ex.Message });
             }
         }
-
         [HttpDelete]
         [Route("DeleteAccount/{id}")]
-        public async Task<JsonResult> DeleteAccount(int id)
+        public async Task<IActionResult> DeleteAccount(int id)
         {
-            return await _dbInteraction.DeleteAccountAndRelatedData(id);
+            IActionResult result;
+            try
+            {
+                result = await _dbInteraction.DeleteAccountAndRelatedData(id);
+            }
+            catch (Exception ex)
+            {
+                result = new ObjectResult(new DeleteAccountResponse
+                {
+                    Success = false,
+                    Message = $"An error occurred: {ex.Message}"
+                })
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
+            }
+            return result;
         }
 
         [HttpGet]
@@ -674,8 +689,10 @@ namespace SIMS_APIs.Controllers
         [HttpGet("UserInfos/{id}")]
         public async Task<IActionResult> GetUserInfoById(int id)
         {
-            string getUserInfoByIdQuery = @"
-                SELECT 
+            try
+            {
+                string getUserInfoByIdQuery = @"
+        SELECT 
             UI.[AccountID],
             UI.[Name] AS UserName,
             UI.[Gender],
@@ -687,7 +704,6 @@ namespace SIMS_APIs.Controllers
             UI.[ContactPhone2],
             UI.[PermanentAddress],
             UI.[TemporaryAddress],
-	        UI.OfficialAvatar,
             A.[MemberCode],
             A.[Email],
             R.[Name] AS RoleName,  
@@ -715,40 +731,54 @@ namespace SIMS_APIs.Controllers
             ON UI.[AccountID] = A.[ID]
         WHERE 
             UI.[AccountID] = @id";
-            SqlParameter[] sqlParameters = new SqlParameter[]
-            {
-        new SqlParameter("@ID", id)
-            };
 
-            DataTable dataTable = await _dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
+                SqlParameter[] sqlParameters = new SqlParameter[]
+                {
+            new SqlParameter("@id", id)
+                };
 
-            if (dataTable.Rows.Count == 0)
-            {
-                return NotFound();
+                DataTable dataTable = await _dbInteraction.GetData(getUserInfoByIdQuery, sqlParameters);
+
+                if (dataTable.Rows.Count == 0)
+                {
+                    return NotFound();
+                }
+
+                DataRow row = dataTable.Rows[0];
+                var userInfos = new UserInfos
+                {
+                    AccountID = Convert.ToInt32(row["AccountID"]),
+                    Name = Convert.ToString(row["UserName"]),
+                    Gender = Enum.TryParse<Gender>(Convert.ToString(row["Gender"]), true, out var gender) ? gender : Gender.Unknown,
+                    DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
+                    PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
+                    ImagePath = Convert.ToString(row["OfficialAvatar"]),
+                    PersonalPhone = Convert.ToString(row["PersonalPhone"]),
+                    ContactPhone1 = Convert.ToString(row["ContactPhone1"]),
+                    ContactPhone2 = Convert.ToString(row["ContactPhone2"]),
+                    PermanentAddress = Convert.ToString(row["PermanentAddress"]),
+                    TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
+                    Email = Convert.ToString(row["Email"]),
+                    Role = Convert.ToString(row["RoleName"]),
+                    Major = Convert.ToString(row["MajorName"]),
+                    Department = Convert.ToString(row["DepartmentName"]),
+                    MemberCode = Convert.ToString(row["MemberCode"])
+                };
+
+                return Ok(userInfos);
             }
-
-            DataRow row = dataTable.Rows[0];
-            var userInfos = new UserInfos
+            catch (Exception ex)
             {
-                AccountID = Convert.ToInt32(row["AccountID"]),
-                Name = Convert.ToString(row["UserName"]),
-                Gender = Enum.TryParse<Gender>(Convert.ToString(row["Gender"]), true, out var gender) ? gender : Gender.Unknown, 
-                DateOfBirth = Convert.ToDateTime(row["DateOfBirth"]),
-                PersonalAvatar = Convert.ToString(row["PersonalAvatar"]),
-                ImagePath = Convert.ToString(row["OfficialAvatar"]),
-                PersonalPhone = Convert.ToString(row["PersonalPhone"]),
-                ContactPhone1 = Convert.ToString(row["ContactPhone1"]),
-                ContactPhone2 = Convert.ToString(row["ContactPhone2"]),
-                PermanentAddress = Convert.ToString(row["PermanentAddress"]),
-                TemporaryAddress = Convert.ToString(row["TemporaryAddress"]),
-                Email = Convert.ToString(row["Email"]),
-                Role = Convert.ToString(row["RoleName"]),
-                Major = Convert.ToString(row["MajorName"]),
-                Department = Convert.ToString(row["DepartmentName"]),
-                MemberCode = Convert.ToString(row["MemberCode"]) // Include MemberCode
-            };
-            return Ok(userInfos);
+                // Log the exception details for debugging
+                // Example: _logger.LogError(ex, "An error occurred while retrieving user information.");
+
+                return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponse
+                {
+                    Message = "An error occurred while retrieving user information."
+                });
+            }
         }
+
         [HttpPut("UpdateUserInfos/{id}")]
         public async Task<IActionResult> UpdateUserInfos(int id, [FromBody] UpdateAccountRequest request)
         {
@@ -756,7 +786,8 @@ namespace SIMS_APIs.Controllers
 
             if (id <= 0)
             {
-                return BadRequest("Invalid ID.");
+                var badRequestResponse = new UpdateAccountResponse(false, "Invalid ID.");
+                return BadRequest(badRequestResponse);
             }
 
             try
@@ -765,17 +796,20 @@ namespace SIMS_APIs.Controllers
 
                 if (result)
                 {
-                    return Ok(new { success = true, message = "Account updated successfully." });
+                    var successResponse = new UpdateAccountResponse(true, "Account updated successfully.");
+                    return Ok(successResponse);
                 }
                 else
                 {
-                    return StatusCode(500, new { success = false, message = "Failed to update the account." });
+                    var failureResponse = new UpdateAccountResponse(false, "Failed to update the account.");
+                    return StatusCode(500, failureResponse);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"UpdateUserInfos Exception: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "An error occurred while updating the account.", details = ex.Message });
+                var errorResponse = new UpdateAccountResponse(false, "An error occurred while updating the account.", ex.Message);
+                return StatusCode(500, errorResponse);
             }
         }
 

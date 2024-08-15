@@ -10,12 +10,12 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace SIMS_Testing
 {
-    public class AdminControllerTests
+    public class AdminControllerTestsAddAccount
     {
         private readonly Mock<DatabaseInteraction> _mockDbInteraction;
         private readonly AdminController _controller;
 
-        public AdminControllerTests()
+        public AdminControllerTestsAddAccount()
         {
             _mockDbInteraction = new Mock<DatabaseInteraction>(Mock.Of<IConfiguration>(), Mock.Of<IWebHostEnvironment>());
             _controller = new AdminController(Mock.Of<IConfiguration>(), Mock.Of<IWebHostEnvironment>());

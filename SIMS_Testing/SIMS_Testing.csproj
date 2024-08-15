@@ -18,12 +18,11 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\SIMS\SIMS.csproj" />
-    <ProjectReference Include="..\SIMS_APIs\SIMS_APIs.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\SIMS_APIs\SIMS_APIs.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
