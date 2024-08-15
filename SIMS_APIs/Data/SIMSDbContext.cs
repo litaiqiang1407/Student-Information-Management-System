@@ -2,8 +2,6 @@
 using SIMS.Data.Entities;
 using SIMS.Data.Entities.Admin;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using SIMS_APIs.Data.Entities;
-
 
 namespace SIMS.Data
 {
