@@ -230,12 +230,12 @@ namespace SIMS_APIs.Controllers
             }
         }
 
-        [HttpDelete]
-        [Route("DeleteAccount/{id}")]
-        public async Task<JsonResult> DeleteAccount(int id)
-        {
-            return await _dbInteraction.DeleteAccountAndRelatedData(id);
-        }
+        //[HttpDelete]
+        //[Route("DeleteAccount/{id}")]
+        //public async Task<JsonResult> DeleteAccount(int id)
+        //{
+        //    return await _dbInteraction.DeleteAccountAndRelatedData(id);
+        //}
 
         [HttpGet]
         [Route("GetAdmin")]
